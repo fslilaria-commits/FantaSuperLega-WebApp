@@ -1,0 +1,84 @@
+:root {
+    --bg-dark: #0f172a;
+    --card-bg: #1e293b;
+    --accent: #0284c7;
+    --accent-gold: #f59e0b;
+    --court-green: #059669;
+    --court-line: #ffffff;
+    --text-main: #f8fafc;
+    --text-sub: #94a3b8;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Work Sans', sans-serif; }
+
+body { background-color: var(--bg-dark); color: var(--text-main); min-height: 100vh; }
+
+.navbar {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 1rem 2rem; background: #020617; border-bottom: 1px solid #334155;
+}
+
+.logo { font-family: 'Teko', sans-serif; font-size: 1.8rem; letter-spacing: 1px; color: var(--text-main); }
+.logo b { color: var(--accent); }
+
+.nav-links { display: flex; gap: 0.5rem; }
+.nav-btn {
+    background: transparent; border: none; color: var(--text-sub);
+    padding: 0.6rem 1.2rem; cursor: pointer; border-radius: 8px; font-weight: 600;
+}
+.nav-btn.active, .nav-btn:hover { background: var(--card-bg); color: var(--accent); }
+
+.container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* CAMPO VOLLEY 2D/3D */
+.volleyball-court {
+    background-color: var(--court-green); position: relative;
+    height: 480px; border-radius: 12px; border: 4px solid var(--court-line);
+    margin: 1.5rem 0; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between;
+}
+
+.net {
+    position: absolute; top: 50%; left: 0; right: 0; height: 4px;
+    background: var(--court-line); box-shadow: 0 0 10px rgba(0,0,0,0.5); z-index: 2;
+}
+
+.attack-line { position: absolute; left: 0; right: 0; height: 2px; background: rgba(255,255,255,0.4); }
+.line-top { top: 30%; }
+.line-bottom { bottom: 30%; }
+
+.starter-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr);
+    height: 100%; padding: 1rem; gap: 1rem; z-index: 3;
+}
+
+.slot-card {
+    background: rgba(30, 41, 59, 0.85); backdrop-filter: blur(4px);
+    border: 2px dashed #475569; border-radius: 8px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    color: var(--text-sub); cursor: pointer; transition: 0.2s; position: relative;
+}
+.slot-card:hover { border-color: var(--accent); background: rgba(30, 41, 59, 0.95); }
+
+.role-tag {
+    position: absolute; top: 6px; left: 6px; background: var(--accent);
+    color: white; font-size: 0.75rem; font-weight: 700; padding: 2px 6px; border-radius: 4px;
+}
+
+/* PANCHINA */
+.bench-section { background: var(--card-bg); padding: 1rem; border-radius: 12px; }
+.bench-grid { display: flex; gap: 1rem; margin-top: 0.8rem; overflow-x: auto; }
+
+/* MERCATO TABLE */
+.market-table-wrapper { background: var(--card-bg); border-radius: 12px; overflow: hidden; margin-top: 1rem; }
+.market-table { width: 100%; border-collapse: collapse; text-align: left; }
+.market-table th, .market-table td { padding: 1rem; border-bottom: 1px solid #334155; }
+.market-table th { background: #0f172a; color: var(--text-sub); }
+
+.player-row { display: flex; align-items: center; gap: 0.8rem; }
+.player-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: #334155; }
+
+.btn { padding: 0.6rem 1.2rem; border-radius: 6px; border: none; font-weight: 700; cursor: pointer; }
+.btn-primary { background: var(--accent); color: white; }
+.btn-secondary { background: #475569; color: white; }

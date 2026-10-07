@@ -1,0 +1,14 @@
+{
+  "name": "fanta-superlega-bot",
+  "version": "1.0.0",
+  "description": "Bot serverless di sincronizzazione roster Superlega",
+  "main": "updater.js",
+  "scripts": {
+    "start": "node updater.js"
+  },
+  "dependencies": {
+    "axios": "^1.6.8",
+    "cheerio": "^1.0.0-rc.12",
+    "firebase-admin": "^12.0.0"
+  }
+}
