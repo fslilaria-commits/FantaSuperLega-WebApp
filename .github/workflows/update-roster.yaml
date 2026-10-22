@@ -1,8 +1,10 @@
 name: Auto-Update Roster SuperLega
 
 on:
-  schedule:
-    - cron: '0 3 * * 2'
+  # Esecuzione settimanale sospesa: lo scraping di legavolley.it oggi non trova giocatori.
+  # Da rivedere quando si passa al listone curato a mano.
+  # schedule:
+  #   - cron: '0 3 * * 2'
   workflow_dispatch:
 
 jobs:

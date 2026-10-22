@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Teko:wght@500;700&family=Work+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -18,14 +18,14 @@
 <body>
     <header class="navbar">
         <div class="logo">
-            <i class="fas fa-volleyball-ball logo-icon"></i>
+            <i class="fas fa-volleyball logo-icon"></i>
             <span>FANTA<b>SUPERLEGA</b> <small>26/27</small></span>
         </div>
         <nav class="nav-links">
-            <button class="nav-btn active" onclick="switchTab('field')"><i class="fas fa-running"></i> Campo</button>
-            <button class="nav-btn" onclick="switchTab('market')"><i class="fas fa-store"></i> Mercato</button>
-            <button class="nav-btn" onclick="switchTab('league')"><i class="fas fa-trophy"></i> Lega</button>
-            <button class="nav-btn" onclick="switchTab('calculator')"><i class="fas fa-calculator"></i> Tabellini</button>
+            <button class="nav-btn active" data-tab="field" onclick="switchTab('field')"><i class="fas fa-person-running"></i> Campo</button>
+            <button class="nav-btn" data-tab="market" onclick="switchTab('market')"><i class="fas fa-store"></i> Mercato</button>
+            <button class="nav-btn" data-tab="league" onclick="switchTab('league')"><i class="fas fa-trophy"></i> Lega</button>
+            <button class="nav-btn" data-tab="calculator" onclick="switchTab('calculator')"><i class="fas fa-calculator"></i> Tabellini</button>
         </nav>
         <div class="user-status" id="userStatus">Inizializzazione...</div>
     </header>
