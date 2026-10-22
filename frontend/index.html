@@ -27,7 +27,11 @@
             <button class="nav-btn" data-tab="league" onclick="switchTab('league')"><i class="fas fa-trophy"></i> Lega</button>
             <button class="nav-btn" data-tab="calculator" onclick="switchTab('calculator')"><i class="fas fa-calculator"></i> Tabellini</button>
         </nav>
-        <div class="user-status" id="userStatus">Inizializzazione...</div>
+        <div class="user-box">
+            <span class="user-status" id="userStatus">Inizializzazione...</span>
+            <button class="btn btn-primary" id="loginBtn" hidden><i class="fab fa-google"></i> Accedi</button>
+            <button class="btn btn-secondary" id="logoutBtn" hidden>Esci</button>
+        </div>
     </header>
 
     <main class="container">
