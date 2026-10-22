@@ -1,0 +1,36 @@
+name: Test regole Firestore
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+    paths:
+      - 'firestore.rules'
+      - 'tests/**'
+      - 'package.json'
+      - 'package-lock.json'
+
+jobs:
+  test-rules:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Codice
+        uses: actions/checkout@v4
+
+      - name: Configura Java (richiesto dall'emulatore)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Configura Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Installa Dipendenze
+        run: npm ci
+
+      - name: Esegui i test delle regole
+        run: npm run test:rules
