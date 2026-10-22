@@ -22,8 +22,22 @@ Senza configurazione Firebase l'app parte in **modalità offline** e mostra i gi
 
 ## Collegare Firebase
 
-1. Creare un progetto su [Firebase Console](https://console.firebase.google.com/) con Authentication e Firestore attivi.
-2. Copiare la configurazione web dell'app in `frontend/js/config.js` al posto dei valori segnaposto.
+1. Creare un progetto su [Firebase Console](https://console.firebase.google.com/).
+2. **Authentication → Metodo di accesso**: attivare **Google**. In **Impostazioni → Domini autorizzati** aggiungere il dominio dove è pubblicata l'app (per GitHub Pages `fslilaria-commits.github.io`).
+3. **Firestore Database**: crearlo in modalità produzione, regione europea (per esempio `eur3`).
+4. **Impostazioni progetto → Le tue app**: aggiungere un'app web e copiare la configurazione in `frontend/js/config.js` al posto dei segnaposto. Questi valori sono pubblici per natura: la sicurezza la fanno le regole.
+5. Pubblicare le regole: incollare `firestore.rules` in **Firestore → Regole**, oppure da terminale `npx firebase deploy --only firestore:rules --project <id-progetto>`.
+
+## Dati e regole di sicurezza
+
+Il modello dati è descritto in [`docs/modello-dati.md`](docs/modello-dati.md), le regole sono in `firestore.rules`. Ogni modifica alle regole va accompagnata da un test in `tests/`.
+
+```bash
+npm install
+npm run test:rules
+```
+
+Il comando avvia l'emulatore Firestore, che richiede **Java 11 o superiore**. Gli stessi test girano su GitHub a ogni pull request.
 
 ## Bot del listone
 

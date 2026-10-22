@@ -44,7 +44,7 @@ async function scrapeAndSync() {
                 const role = mapRole(roleStr);
                 const id = name.toLowerCase().replace(/[^a-z0-9]/g, '_');
                 
-                const playerRef = db.collection('global_players').doc(id);
+                const playerRef = db.collection('players').doc(id);
                 batch.set(playerRef, {
                     id, name, team, role, photo,
                     price: 80, // Prezzo stimato di default per nuovi ingressi
