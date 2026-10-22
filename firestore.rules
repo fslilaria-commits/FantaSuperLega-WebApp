@@ -1,0 +1,177 @@
+rules_version = '2';
+
+// Modello dati e motivazioni: docs/modello-dati.md
+// Lo script (Admin SDK) non passa da queste regole: ciò che è "solo script" qui è negato ai client.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function league(leagueId) {
+      return get(/databases/$(database)/documents/leagues/$(leagueId)).data;
+    }
+
+    function isPresident(leagueId) {
+      return signedIn() && league(leagueId).presidentUid == request.auth.uid;
+    }
+
+    function isMember(leagueId) {
+      return signedIn()
+        && exists(/databases/$(database)/documents/leagues/$(leagueId)/members/$(request.auth.uid));
+    }
+
+    function isString(value, maxLen) {
+      return value is string && value.size() > 0 && value.size() <= maxLen;
+    }
+
+    // Listone: pubblico, aggiornato solo dallo script
+    match /players/{playerId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Giornate e statistiche: aggiornate solo dallo script
+    match /matchdays/{n} {
+      allow read: if signedIn();
+      allow write: if false;
+
+      match /stats/{playerId} {
+        allow read: if signedIn();
+        allow write: if false;
+      }
+    }
+
+    // Codici invito: si legge un codice alla volta, nessun elenco
+    match /leagueCodes/{code} {
+      allow get: if signedIn();
+      allow list: if false;
+      allow create: if signedIn()
+        && code.matches('^[0-9]{6}$')
+        && request.resource.data.keys().hasOnly(['leagueId'])
+        && getAfter(/databases/$(database)/documents/leagues/$(request.resource.data.leagueId)).data.presidentUid == request.auth.uid
+        && getAfter(/databases/$(database)/documents/leagues/$(request.resource.data.leagueId)).data.code == code;
+      allow update, delete: if false;
+    }
+
+    match /leagues/{leagueId} {
+
+      function validSettings(s) {
+        return s.keys().hasOnly(['budget', 'mode', 'startMatchday'])
+          && s.budget is number && s.budget >= 0 && s.budget <= 10000
+          && s.mode in ['classifica', 'scontri']
+          && s.startMatchday is int && s.startMatchday >= 1;
+      }
+
+      function validLeague(d) {
+        return d.keys().hasOnly(['name', 'code', 'presidentUid', 'settings', 'createdAt'])
+          && isString(d.name, 60)
+          && d.code is string && d.code.matches('^[0-9]{6}$')
+          && validSettings(d.settings)
+          && d.createdAt is timestamp;
+      }
+
+      allow read: if isMember(leagueId) || isPresident(leagueId);
+      allow create: if signedIn()
+        && request.resource.data.presidentUid == request.auth.uid
+        && validLeague(request.resource.data);
+      // Il Presidente cambia nome e impostazioni, non codice, presidenza o data di creazione
+      allow update: if isPresident(leagueId)
+        && validLeague(request.resource.data)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'settings']);
+      allow delete: if false;
+
+      match /members/{uid} {
+        function validMember(d) {
+          return d.keys().hasOnly(['teamName', 'code', 'joinedAt'])
+            && isString(d.teamName, 40)
+            && d.joinedAt is timestamp;
+        }
+
+        allow read: if isMember(leagueId);
+        // Si entra solo con il codice giusto, e solo per sé stessi
+        allow create: if signedIn()
+          && uid == request.auth.uid
+          && validMember(request.resource.data)
+          && request.resource.data.code == getAfter(/databases/$(database)/documents/leagues/$(leagueId)).data.code;
+        allow update: if signedIn()
+          && uid == request.auth.uid
+          && validMember(request.resource.data)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['teamName']);
+        allow delete: if isPresident(leagueId) || (signedIn() && uid == request.auth.uid);
+      }
+
+      match /rosters/{uid} {
+        function validRoster(d) {
+          return d.keys().hasOnly(['P', 'S', 'C', 'O', 'L', 'all', 'prices', 'creditsLeft'])
+            && d.P is list && d.P.size() == 2
+            && d.S is list && d.S.size() == 4
+            && d.C is list && d.C.size() == 3
+            && d.O is list && d.O.size() == 2
+            && d.L is list && d.L.size() == 1
+            && d.all is list && d.all.size() == 12
+            && d.all.toSet().size() == 12
+            && d.all.toSet() == d.P.concat(d.S).concat(d.C).concat(d.O).concat(d.L).toSet()
+            && d.prices is map && d.prices.keys().toSet() == d.all.toSet()
+            && d.creditsLeft is number && d.creditsLeft >= 0;
+        }
+
+        allow read: if isMember(leagueId);
+        allow create, update: if isPresident(leagueId)
+          && exists(/databases/$(database)/documents/leagues/$(leagueId)/members/$(uid))
+          && validRoster(request.resource.data);
+        allow delete: if isPresident(leagueId);
+      }
+
+      match /lineups/{lineupId} {
+        function roster(uid) {
+          return get(/databases/$(database)/documents/leagues/$(leagueId)/rosters/$(uid)).data;
+        }
+
+        function lockAt(matchday) {
+          return get(/databases/$(database)/documents/matchdays/$(string(matchday))).data.lockAt;
+        }
+
+        function validLineup(d) {
+          let s = d.starters;
+          let r = roster(request.auth.uid);
+          let starters = [s.P, s.S1, s.S2, s.C1, s.C2, s.O, s.L];
+          return d.keys().hasOnly(['uid', 'matchday', 'starters', 'bench', 'captain'])
+            && d.uid == request.auth.uid
+            && d.matchday is int
+            && lineupId == string(d.matchday) + '_' + request.auth.uid
+            && s.keys().hasOnly(['P', 'S1', 'S2', 'C1', 'C2', 'O', 'L'])
+            && s.keys().hasAll(['P', 'S1', 'S2', 'C1', 'C2', 'O', 'L'])
+            && s.P in r.P
+            && s.S1 in r.S && s.S2 in r.S
+            && s.C1 in r.C && s.C2 in r.C
+            && s.O in r.O
+            && s.L in r.L
+            && d.bench is list && d.bench.size() == 5
+            && d.bench.hasOnly(r.all)
+            && starters.concat(d.bench).toSet().size() == 12
+            && d.captain in starters;
+        }
+
+        // La propria formazione sempre; quelle degli altri solo dopo la scadenza
+        allow read: if isMember(leagueId)
+          && (resource.data.uid == request.auth.uid || request.time >= lockAt(resource.data.matchday));
+        allow create, update: if isMember(leagueId)
+          && validLineup(request.resource.data)
+          && request.time < lockAt(request.resource.data.matchday);
+        allow delete: if false;
+      }
+
+      match /scores/{scoreId} {
+        allow read: if isMember(leagueId);
+        allow write: if false;
+      }
+
+      match /standings/{uid} {
+        allow read: if isMember(leagueId);
+        allow write: if false;
+      }
+    }
+  }
+}

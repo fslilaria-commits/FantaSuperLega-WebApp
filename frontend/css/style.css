@@ -28,6 +28,8 @@ body { background-color: var(--bg-dark); color: var(--text-main); min-height: 10
 }
 .nav-btn.active, .nav-btn:hover { background: var(--card-bg); color: var(--accent); }
 
+.user-box { display: flex; align-items: center; gap: 0.6rem; color: var(--text-sub); font-size: 0.9rem; }
+
 .container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }
 .tab-content { display: none; }
 .tab-content.active { display: block; }
