@@ -80,3 +80,13 @@ test('ordine della classifica: scontri diretti e classifica generale', () => {
     assert.deepEqual(ordinaClassifica(members, standings, 'scontri').map(m => m.uid), ['b', 'd', 'a', 'c']);
     assert.deepEqual(ordinaClassifica(members, standings, 'classifica').map(m => m.uid), ['c', 'b', 'd', 'a']);
 });
+
+test('una squadra uscita dalla lega ma presente nel calendario non blocca il calcolo e perde il tie-break', () => {
+    const due = [{ uid: 'a', joinedAt: 1 }];
+    // a non ha schierato (0 punti) e l'avversario è uscito dalla lega: pareggio a 0, tie-break ad a
+    const { classifica, partite } = risultatiScontri({ rounds: { 1: [sfida('a', 'uscita')] }, scores: [{ uid: 'a', matchday: 1, total: 0 }], members: due });
+    assert.equal(partite[0].vincitore, 'a');
+    assert.equal(classifica.a.tbWon, 1);
+    assert.equal(classifica.uscita, undefined);
+    assert.doesNotThrow(() => risultatiScontri({ rounds: { 1: [sfida('x', 'y')] }, scores: [{ uid: 'a', matchday: 1, total: 0 }], members: due }));
+});

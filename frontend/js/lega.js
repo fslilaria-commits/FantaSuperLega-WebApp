@@ -1,5 +1,6 @@
 // Scheda Lega: le mie leghe, creazione, ingresso con codice, partecipanti e classifica
 const LEAGUE_KEY = 'fsl-lega-selezionata';
+let richiestaLega = 0; // solo l'ultima lega scelta aggiorna lo stato, anche se una risposta precedente arriva dopo
 
 document.getElementById('leagueSelect').addEventListener('change', e => selectLeague(e.target.value));
 document.getElementById('createLeagueForm').addEventListener('submit', createLeague);
@@ -30,14 +31,10 @@ async function loadMyLeagues(preferredId) {
 }
 
 async function selectLeague(id) {
-    state.league = state.leagues.find(l => l.id === id) || null;
-    state.members = [];
-    state.rosters = {};
-    state.standings = {};
-    state.scores = [];
-    state.schedule = null;
-    state.transfers = [];
-    if (state.league) {
+    const richiesta = ++richiestaLega;
+    const league = state.leagues.find(l => l.id === id) || null;
+    const dati = { league, members: [], rosters: {}, standings: {}, scores: [], schedule: null, transfers: [] };
+    if (league) {
         saveSelectedLeague(id);
         const [members, rosters, standings, scores, schedule, transfers] = await Promise.all([
             db.collection(`leagues/${id}/members`).get(),
@@ -47,17 +44,19 @@ async function selectLeague(id) {
             db.doc(`leagues/${id}/schedule/main`).get(),
             db.collection(`leagues/${id}/transfers`).get(),
         ]);
-        state.schedule = schedule.exists ? schedule.data() : null;
-        state.transfers = transfers.docs
+        dati.schedule = schedule.exists ? schedule.data() : null;
+        dati.transfers = transfers.docs
             .map(d => ({ id: d.id, ...d.data(), at: d.data().at?.toMillis?.() ?? 0 }))
             .sort((a, b) => b.at - a.at);
-        state.members = members.docs
+        dati.members = members.docs
             .map(d => ({ uid: d.id, ...d.data() }))
             .sort((a, b) => a.teamName.localeCompare(b.teamName, 'it'));
-        state.rosters = Object.fromEntries(rosters.docs.map(d => [d.id, d.data()]));
-        state.standings = Object.fromEntries(standings.docs.map(d => [d.id, d.data()]));
-        state.scores = scores.docs.map(d => d.data());
+        dati.rosters = Object.fromEntries(rosters.docs.map(d => [d.id, d.data()]));
+        dati.standings = Object.fromEntries(standings.docs.map(d => [d.id, d.data()]));
+        dati.scores = scores.docs.map(d => d.data());
     }
+    if (richiesta !== richiestaLega) return;
+    Object.assign(state, dati);
     refreshAll();
 }
 
@@ -69,7 +68,7 @@ function renderLeague() {
     const selectBox = document.getElementById('leagueSelectBox');
     const select = document.getElementById('leagueSelect');
     selectBox.hidden = state.leagues.length < 2;
-    select.replaceChildren(...state.leagues.map(l => el('option', { value: l.id, selected: l.id === state.league?.id }, l.name)));
+    riempi(select, state.leagues.map(l => el('option', { value: l.id, selected: l.id === state.league?.id }, l.name)));
 
     const dashboard = document.getElementById('leagueDashboard');
     dashboard.hidden = !state.league;
@@ -86,14 +85,13 @@ function renderLeague() {
     // Classifica: negli scontri diretti contano i punti delle sfide, nella classifica generale i fanta-punti.
     // A parità: fanta-punti totali, poi chi si è iscritto prima (come nel FantaLVF)
     const scontri = l.settings?.mode === 'scontri';
-    const iscritti = state.members.map(m => ({ ...m, joinedAt: m.joinedAt?.toMillis?.() ?? 0 }));
-    const ordinati = Scontri.ordinaClassifica(iscritti, state.standings, l.settings?.mode);
-    document.getElementById('leaderboardHead').replaceChildren(el('tr', {},
+    const ordinati = Scontri.ordinaClassifica(iscrittiConData(), state.standings, l.settings?.mode);
+    riempi(document.getElementById('leaderboardHead'), el('tr', {},
         el('th', {}, 'Pos'), el('th', {}, 'Squadra'), el('th', {}, 'Rosa'),
         scontri ? el('th', { title: 'Vittorie, tie-break vinti e persi, sconfitte' }, 'V · TB · S') : el('th', {}, 'Ultima giornata'),
         el('th', {}, scontri ? 'Fanta-punti' : 'Punti'),
         scontri ? el('th', {}, 'Punti') : null));
-    document.getElementById('leaderboardBody').replaceChildren(...ordinati.map((m, i) => {
+    riempi(document.getElementById('leaderboardBody'), ordinati.map((m, i) => {
         const rosa = state.rosters[m.uid]?.all?.length || 0;
         const c = state.standings[m.uid];
         return el('tr', {},
@@ -137,7 +135,7 @@ async function createLeague(e) {
         const code = randomCode();
         if ((await db.doc(`leagueCodes/${code}`).get()).exists) continue;
         const leagueRef = db.collection('leagues').doc();
-        const now = firebase.firestore.Timestamp.now();
+        const now = firebase.firestore.FieldValue.serverTimestamp();
         const batch = db.batch();
         batch.set(leagueRef, {
             name,
@@ -185,7 +183,7 @@ async function joinLeague(e) {
             await selectLeague(leagueId);
             return;
         }
-        const now = firebase.firestore.Timestamp.now();
+        const now = firebase.firestore.FieldValue.serverTimestamp();
         const uid = state.user.uid;
         const batch = db.batch();
         batch.set(db.doc(`leagues/${leagueId}/members/${uid}`), { teamName, code, joinedAt: now });

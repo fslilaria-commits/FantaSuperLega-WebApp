@@ -15,11 +15,12 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@600;700;800&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha384-PPIZEGYM1v8zp5Py7UjFb79S58UeqCL9pYVnVPURKEqvioPROaVAJKKLzvH2rDnI" crossorigin="anonymous" referrerpolicy="no-referrer">
     <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js" integrity="sha384-yuGdyIzzYtOBlBG6JOWn+Ey9kpq7HocusNuxEGyyohr1eEyXpeEyehIIXC/hznw4" crossorigin="anonymous"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js" integrity="sha384-nwX2Qpkhc2sv6L0ZPkLefLGguao67toSowvePuQvGF6cG+8MUphGI2uI94Ls3JF7" crossorigin="anonymous"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js" integrity="sha384-lI+CxEx/bCvWP1b0OK13j5HTrTZP7yf1xle8TVOFq2smz6KC1RChTarRV/RHP5PP" crossorigin="anonymous"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-check-compat.js" integrity="sha384-rxbD+YIVHadImwEcPc07/NNXIMwVf3RtXkQUgI0cE4GzDCFQ9IQ+kLvlefJ/Eb7E" crossorigin="anonymous"></script>
 </head>
 <body>
     <header class="navbar">
@@ -28,12 +29,12 @@
             <span class="logo-text">FANTA<b>SUPERLEGA</b></span><span class="logo-season">26/27</span>
         </div>
         <nav class="nav-links" id="mainNav" hidden>
-            <button class="nav-btn active" data-tab="home" onclick="switchTab('home')"><i class="fas fa-house"></i> La mia giornata</button>
-            <button class="nav-btn" data-tab="field" onclick="switchTab('field')"><i class="fas fa-person-running"></i> Campo<span class="nav-dot" id="fieldDot" hidden title="Formazione non salvata"></span></button>
-            <button class="nav-btn" data-tab="market" onclick="switchTab('market')"><i class="fas fa-store"></i> Mercato</button>
-            <button class="nav-btn" data-tab="league" onclick="switchTab('league')"><i class="fas fa-trophy"></i> Lega</button>
-            <button class="nav-btn" data-tab="calculator" onclick="switchTab('calculator')"><i class="fas fa-calculator"></i> Tabellini</button>
-            <button class="nav-btn" data-tab="admin" id="adminNavBtn" onclick="switchTab('admin')" hidden><i class="fas fa-user-shield"></i> Admin</button>
+            <button class="nav-btn active" data-tab="home"><i class="fas fa-house"></i> La mia giornata</button>
+            <button class="nav-btn" data-tab="field"><i class="fas fa-person-running"></i> Campo<span class="nav-dot" id="fieldDot" hidden title="Formazione non salvata"></span></button>
+            <button class="nav-btn" data-tab="market"><i class="fas fa-store"></i> Mercato</button>
+            <button class="nav-btn" data-tab="league"><i class="fas fa-trophy"></i> Lega</button>
+            <button class="nav-btn" data-tab="calculator"><i class="fas fa-calculator"></i> Tabellini</button>
+            <button class="nav-btn" data-tab="admin" id="adminNavBtn" hidden><i class="fas fa-user-shield"></i> Admin</button>
         </nav>
         <div class="user-box">
             <span class="user-status" id="userStatus">Inizializzazione...</span>
@@ -402,9 +403,6 @@
     <script src="js/home.js"></script>
     <script src="js/giocatore.js"></script>
     <script src="js/routine.js"></script>
-    <script>
-        // App installabile: il service worker serve solo sul sito pubblicato (https), non in locale
-        if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js');
-    </script>
+
 </body>
 </html>

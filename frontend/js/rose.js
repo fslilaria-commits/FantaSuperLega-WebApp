@@ -28,7 +28,7 @@ function renderRosterEditor() {
     if (box.hidden) return;
 
     const select = document.getElementById('rosterMemberSelect');
-    select.replaceChildren(...state.members.map(m => el('option', { value: m.uid }, m.teamName)));
+    riempi(select, state.members.map(m => el('option', { value: m.uid }, m.teamName)));
     const stillThere = rosterEdit.leagueId === state.league.id && state.members.some(m => m.uid === rosterEdit.uid);
     if (stillThere) {
         select.value = rosterEdit.uid;
@@ -43,9 +43,17 @@ function otherRosters() {
     return Object.fromEntries(Object.entries(state.rosters).filter(([uid]) => uid !== rosterEdit.uid));
 }
 
+// Controllo della rosa in modifica: i crediti partono da quelli della rosa salvata (mercato compreso)
+function controllaRosa(budget) {
+    return RoseCheck.checkRoster({
+        picks: rosterEdit.picks, budget, playersById: state.playersById, altreRose: otherRosters(),
+        riferimento: RoseCheck.riferimentoDa(state.rosters[rosterEdit.uid]),
+    });
+}
+
 function drawRosterEditor() {
     const budget = state.league.settings?.budget ?? 0;
-    const check = RoseCheck.checkRoster({ picks: rosterEdit.picks, budget, playersById: state.playersById, altreRose: otherRosters() });
+    const check = controllaRosa(budget);
     const owned = new Set([...Object.values(otherRosters()).flatMap(r => r.all || []), ...rosterEdit.picks.map(p => p.id)]);
 
     const sections = Object.entries(RoseCheck.MAX_PER_RUOLO).map(([role, max]) => {
@@ -88,19 +96,19 @@ function drawRosterEditor() {
         check.errors.map(e => el('p', { class: 'msg-error' }, e)),
         check.warnings.map(w => el('p', { class: 'msg-warning' }, w)));
 
-    document.getElementById('rosterEditor').replaceChildren(summary, el('div', { class: 'roster-grid' }, sections));
+    riempi(document.getElementById('rosterEditor'), summary, el('div', { class: 'roster-grid' }, sections));
     document.getElementById('saveRosterBtn').disabled = check.errors.length > 0;
 }
 
 async function saveRoster() {
     const status = document.getElementById('rosterStatus');
     const budget = state.league.settings?.budget ?? 0;
-    const check = RoseCheck.checkRoster({ picks: rosterEdit.picks, budget, playersById: state.playersById, altreRose: otherRosters() });
+    const check = controllaRosa(budget);
     if (check.errors.length) {
         status.textContent = 'Correggi gli errori prima di salvare.';
         return;
     }
-    const roster = RoseCheck.buildRoster(rosterEdit.picks, budget);
+    const roster = RoseCheck.buildRoster(rosterEdit.picks, budget, RoseCheck.riferimentoDa(state.rosters[rosterEdit.uid]));
     try {
         await db.doc(`leagues/${state.league.id}/rosters/${rosterEdit.uid}`).set(roster);
         state.rosters[rosterEdit.uid] = roster;
