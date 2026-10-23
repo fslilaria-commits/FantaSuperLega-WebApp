@@ -29,16 +29,23 @@ Restrizioni sulle API (elenco delle API consentite) non sono necessarie: la rest
 
 App Check fa sì che Firebase risponda solo alle richieste che arrivano davvero dall'app. Usa reCAPTCHA v3, invisibile per chi gioca.
 
+Stato al 23/10/2026: chiave creata (etichetta `FantaSuperLega`, proprietario andre.mariani90@gmail.com) e chiave del sito già in `frontend/js/config.js`. Restano i passi 4 e 5.
+
 1. **Crea la chiave reCAPTCHA v3** su [google.com/recaptcha/admin](https://www.google.com/recaptcha/admin):
    - Tipo: **reCAPTCHA v3** (basato sul punteggio)
    - Domini: `fslilaria-commits.github.io`
    - Ottieni due chiavi: la **chiave del sito** (pubblica) e la **chiave segreta**.
-2. **Registra l'app in App Check**: Firebase Console → **App Check** → scheda **App** → l'app web → **reCAPTCHA** → incolla la **chiave segreta** → Salva.
+   - Conviene aggiungere un secondo proprietario (Ilaria) e spuntare "Invia avvisi ai proprietari".
+2. **Registra l'app in App Check**: Firebase Console → **App Check** → scheda **App** → l'app web → **reCAPTCHA** (non "Fraud Defense") → incolla la **chiave segreta** → durata del token **1 giorno** → Salva.
 3. **Mandami la chiave del sito** (quella pubblica): la inserisco in `appCheckSiteKey` in `frontend/js/config.js`. La chiave segreta non va condivisa né messa nel codice.
 4. **Controlla per 2-3 giorni**: Firebase Console → App Check → **API** → Cloud Firestore. Le richieste devono risultare quasi tutte **verificate**.
 5. **Attiva l'applicazione obbligatoria** solo quando le richieste sono verificate: App Check → API → Cloud Firestore → **Applica**. Da quel momento le richieste che non arrivano dall'app vengono rifiutate.
 
 Se dopo l'applicazione qualcosa smette di funzionare, si torna indietro da App Check → API → Cloud Firestore → **Non applicare**.
+
+La console Firebase segnala che reCAPTCHA Classic è deprecato e propone Google Cloud Fraud Defense (il vecchio reCAPTCHA Enterprise). Per ora la v3 funziona e si configura tutta dalla console Firebase, senza attivare altre API su Google Cloud. Se Google annuncia lo spegnimento (arriva una mail ai proprietari della chiave), prima si toglie l'applicazione obbligatoria con **Non applicare**, poi si passa a Fraud Defense: nuova chiave nella console Cloud e, nel codice, il provider Enterprise al posto della v3.
+
+App Check funziona solo sul sito pubblicato: aprendo l'app da `localhost` senza `?emulatori` le richieste non risultano verificate e, con l'applicazione obbligatoria attiva, vengono rifiutate. In locale si usano gli emulatori.
 
 Negli emulatori locali App Check resta spento.
 
