@@ -173,15 +173,15 @@ service cloud.firestore {
       }
 
       match /rosters/{uid} {
-        // Durante l'asta la rosa si salva anche incompleta: al massimo 2 P, 4 S, 3 C, 2 O, 1 L
+        // Durante l'asta la rosa si salva anche incompleta: al massimo 2 P, 4 S, 4 C, 2 O, 2 L
         function validRoster(d) {
           return d.keys().hasOnly(['P', 'S', 'C', 'O', 'L', 'all', 'prices', 'creditsLeft'])
             && d.P is list && d.P.size() <= 2
             && d.S is list && d.S.size() <= 4
-            && d.C is list && d.C.size() <= 3
+            && d.C is list && d.C.size() <= 4
             && d.O is list && d.O.size() <= 2
-            && d.L is list && d.L.size() <= 1
-            && d.all is list && d.all.size() <= 12
+            && d.L is list && d.L.size() <= 2
+            && d.all is list && d.all.size() <= 14
             && d.all.toSet().size() == d.all.size()
             && d.all.toSet() == d.P.concat(d.S).concat(d.C).concat(d.O).concat(d.L).toSet()
             && d.prices is map && d.prices.keys().toSet() == d.all.toSet()
@@ -216,9 +216,9 @@ service cloud.firestore {
             && s.C1 in r.C && s.C2 in r.C
             && s.O in r.O
             && s.L in r.L
-            && d.bench is list && d.bench.size() == 5
+            && d.bench is list && d.bench.size() == 7
             && d.bench.hasOnly(r.all)
-            && starters.concat(d.bench).toSet().size() == 12
+            && starters.concat(d.bench).toSet().size() == 14
             && d.captain in starters;
         }
 

@@ -97,12 +97,12 @@ Ognuno crea e modifica solo il proprio documento. Posti: le rose sono esclusive,
 ### `leagues/{leagueId}/rosters/{uid}` — rose
 | Campo | Tipo | Note |
 |---|---|---|
-| `P`, `S`, `C`, `O`, `L` | list | Id dei giocatori per ruolo: 2, 4, 3, 2, 1 |
-| `all` | list | Tutti e 12, senza ripetizioni |
+| `P`, `S`, `C`, `O`, `L` | list | Id dei giocatori per ruolo: 2, 4, 4, 2, 2 (rosa da 14: il FantaLVF ne ha 12, qui un centrale e un libero in più) |
+| `all` | list | Tutti e 14, senza ripetizioni |
 | `prices` | map | `playerId → crediti pagati all'asta` |
 | `creditsLeft` | number | Crediti avanzati per il mercato |
 
-Scrive solo il Presidente. Durante l'asta la rosa si può salvare anche incompleta: le regole controllano i massimi per ruolo (2, 4, 3, 2, 1), l'assenza di doppioni e la coerenza dei prezzi. Esclusività tra squadre, massimo 4 per club e budget li controlla il pannello del Presidente (`frontend/js/rose-check.js`), perché le regole non possono confrontare tutte le rose.
+Scrive solo il Presidente. Durante l'asta la rosa si può salvare anche incompleta: le regole controllano i massimi per ruolo (2, 4, 4, 2, 2), l'assenza di doppioni e la coerenza dei prezzi. Esclusività tra squadre, massimo 4 per club e budget li controlla il pannello del Presidente (`frontend/js/rose-check.js`), perché le regole non possono confrontare tutte le rose.
 
 ### `leagues/{leagueId}/lineups/{matchday}_{uid}` — formazioni
 | Campo | Tipo | Note |
@@ -110,11 +110,11 @@ Scrive solo il Presidente. Durante l'asta la rosa si può salvare anche incomple
 | `uid` | string | Proprietario |
 | `matchday` | number | |
 | `starters` | map | `P, S1, S2, C1, C2, O, L` → playerId |
-| `bench` | list | 5 playerId |
+| `bench` | list | 7 playerId |
 | `captain` | string | Uno dei titolari |
 | `savedAt` | timestamp | Data del server del salvataggio |
 
-Ognuno scrive solo la propria, e solo prima di `lockAt`. I trasferimenti di mercato registrati dopo `savedAt` e prima della scadenza sostituiscono nella formazione i giocatori partiti. I giocatori devono essere della propria rosa (completa), nel ruolo giusto, senza doppioni; la panchina sono gli altri 5. Le formazioni degli altri si vedono solo dopo la scadenza. Per una nuova giornata l'app riparte dalla formazione precedente.
+Ognuno scrive solo la propria, e solo prima di `lockAt`. I trasferimenti di mercato registrati dopo `savedAt` e prima della scadenza sostituiscono nella formazione i giocatori partiti. I giocatori devono essere della propria rosa (completa), nel ruolo giusto, senza doppioni; la panchina sono gli altri 7. Le formazioni degli altri si vedono solo dopo la scadenza. Per una nuova giornata l'app riparte dalla formazione precedente.
 
 ### `leagues/{leagueId}/schedule/main` — calendario degli scontri diretti
 | Campo | Tipo | Note |

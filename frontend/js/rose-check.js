@@ -2,8 +2,9 @@
 // Alcuni controlli le regole Firestore non li possono fare (esclusività tra squadre, massimo per club,
 // budget): li fa questo modulo prima del salvataggio. Il limite per club lo usa anche il mercato.
 (function (root) {
-    const MAX_PER_RUOLO = { P: 2, S: 4, C: 3, O: 2, L: 1 };
-    const TOTALE = 12;
+    // Rosa da 14: rispetto ai 12 del FantaLVF un centrale e un libero in più
+    const MAX_PER_RUOLO = { P: 2, S: 4, C: 4, O: 2, L: 2 };
+    const TOTALE = Object.values(MAX_PER_RUOLO).reduce((a, b) => a + b, 0);
     const MAX_PER_CLUB = 4;
 
     // ids -> { club: quanti giocatori }

@@ -1,6 +1,7 @@
 // Formazione di giornata: 7 titolari (P, S1, S2, C1, C2, O, L) presi dalla propria rosa, un capitano
-// tra i titolari (punti x2); gli altri 5 della rosa vanno in panchina (punti al 50%).
+// tra i titolari (punti x2); gli altri della rosa (7 su 14) vanno in panchina (punti al 50%).
 (function (root) {
+    const RoseCheck = typeof module !== 'undefined' && module.exports ? require('./rose-check.js') : root.RoseCheck;
     const SLOTS = [
         { slot: 'P', role: 'P' },
         { slot: 'S1', role: 'S' },
@@ -12,12 +13,12 @@
     ];
 
     function isRosterComplete(roster) {
-        return !!roster && Array.isArray(roster.all) && roster.all.length === 12;
+        return !!roster && Array.isArray(roster.all) && roster.all.length === RoseCheck.TOTALE;
     }
 
     function checkLineup(roster, starters, captain) {
         const errors = [];
-        if (!isRosterComplete(roster)) return ['la rosa non è ancora completa: il Presidente deve inserire tutti i 12 giocatori'];
+        if (!isRosterComplete(roster)) return [`la rosa non è ancora completa: il Presidente deve inserire tutti i ${RoseCheck.TOTALE} giocatori`];
 
         const scelti = [];
         for (const { slot, role } of SLOTS) {
@@ -32,7 +33,7 @@
         return errors;
     }
 
-    // Documento da salvare: la panchina sono i 5 della rosa non schierati
+    // Documento da salvare: la panchina sono quelli della rosa non schierati
     function buildLineup({ roster, starters, captain, matchday, uid }) {
         const titolari = SLOTS.map(s => starters[s.slot]);
         return {
