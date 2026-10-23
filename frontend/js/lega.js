@@ -35,14 +35,17 @@ async function selectLeague(id) {
     state.rosters = {};
     state.standings = {};
     state.scores = [];
+    state.schedule = null;
     if (state.league) {
         saveSelectedLeague(id);
-        const [members, rosters, standings, scores] = await Promise.all([
+        const [members, rosters, standings, scores, schedule] = await Promise.all([
             db.collection(`leagues/${id}/members`).get(),
             db.collection(`leagues/${id}/rosters`).get(),
             db.collection(`leagues/${id}/standings`).get(),
             db.collection(`leagues/${id}/scores`).get(),
+            db.doc(`leagues/${id}/schedule/main`).get(),
         ]);
+        state.schedule = schedule.exists ? schedule.data() : null;
         state.members = members.docs
             .map(d => ({ uid: d.id, ...d.data() }))
             .sort((a, b) => a.teamName.localeCompare(b.teamName, 'it'));
@@ -75,9 +78,16 @@ function renderLeague() {
     document.getElementById('leagueMeta').textContent = `${modalita} · ${crediti} · dalla giornata ${l.settings?.startMatchday ?? 1}`;
     document.getElementById('leagueCodeDisplay').textContent = l.code;
 
-    // Classifica generale: somma dei punti delle giornate calcolate
-    const ordinati = state.members.slice().sort((a, b) =>
-        (state.standings[b.uid]?.total ?? 0) - (state.standings[a.uid]?.total ?? 0) || a.teamName.localeCompare(b.teamName, 'it'));
+    // Classifica: negli scontri diretti contano i punti delle sfide, nella classifica generale i fanta-punti.
+    // A parità: fanta-punti totali, poi chi si è iscritto prima (come nel FantaLVF)
+    const scontri = l.settings?.mode === 'scontri';
+    const iscritti = state.members.map(m => ({ ...m, joinedAt: m.joinedAt?.toMillis?.() ?? 0 }));
+    const ordinati = Scontri.ordinaClassifica(iscritti, state.standings, l.settings?.mode);
+    document.getElementById('leaderboardHead').replaceChildren(el('tr', {},
+        el('th', {}, 'Pos'), el('th', {}, 'Squadra'), el('th', {}, 'Rosa'),
+        scontri ? el('th', { title: 'Vittorie, tie-break vinti e persi, sconfitte' }, 'V · TB · S') : el('th', {}, 'Ultima giornata'),
+        el('th', {}, scontri ? 'Fanta-punti' : 'Punti'),
+        scontri ? el('th', {}, 'Punti') : null));
     document.getElementById('leaderboardBody').replaceChildren(...ordinati.map((m, i) => {
         const rosa = state.rosters[m.uid]?.all?.length || 0;
         const c = state.standings[m.uid];
@@ -88,12 +98,16 @@ function renderLeague() {
                 m.uid === l.presidentUid ? el('i', { class: 'fas fa-crown president-icon', title: 'Presidente' }) : null,
                 m.uid === state.user.uid ? el('span', { class: 'admin-sub' }, ' (tu)') : null),
             el('td', {}, `${rosa}/12`),
-            el('td', {}, c?.ultima ? `${c.ultima.total.toFixed(2)} (G${c.ultima.matchday})` : '—'),
-            el('td', {}, el('strong', {}, c ? c.total.toFixed(2) : '—')));
+            scontri
+                ? el('td', {}, c ? `${c.won ?? 0} · ${c.tbWon ?? 0}/${c.tbLost ?? 0} · ${c.lost ?? 0}` : '—')
+                : el('td', {}, c?.ultima ? `${c.ultima.total.toFixed(2)} (G${c.ultima.matchday})` : '—'),
+            el('td', {}, scontri ? (c ? c.total.toFixed(2) : '—') : el('strong', {}, c ? c.total.toFixed(2) : '—')),
+            scontri ? el('td', {}, el('strong', {}, c ? String(c.points ?? 0) : '—')) : null);
     }));
     document.getElementById('leaderboardNote').textContent = Object.keys(state.standings).length
-        ? (l.settings?.mode === 'scontri' ? 'Per ora la classifica somma i punti: gli scontri diretti arrivano con il prossimo aggiornamento.' : '')
+        ? (scontri ? 'Vittoria 3 punti; a parità di fanta-punti tie-break: 2 punti a chi ha più punti in classifica generale, 1 all\'altro.' : '')
         : 'I punti compaiono dopo il calcolo della prima giornata.';
+    renderSfide();
 }
 
 function randomCode() {
@@ -177,6 +191,8 @@ async function joinLeague(e) {
         await loadMyLeagues(leagueId);
     } catch (err) {
         console.error(err);
-        status.textContent = 'Non sono riuscito a entrare nella lega, riprova.';
+        status.textContent = err.code === 'permission-denied'
+            ? 'Non puoi entrare: la lega è a scontri diretti e il calendario delle sfide è già stato generato.'
+            : 'Non sono riuscito a entrare nella lega, riprova.';
     }
 }
