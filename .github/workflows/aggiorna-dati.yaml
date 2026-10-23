@@ -1,0 +1,50 @@
+name: Aggiorna dati SuperLega
+
+# Ogni settimana scarica dal sito della Lega la proposta di listone e la salva in data/players.json.
+# Non tocca il gioco: gli admin la applicano dal pannello Admin dell'app.
+on:
+  schedule:
+    - cron: '0 5 * * 2' # martedì alle 5:00 UTC, dopo la giornata del weekend
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: aggiorna-dati
+  cancel-in-progress: false
+
+jobs:
+  listone:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Codice
+        uses: actions/checkout@v4
+
+      - name: Configura Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: backend-bot/package-lock.json
+
+      - name: Installa Dipendenze
+        working-directory: backend-bot
+        run: npm ci
+
+      - name: Scarica la proposta di listone
+        working-directory: backend-bot
+        run: npm run genera-listone
+
+      - name: Salva le differenze, se ci sono
+        run: |
+          if git diff --quiet -- data/players.json; then
+            echo "Nessuna novità nel listone." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/players.json
+          git commit -m "Proposta listone aggiornata dal sito della Lega"
+          git push
+          echo "Nuova proposta di listone salvata: da applicare dal pannello Admin." >> "$GITHUB_STEP_SUMMARY"
