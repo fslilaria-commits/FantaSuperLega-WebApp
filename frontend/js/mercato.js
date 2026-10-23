@@ -62,6 +62,7 @@
     function risolviOfferte({ offers, rosters, posizione, playersById }) {
         const lavoro = copia(rosters);
         const posseduti = new Set(Object.values(lavoro).flatMap(r => r.all || []));
+        const liberati = new Set(); // lasciati in questa assegnazione: svincolati dalla prossima finestra
         const assegnati = new Set();
         const vinte = [];
         const perse = [];
@@ -77,6 +78,7 @@
             const rosa = lavoro[o.uid];
             let motivo = null;
             if (assegnati.has(o.playerIn)) motivo = "assegnato a un'offerta più alta";
+            else if (liberati.has(o.playerIn)) motivo = 'appena lasciato da un\'altra squadra: sarà svincolato dalla prossima finestra';
             else if (posseduti.has(o.playerIn)) motivo = 'non è più svincolato';
             else if (!rosa || !(rosa[o.role] || []).includes(o.playerOut)) motivo = 'il giocatore da lasciare non è più nella rosa';
             else if (playersById[o.playerIn] && playersById[o.playerIn].role !== o.role) motivo = 'ruolo diverso';
@@ -92,7 +94,7 @@
             }
             sostituisci(rosa, o.role, o.playerOut, o.playerIn, o.valore);
             rosa.creditsLeft = (rosa.creditsLeft ?? 0) - (o.extra || 0);
-            posseduti.delete(o.playerOut);
+            liberati.add(o.playerOut);
             posseduti.add(o.playerIn);
             assegnati.add(o.playerIn);
             vinte.push(o);
@@ -147,6 +149,24 @@
         return l;
     }
 
+    // Rosa alla scadenza di una giornata e trasferimenti di prima della scadenza che valgono davvero.
+    // Si parte dalla rosa di oggi e si torna indietro nel tempo: un trasferimento vale solo se chi è arrivato
+    // è in rosa e chi è partito no, così un movimento registrato senza cambiare la rosa non tocca le formazioni.
+    // Quelli dopo la scadenza si annullano: si può calcolare (o ricalcolare) una giornata con la rosa di quel momento.
+    function rosaAllaScadenza(roster, movimenti, scadenza) {
+        const rosa = new Set(roster?.all || []);
+        let allaScadenza = null;
+        const validi = [];
+        for (const m of movimenti.slice().sort((a, b) => b.at - a.at)) {
+            if (!allaScadenza && m.at < scadenza) allaScadenza = new Set(rosa);
+            if (!rosa.has(m.playerIn) || rosa.has(m.playerOut)) continue;
+            rosa.delete(m.playerIn);
+            rosa.add(m.playerOut);
+            if (m.at < scadenza) validi.push(m);
+        }
+        return { rosa: allaScadenza || rosa, movimenti: validi.reverse() };
+    }
+
     // Crediti già impegnati nelle offerte attive di una squadra
     function creditiImpegnati(offerte, uid, tranneId) {
         return offerte
@@ -154,7 +174,7 @@
             .reduce((tot, o) => tot + (o.extra || 0), 0);
     }
 
-    const api = { ANTICIPO_OFFERTE, finestraMercato, risolviOfferte, eseguiScambio, applicaSostituzioni, creditiImpegnati };
+    const api = { ANTICIPO_OFFERTE, finestraMercato, risolviOfferte, eseguiScambio, applicaSostituzioni, rosaAllaScadenza, creditiImpegnati };
     if (typeof module !== 'undefined' && module.exports) module.exports = api;
     else root.Mercato = api;
 })(this);

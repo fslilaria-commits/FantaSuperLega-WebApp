@@ -52,7 +52,8 @@
         return Object.fromEntries(CAMPI.map(k => [k, g[k] ?? null]));
     }
 
-    const api = { confrontaCalendario };
+    // uguali serve anche fuori dal calendario (per esempio per le rose del mercato)
+    const api = { confrontaCalendario, uguali };
     if (typeof module !== 'undefined' && module.exports) module.exports = api;
     else root.CalendarioDiff = api;
 })(this);

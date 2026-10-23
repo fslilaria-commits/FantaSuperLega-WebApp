@@ -1,6 +1,7 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { MEDIA, generaCalendario, risultatiScontri, ordinaClassifica } = require('../../frontend/js/scontri.js');
+const S = require('../../frontend/js/scontri.js');
+const { MEDIA, generaCalendario, risultatiScontri, ordinaClassifica } = S;
 
 const fisso = () => 0.42; // per avere un calendario riproducibile nei test
 
@@ -89,4 +90,14 @@ test('una squadra uscita dalla lega ma presente nel calendario non blocca il cal
     assert.equal(classifica.a.tbWon, 1);
     assert.equal(classifica.uscita, undefined);
     assert.doesNotThrow(() => risultatiScontri({ rounds: { 1: [sfida('x', 'y')] }, scores: [{ uid: 'a', matchday: 1, total: 0 }], members: due }));
+});
+
+test('un calendario scritto male non blocca il calcolo', () => {
+    const rounds = { 1: [{ a: 'a', b: 'b' }, null, { a: 'a' }, 5], 2: 5, 3: [{ a: 'b', b: 'a' }] };
+    assert.deepEqual(S.sfideDi(rounds, 1), [{ a: 'a', b: 'b' }]);
+    assert.deepEqual(S.sfideDi(rounds, 2), []);
+    assert.deepEqual(S.sfideDi(undefined, 1), []);
+    const scores = [{ uid: 'a', matchday: 1, total: 50 }, { uid: 'b', matchday: 1, total: 40 }, { uid: 'a', matchday: 2, total: 1 }];
+    const { classifica } = S.risultatiScontri({ rounds, scores, members: [{ uid: 'a' }, { uid: 'b' }] });
+    assert.equal(classifica.a.points, 3);
 });
