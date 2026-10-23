@@ -63,4 +63,4 @@ Negli emulatori locali App Check resta spento.
 
 ## Facoltativo: protezione del ramo principale su GitHub
 
-Ilaria, come proprietaria della repo, può impostare in **Settings → Branches → Add rule** per `main`: "Require a pull request before merging" e "Require status checks to pass" con il controllo **Test**. Così nessuno, nemmeno per errore, può modificare il sito senza passare dai test.
+Chi è proprietario della repo su GitHub può impostare in **Settings → Branches → Add rule** per `main`: "Require a pull request before merging" e "Require status checks to pass" con il controllo **Test**. Così nessuno, nemmeno per errore, può modificare il sito senza passare dai test.

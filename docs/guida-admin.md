@@ -10,7 +10,7 @@ Questa guida spiega cosa fare ogni settimana per far girare il Fanta SuperLega e
 
 | Ruolo | Chi è | Cosa fa |
 |---|---|---|
-| **Admin** | Chi è nella collezione `admins` di Firebase (Andrea e Ilaria) | Ogni settimana applica listone, calendario e punteggi dal **pannello Admin**. Vale per tutte le leghe |
+| **Admin** | Chi è nella collezione `admins` di Firebase (chi gestisce il progetto) | Ogni settimana applica listone, calendario e punteggi dal **pannello Admin**. Vale per tutte le leghe |
 | **Presidente** | Chi ha creato una lega | Inserisce le rose dopo l'asta, genera il calendario degli scontri diretti, applica il mercato della sua lega |
 | **Partecipante** | Chi è entrato in una lega con il codice | Schiera la formazione, fa offerte e scambi |
 | **Visitatore** | Chi non ha fatto l'accesso | Vede solo la pagina di benvenuto |
@@ -116,7 +116,7 @@ Si fanno da https://console.firebase.google.com/project/fanta-superlega-734b1 co
 | Problema | Cosa fare |
 |---|---|
 | La routine dice "Tutto aggiornato" ma l'ultima giornata manca | Lo scaricamento non è ancora passato, o la Lega non ha ancora verificato i dati. Su GitHub → Actions controlla l'ultima esecuzione di "Aggiorna dati SuperLega", o lanciala a mano (**Run workflow**) |
-| Su GitHub l'aggiornamento è rosso | Il programma si ferma apposta se i dati della Lega sembrano sbagliati (squadre quasi vuote, giocatori spariti, gare mancanti). Riprova il giorno dopo con **Run workflow**; se resta rosso, avvisa Andrea |
+| Su GitHub l'aggiornamento è rosso | Il programma si ferma apposta se i dati della Lega sembrano sbagliati (squadre quasi vuote, giocatori spariti, gare mancanti). Riprova il giorno dopo con **Run workflow**; se resta rosso, avvisa chi sviluppa il progetto |
 | Nomi non trovati nel tabellino | Prima applica il listone; se restano, abbinali a mano (punto 2) |
 | Un punteggio è sbagliato | Correggi il numero (punto 2), poi **Calcola e applica**. Il ricalcolo sovrascrive il precedente e aggiorna tutte le classifiche |
 | "Permessi da admin mancanti" | Pubblica le regole (punto 6) e ricarica il sito |

@@ -57,7 +57,7 @@ I ruoli (Admin, Presidente, Partecipante, Visitatore) sono descritti in [`docs/m
 **Nominare un admin** (solo dalla console Firebase, mai dall'app):
 1. La persona fa una volta l'accesso con Google sul sito.
 2. Firebase Console → **Authentication → Utenti**: copiare il suo **UID**.
-3. Firebase Console → **Firestore Database → Dati → Avvia raccolta** (la prima volta) `admins`, ID documento = l'UID copiato, un campo qualsiasi (per esempio `nome` = `Andrea`).
+3. Firebase Console → **Firestore Database → Dati → Avvia raccolta** (la prima volta) `admins`, ID documento = l'UID copiato, un campo qualsiasi (per esempio `ruolo` = `admin`).
 4. Ricaricando il sito compare la scheda **Admin**.
 
 ## Aggiornamento di listone, calendario e tabellini
