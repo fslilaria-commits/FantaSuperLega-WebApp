@@ -55,15 +55,20 @@ async function renderField() {
 // La formazione salvata per questa giornata, oppure la precedente ancora valida come punto di partenza
 async function loadLineupForEdit(roster) {
     const base = `leagues/${state.league.id}/lineups`;
+    // Dopo un trasferimento chi arriva prende il posto di chi parte (come nel FantaLVF)
+    const mieiMovimenti = state.transfers.filter(m => m.uid === state.user.uid);
+    const aggiornata = l => Mercato.applicaSostituzioni(l, mieiMovimenti, Date.now());
     try {
         const current = await db.doc(`${base}/${state.matchday.number}_${state.user.uid}`).get();
         if (current.exists) {
-            const d = current.data();
-            return { starters: { ...d.starters }, captain: d.captain, saved: true };
+            const salvata = current.data();
+            const valida = FormazioneCheck.suggestFrom(roster, aggiornata(salvata));
+            const uguale = JSON.stringify(valida.starters) === JSON.stringify(salvata.starters) && valida.captain === salvata.captain;
+            return { ...valida, saved: uguale };
         }
         const mine = await db.collection(base).where('uid', '==', state.user.uid).get();
         const previous = mine.docs.map(d => d.data()).sort((a, b) => b.matchday - a.matchday)[0];
-        return { ...FormazioneCheck.suggestFrom(roster, previous), saved: false };
+        return { ...FormazioneCheck.suggestFrom(roster, aggiornata(previous)), saved: false };
     } catch (e) {
         console.error(e);
         return { starters: {}, captain: null, saved: false };

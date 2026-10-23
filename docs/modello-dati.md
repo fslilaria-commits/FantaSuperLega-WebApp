@@ -78,6 +78,7 @@ Il codice a 6 cifre è l'id del documento. Si legge un codice alla volta (niente
 | `settings.budget` | number | Crediti per l'asta |
 | `settings.mode` | string | `classifica` o `scontri` |
 | `settings.startMatchday` | number | Prima giornata valida |
+| `settings.marketSuspended` | bool | Mercato sospeso dal Presidente (facoltativo) |
 | `createdAt` | timestamp | |
 
 Leggibile dai membri, modificabile solo dal Presidente (che non può cedere la presidenza).
@@ -120,6 +121,30 @@ Ognuno scrive solo la propria, e solo prima di `lockAt`. I giocatori devono esse
 | `createdAt`, `createdBy` | | |
 
 Solo per le leghe `scontri`. Lo genera il Presidente prima della giornata di inizio, oppure un admin al primo calcolo se manca. Girone all'italiana ripetuto a ciclo fino all'ultima giornata; con squadre dispari entra la Squadra media, che prende la media dei punti della giornata. Una volta generato, nella lega non entra più nessuno (come nel FantaLVF).
+
+## Mercato (Modalità Leghe FantaLVF)
+
+La logica è in `frontend/js/mercato.js`. **Senza server le assegnazioni non scattano da sole: le applica il Presidente con un clic** dalla scheda Lega ("Assegna gli svincolati", "Applica gli scambi accettati").
+
+**Finestra** per la giornata *n*: apre a fine giornata *n−1* (3 ore dopo l'inizio dell'ultima partita), offerte per gli svincolati fino a 3 ore prima della scadenza di *n*, scambi fino alla scadenza. Le regole controllano che si sia dopo l'inizio della giornata *n−1* e prima delle chiusure; il Presidente può sospendere il mercato.
+
+### `leagues/{leagueId}/markets/{n}/offers/{uid}_{playerIn}` — offerte segrete
+| Campo | Tipo | Note |
+|---|---|---|
+| `uid` | string | Chi offre |
+| `playerIn` | string | Svincolato richiesto |
+| `playerOut` | string | Giocatore della propria rosa, stesso ruolo, che si lascia |
+| `role` | string | |
+| `extra` | number | Crediti in aggiunta (≥ 0) |
+| `status` | string | `active`, `withdrawn`, `won`, `lost` (+ `motivo` se persa) |
+
+L'offerta vale il valore del giocatore lasciato più i crediti. Nessuno legge le offerte degli altri prima della chiusura, nemmeno il Presidente. Vince la più alta; a parità chi è più in basso in classifica. Il nuovo arrivato prende posto e valore del giocatore lasciato più i crediti; il giocatore lasciato torna svincolato dalla finestra successiva.
+
+### `leagues/{leagueId}/trades/{tradeId}` — scambi tra squadre
+`from` offre `give` (più `extra` crediti) per `take` di `to`, stesso ruolo. Stati: `proposed` → `accepted` / `refused` / `countered` (rilancio con una controproposta) / `withdrawn`; il Presidente porta gli accettati a `executed` (o `void` se non più validi). Chi arriva prende il valore di chi parte, più i crediti per chi li paga. Li leggono solo le due squadre, il Presidente e gli admin.
+
+### `leagues/{leagueId}/transfers/{id}` — registro dei movimenti
+`tipo` (`svincolato` o `scambio`), `uid`, `playerIn`, `playerOut`, `valore`, `extra`, `matchday`, `at` (ora del server). Lo scrive il Presidente quando applica il mercato, lo legge tutta la lega. Serve anche alle formazioni: chi arriva prima della scadenza di una giornata prende il posto di chi parte, nella formazione e nel calcolo dei punteggi.
 
 ### `leagues/{leagueId}/scores/{matchday}_{uid}` e `leagues/{leagueId}/standings/{uid}`
 Punteggi di giornata e classifica. Lettura per i membri e gli admin, scrittura solo admin (calcolati dai tabellini ufficiali).
