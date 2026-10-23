@@ -26,13 +26,13 @@ const CODE = '123456';
 const future = Timestamp.fromMillis(Date.now() + 24 * 3600 * 1000);
 const past = Timestamp.fromMillis(Date.now() - 24 * 3600 * 1000);
 
-// Rosa valida: 2 P, 4 S, 3 C, 2 O, 1 L
+// Rosa valida: 2 P, 4 S, 4 C, 2 O, 2 L
 const roster = {
     P: ['p1', 'p2'],
     S: ['s1', 's2', 's3', 's4'],
-    C: ['c1', 'c2', 'c3'],
+    C: ['c1', 'c2', 'c3', 'c4'],
     O: ['o1', 'o2'],
-    L: ['l1'],
+    L: ['l1', 'l2'],
 };
 roster.all = [...roster.P, ...roster.S, ...roster.C, ...roster.O, ...roster.L];
 roster.prices = Object.fromEntries(roster.all.map(id => [id, 10]));
@@ -42,7 +42,7 @@ const lineup = (matchday, uid, overrides = {}) => ({
     uid,
     matchday,
     starters: { P: 'p1', S1: 's1', S2: 's2', C1: 'c1', C2: 'c2', O: 'o1', L: 'l1' },
-    bench: ['p2', 's3', 's4', 'c3', 'o2'],
+    bench: ['p2', 's3', 's4', 'c3', 'c4', 'o2', 'l2'],
     captain: 's1',
     savedAt: serverTimestamp(),
     ...overrides,
@@ -224,7 +224,7 @@ describe('rose', () => {
     });
 
     test('nessun giocatore ripetuto', async () => {
-        const all = [...roster.all.slice(0, 11), 'p1'];
+        const all = [...roster.P, ...roster.S, ...roster.C, 'o1', 'p1', ...roster.L];
         const dup = { ...roster, O: ['o1', 'p1'], all };
         await assertFails(setDoc(doc(as('pres'), `leagues/${LEAGUE}/rosters/anna`), dup));
     });
@@ -256,7 +256,7 @@ describe('formazioni', () => {
     });
 
     test('solo giocatori della propria rosa', async () => {
-        const bad = lineup(1, 'anna', { bench: ['p2', 's3', 's4', 'c3', 'altro'] });
+        const bad = lineup(1, 'anna', { bench: ['p2', 's3', 's4', 'c3', 'c4', 'o2', 'altro'] });
         await assertFails(setDoc(ref(as('anna'), '1_anna'), bad));
     });
 
@@ -268,7 +268,7 @@ describe('formazioni', () => {
     });
 
     test('nessun giocatore due volte', async () => {
-        const bad = lineup(1, 'anna', { bench: ['p2', 's3', 's4', 'c3', 's1'] });
+        const bad = lineup(1, 'anna', { bench: ['p2', 's3', 's4', 'c3', 'c4', 'o2', 's1'] });
         await assertFails(setDoc(ref(as('anna'), '1_anna'), bad));
     });
 

@@ -36,7 +36,7 @@ async function renderField() {
     if (!state.league) return fieldNotice('Per schierare la formazione entra in una lega dalla scheda Lega.');
     if (!state.matchday) return fieldNotice('Nessuna giornata da schierare: il calendario non è ancora stato caricato da un admin.');
     if (!FormazioneCheck.isRosterComplete(roster)) {
-        return fieldNotice(`La tua rosa ha ${roster?.all?.length || 0} giocatori su 12: il Presidente deve completarla dopo l'asta.`);
+        return fieldNotice(`La tua rosa ha ${roster?.all?.length || 0} giocatori su ${RoseCheck.TOTALE}: il Presidente deve completarla dopo l'asta.`);
     }
     fieldNotice('');
 

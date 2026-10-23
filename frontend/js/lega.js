@@ -219,7 +219,7 @@ function renderLeague() {
                 el('strong', {}, m.teamName),
                 m.uid === l.presidentUid ? el('i', { class: 'fas fa-crown president-icon', title: 'Presidente' }) : null,
                 m.uid === state.user.uid ? el('span', { class: 'admin-sub' }, ' (tu)') : null),
-            el('td', {}, `${rosa}/12`),
+            el('td', {}, `${rosa}/${RoseCheck.TOTALE}`),
             scontri
                 ? el('td', {}, c ? `${c.won ?? 0} · ${c.tbWon ?? 0}/${c.tbLost ?? 0} · ${c.lost ?? 0}` : '—')
                 : el('td', {}, c?.ultima ? `${c.ultima.total.toFixed(2)} (G${c.ultima.matchday})` : '—'),
