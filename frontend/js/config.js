@@ -13,7 +13,7 @@ const firebaseConfigured = !firebaseConfig.apiKey.startsWith('YOUR_');
 
 // Chiave Fraud Defense (ex reCAPTCHA Enterprise) per App Check, pubblica come la configurazione.
 // Vuota = App Check spento. Vale solo sul dominio fslilaria-commits.github.io; come ottenerla: docs/sicurezza.md
-const appCheckSiteKey = '';
+const appCheckSiteKey = '6Ld65fwtAAAAAFED9z41fucCMASqP3qwT8ZWj2My';
 
 // Solo per lo sviluppo: http://localhost:<porta>/frontend/?emulatori usa gli emulatori Firebase locali
 // (npm run emulatori) invece del progetto vero. Sul sito pubblicato non si attiva mai.

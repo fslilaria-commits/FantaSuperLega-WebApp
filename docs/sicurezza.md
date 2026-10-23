@@ -29,6 +29,10 @@ Restrizioni sulle API (elenco delle API consentite) non sono necessarie: la rest
 
 App Check fa sì che Firebase risponda solo alle richieste che arrivano davvero dall'app. Usa **Google Cloud Fraud Defense** (il vecchio reCAPTCHA Enterprise) con una chiave a punteggio, invisibile per chi gioca. Il reCAPTCHA v3 classico non si può più usare: Firebase non registra più app nuove con quel provider. Funziona con il piano gratuito Spark: 10.000 verifiche al mese senza costi, e con la durata del token a 1 giorno una lega tra amici ne usa poche centinaia.
 
+Stato al 23/10/2026: chiave `FantaSuperLega App Check` creata nel progetto fanta-superlega-734b1 (account andre.mariani90@gmail.com), registrata in App Check e inserita in `frontend/js/config.js`. Restano i passi 4 e 5.
+
+La console Google Cloud va aperta con l'account personale: con un account di lavoro il progetto non compare.
+
 1. **Crea la chiave** nella [console Google Cloud → Fraud Defense](https://console.cloud.google.com/security/recaptcha?project=fanta-superlega-734b1), progetto **fanta-superlega-734b1**:
    - se lo chiede, **abilita l'API** reCAPTCHA Enterprise;
    - **Crea chiave**: nome `FantaSuperLega App Check`, tipo di applicazione **Web**;
