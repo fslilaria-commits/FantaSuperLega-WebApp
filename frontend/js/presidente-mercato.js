@@ -1,5 +1,4 @@
 // Pannello mercato del Presidente: senza server le assegnazioni non scattano da sole, le applica lui con un clic
-const ORE_3 = 3 * 3600 * 1000;
 let anteprimaMercato = null; // { tipo: 'svincolati' | 'scambi', ... }
 
 document.getElementById('marketSuspendToggle').addEventListener('change', async e => {
@@ -29,9 +28,7 @@ function disegnaPannelloPresidente() {
     const azioni = el('div', { class: 'admin-actions' },
         el('button', { class: 'btn btn-secondary', onclick: preparaSvincolati }, el('i', { class: 'fas fa-gavel' }), ' Assegna gli svincolati'),
         el('button', { class: 'btn btn-secondary', onclick: preparaScambi }, el('i', { class: 'fas fa-right-left' }), ' Applica gli scambi accettati'));
-    const parti = [azioni];
-    if (anteprimaMercato) parti.push(disegnaAnteprima(anteprimaMercato));
-    body.replaceChildren(...parti);
+    riempi(body, azioni, anteprimaMercato ? disegnaAnteprima(anteprimaMercato) : null);
 }
 
 function disegnaAnteprima(a) {
@@ -48,23 +45,14 @@ function disegnaAnteprima(a) {
             ['Non più validi', a.esiti.filter(x => !x.ok), x => `${nome(x.trade.give)} per ${nome(x.trade.take)}: ${x.motivo}`],
         ];
     }
-    const wrap = el('div', { id: 'anteprimaMercato' });
-    const titolo = el('p', { class: 'admin-sub' }, a.titolo);
-    const lista = el('div');
-    for (const [t, elenco, riga] of sezioni) {
-        if (!elenco.length) continue;
-        lista.append(el('details', { class: 'admin-diff', open: true }, el('summary', {}, `${t} (${elenco.length})`), el('ul', {}, elenco.map(x => el('li', {}, riga(x))))));
-    }
-    const conferma = a.daApplicare
-        ? el('button', { class: 'btn btn-primary', onclick: applicaMercato }, el('i', { class: 'fas fa-check' }), ' Conferma e applica')
-        : null;
-    wrap.append(titolo, lista, conferma || '');
-    return wrap;
+    return el('div', { id: 'anteprimaMercato' },
+        el('p', { class: 'admin-sub' }, a.titolo),
+        listaDettagli(sezioni, Infinity),
+        a.daApplicare ? el('button', { class: 'btn btn-primary', onclick: applicaMercato }, el('i', { class: 'fas fa-check' }), ' Conferma e applica') : null);
 }
 
 function posizioniInClassifica() {
-    const iscritti = state.members.map(m => ({ ...m, joinedAt: m.joinedAt?.toMillis?.() ?? 0 }));
-    return Object.fromEntries(Scontri.ordinaClassifica(iscritti, state.standings, state.league.settings?.mode).map((m, i) => [m.uid, i]));
+    return Object.fromEntries(Scontri.ordinaClassifica(iscrittiConData(), state.standings, state.league.settings?.mode).map((m, i) => [m.uid, i]));
 }
 
 // Le finestre con le offerte già chiuse (fino a 3 giornate indietro) che hanno ancora offerte da assegnare
@@ -72,7 +60,7 @@ async function preparaSvincolati() {
     const status = document.getElementById('presidentMarketStatus');
     status.textContent = 'Cerco le offerte da assegnare…';
     const now = Date.now();
-    const chiuse = state.matchdays.filter(g => g.lockAt.getTime() - ORE_3 <= now).slice(-3).reverse();
+    const chiuse = state.matchdays.filter(g => g.lockAt.getTime() - Mercato.ANTICIPO_OFFERTE <= now).slice(-3).reverse();
     try {
         for (const g of chiuse) {
             const snap = await db.collection(`leagues/${state.league.id}/markets/${g.number}/offers`).where('status', '==', 'active').get();
@@ -88,8 +76,9 @@ async function preparaSvincolati() {
             return;
         }
         anteprimaMercato = null;
-        status.textContent = state.matchday && state.matchday.lockAt.getTime() - ORE_3 > now
-            ? `Nessuna offerta da assegnare: le offerte della finestra in corso chiudono ${formatDateTime(new Date(state.matchday.lockAt.getTime() - ORE_3))}.`
+        const chiusuraOfferte = state.matchday && new Date(state.matchday.lockAt.getTime() - Mercato.ANTICIPO_OFFERTE);
+        status.textContent = chiusuraOfferte && chiusuraOfferte.getTime() > now
+            ? `Nessuna offerta da assegnare: le offerte della finestra in corso chiudono ${formatDateTime(chiusuraOfferte)}.`
             : 'Nessuna offerta da assegnare.';
         disegnaPannelloPresidente();
     } catch (e) {
@@ -154,7 +143,7 @@ async function applicaMercato() {
 
     // Solo le rose che cambiano davvero
     for (const [uid, roster] of Object.entries(rosteNuove)) {
-        if (JSON.stringify(roster) !== JSON.stringify(state.rosters[uid])) batch.set(base.collection('rosters').doc(uid), roster);
+        if (jsonStabile(roster) !== jsonStabile(state.rosters[uid])) batch.set(base.collection('rosters').doc(uid), roster);
     }
     for (const m of movimenti) {
         batch.set(base.collection('transfers').doc(), { tipo: m.tipo, uid: m.uid, playerIn: m.playerIn, playerOut: m.playerOut, valore: m.valore, extra: m.extra, matchday, at: now });
@@ -168,6 +157,6 @@ async function applicaMercato() {
         mercatoDati.key = null;
         await selectLeague(state.league.id);
     } catch (e) {
-        status.textContent = 'Applicazione non riuscita: ' + (e.code === 'permission-denied' ? 'permessi mancanti (regole aggiornate?).' : e.message);
+        status.textContent = 'Applicazione non riuscita: ' + (e.code === 'permission-denied' ? 'permessi mancanti, o le rose sono cambiate nel frattempo: ripeti il controllo.' : e.message);
     }
 }

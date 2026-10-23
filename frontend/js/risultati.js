@@ -25,7 +25,7 @@ function renderRisultati() {
     if (avviso) return;
 
     if (!giornate.includes(risultatiScelta.matchday)) risultatiScelta = { matchday: giornate[0], uid: null };
-    select.replaceChildren(...giornate.map(n => el('option', { value: n, selected: n === risultatiScelta.matchday }, `Giornata ${n}`)));
+    riempi(select, giornate.map(n => el('option', { value: n, selected: n === risultatiScelta.matchday }, `Giornata ${n}`)));
 
     const nomi = Object.fromEntries(state.members.map(m => [m.uid, m.teamName]));
     const righe = state.scores.filter(s => s.matchday === risultatiScelta.matchday).sort((a, b) => b.total - a.total);
@@ -37,14 +37,14 @@ function renderRisultati() {
             .partite.filter(p => p.matchday === risultatiScelta.matchday)
         : [];
     sfideBox.hidden = !partite.length;
-    sfideBox.replaceChildren(...partite.map(p => el('div', { class: 'sfida' },
+    riempi(sfideBox, partite.map(p => el('div', { class: 'sfida' },
         el('span', { class: p.vincitore === p.a ? 'vincente' : null }, nomeSquadra(p.a)),
         el('strong', {}, `${p.pa.toFixed(2)} – ${p.pb.toFixed(2)}`),
         el('span', { class: p.vincitore === p.b ? 'vincente' : null }, nomeSquadra(p.b)),
         p.tiebreak ? el('small', { class: 'admin-sub' }, 'tie-break') : null)));
     if (!risultatiScelta.uid) risultatiScelta.uid = righe.find(r => r.uid === state.user.uid)?.uid || righe[0]?.uid;
 
-    document.getElementById('risultatiBody').replaceChildren(...righe.map((r, i) => el('tr', {
+    riempi(document.getElementById('risultatiBody'), righe.map((r, i) => el('tr', {
         class: r.uid === risultatiScelta.uid ? 'selected' : null,
         onclick: () => { risultatiScelta.uid = r.uid; renderRisultati(); },
         title: 'Mostra la formazione',
@@ -62,7 +62,7 @@ function renderRisultati() {
         : scelta.formazioneDellaGiornata !== scelta.matchday
             ? `Formazione non salvata per questa giornata: vale quella della giornata ${scelta.formazioneDellaGiornata}.`
             : '';
-    document.getElementById('dettaglioBody').replaceChildren(...scelta.dettaglio.map(d => {
+    riempi(document.getElementById('dettaglioBody'), scelta.dettaglio.map(d => {
         const p = state.playersById[d.id];
         const conta = d.slot === 'panchina' ? 'Panchina 50%' : d.fattore === 2 ? 'Capitano x2' : 'Titolare';
         return el('tr', { class: d.slot === 'panchina' ? 'bench-row' : null },

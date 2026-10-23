@@ -1,54 +1,44 @@
 // Pannello Admin, tabellini e punteggi: calcola i punti dei giocatori di una giornata (regole FantaLVF),
-// poi punteggi e classifiche di tutte le leghe. Usa BATCH_SIZE, renderSections e loadMetaInfo di admin.js.
+// poi punteggi e classifiche di tutte le leghe e il riepilogo stagionale dei giocatori.
+// Usa BATCH_SIZE, renderSections, loadMetaInfo e messaggioErrore di admin.js.
 const TABELLINI_URL = '../data/tabellini';
 let calcolo = null;
 
 if (auth) {
     document.getElementById('punteggiCheckBtn').addEventListener('click', checkPunteggi);
     document.getElementById('punteggiApplyBtn').addEventListener('click', applyPunteggi);
-    auth.onAuthStateChanged(user => { if (user) loadGiornateTabellini(); });
 }
 
+// Le giornate con il tabellino scaricato (admin.js la chiama solo per gli admin)
 async function loadGiornateTabellini() {
     const select = document.getElementById('punteggiGiornata');
-    try {
-        const res = await fetch(`${TABELLINI_URL}/index.json?t=${Date.now()}`, { cache: 'no-store' });
-        const { giornate } = res.ok ? await res.json() : { giornate: [] };
-        select.replaceChildren(...giornate.slice().reverse().map(n => el('option', { value: n }, `Giornata ${n}`)));
-        if (!giornate.length) select.append(el('option', { value: '' }, 'Nessun tabellino'));
-    } catch {
-        select.replaceChildren(el('option', { value: '' }, 'Nessun tabellino'));
-    }
+    const giornate = await giornateConTabellino().catch(() => []);
+    riempi(select, giornate.length
+        ? giornate.slice().reverse().map(n => el('option', { value: n }, `Giornata ${n}`))
+        : el('option', { value: '' }, 'Nessun tabellino'));
     loadMetaInfo('punteggi', 'punteggiInfo');
 }
 
-// Media stagionale dei giocatori delle squadre con la gara spostata, dalle giornate già calcolate
-async function medieGiocatori(ids, primaDi) {
-    if (!ids.length) return {};
-    const storico = Object.fromEntries(ids.map(id => [id, []]));
-    const giornate = await db.collection('matchdays').where('status', '==', 'scored').get();
-    for (const g of giornate.docs.filter(d => d.data().number < primaDi)) {
-        const stats = await g.ref.collection('stats').get();
-        for (const s of stats.docs) if (storico[s.id] && !s.data().media) storico[s.id].push(s.data());
-    }
-    return Object.fromEntries(ids.map(id => [id, Punteggi.media(storico[id])]));
-}
-
+// Restituisce { ok, nonTrovati }: la routine non applica da sola una giornata con nomi non abbinati al listone
 async function checkPunteggi() {
     const status = document.getElementById('punteggiStatus');
     const applyBtn = document.getElementById('punteggiApplyBtn');
     const numero = parseInt(document.getElementById('punteggiGiornata').value, 10);
     applyBtn.hidden = true;
     calcolo = null;
-    if (!numero) return;
+    if (!numero) return { ok: false, nonTrovati: 0 };
     status.textContent = 'Calcolo in corso…';
     try {
         const res = await fetch(`${TABELLINI_URL}/${numero}.json?t=${Date.now()}`, { cache: 'no-store' });
         if (!res.ok) throw new Error(`tabellino non trovato (HTTP ${res.status})`);
         const tabellino = await res.json();
         const listone = Object.values(state.playersById);
+
+        // Gare spostate: i giocatori delle due squadre prendono la media delle giornate precedenti
         const spostate = new Set(tabellino.matches.filter(m => m.moved).flatMap(m => [m.homeId, m.awayId]));
-        const medie = await medieGiocatori(listone.filter(p => spostate.has(p.teamId)).map(p => p.id), numero);
+        if (spostate.size) await loadStatistiche(); // il riepilogo più recente, anche se un altro admin ha appena calcolato
+        const medie = Object.fromEntries(listone.filter(p => spostate.has(p.teamId))
+            .map(p => [p.id, Statistiche.mediaPrima(state.statistiche, p.id, numero)]));
         const { punti, nonTrovati } = Punteggi.punteggiGiornata(tabellino, listone, medie);
         calcolo = { numero, punti };
 
@@ -63,20 +53,29 @@ async function checkPunteggi() {
         ]);
         applyBtn.hidden = false;
         status.textContent = nonTrovati.length ? `Attenzione: ${nonTrovati.length} nomi non trovati.` : 'Tabellino pronto da applicare.';
+        return { ok: true, nonTrovati: nonTrovati.length };
     } catch (e) {
         status.textContent = 'Calcolo non riuscito: ' + e.message;
+        return { ok: false, nonTrovati: 0 };
     }
 }
 
+// Restituisce true se la giornata è stata applicata
 async function applyPunteggi() {
-    if (!calcolo) return;
+    if (!calcolo) return false;
     const { numero, punti } = calcolo;
     const status = document.getElementById('punteggiStatus');
     const applyBtn = document.getElementById('punteggiApplyBtn');
     applyBtn.disabled = true;
     try {
-        status.textContent = 'Salvo i punteggi dei giocatori…';
+        // Prima di scrivere: la giornata deve essere nel calendario, la sua scadenza decide le sostituzioni di mercato
         const ref = db.collection('matchdays').doc(String(numero));
+        const giornata = await ref.get();
+        const lockAt = giornata.exists ? giornata.data().lockAt : null;
+        if (!lockAt?.toMillis) throw new Error(`la giornata ${numero} non è nel calendario: applica prima il calendario.`);
+        const scadenza = lockAt.toMillis();
+
+        status.textContent = 'Salvo i punteggi dei giocatori…';
         const voci = Object.entries(punti);
         for (let i = 0; i < voci.length; i += BATCH_SIZE) {
             const batch = db.batch();
@@ -88,27 +87,40 @@ async function applyPunteggi() {
             }
             await batch.commit();
         }
-        await ref.set({ status: 'scored', scoredAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+        await ref.update({ status: 'scored', scoredAt: firebase.firestore.FieldValue.serverTimestamp() });
 
         status.textContent = 'Calcolo le squadre di tutte le leghe…';
         const leghe = await db.collection('leagues').get();
-        const scadenza = (await ref.get()).data().lockAt.toMillis();
         let squadre = 0;
         for (const lega of leghe.docs) squadre += await calcolaLega(lega, numero, punti, scadenza);
 
         status.textContent = 'Aggiorno le statistiche dei giocatori…';
-        await aggiornaStatistiche();
+        await aggiornaStatistiche(numero, punti);
 
         await db.doc('meta/punteggi').set({ appliedAt: firebase.firestore.FieldValue.serverTimestamp(), appliedBy: auth.currentUser.uid, matchday: numero });
         status.textContent = `Fatto: giornata ${numero} calcolata per ${squadre} squadre in ${leghe.size} leghe.`;
         applyBtn.hidden = true;
+        calcolo = null;
         loadMetaInfo('punteggi', 'punteggiInfo');
+        await loadNextMatchday();
         if (state.league) await selectLeague(state.league.id);
+        return true;
     } catch (e) {
-        status.textContent = 'Calcolo non riuscito: ' + (e.code === 'permission-denied' ? 'permessi da admin mancanti (regole aggiornate?).' : e.message);
+        status.textContent = 'Calcolo non riuscito: ' + messaggioErrore(e);
+        return false;
     } finally {
         applyBtn.disabled = false;
     }
+}
+
+// Raggruppa i documenti per partecipante, con le date convertite in millisecondi
+function perPartecipante(snap, campoData) {
+    const gruppi = {};
+    for (const doc of snap.docs) {
+        const d = doc.data();
+        (gruppi[d.uid] = gruppi[d.uid] || []).push({ ...d, [campoData]: d[campoData]?.toMillis?.() ?? 0 });
+    }
+    return gruppi;
 }
 
 // Punteggi di giornata e classifica di una lega; restituisce quante squadre ha calcolato
@@ -120,15 +132,13 @@ async function calcolaLega(lega, numero, punti, scadenza) {
         lega.ref.collection('lineups').get(),
         lega.ref.collection('transfers').get(),
     ]);
-    const perUtente = {};
-    for (const f of formazioni.docs) (perUtente[f.data().uid] = perUtente[f.data().uid] || []).push(f.data());
-    const movimenti = {};
-    for (const t of trasferimenti.docs) (movimenti[t.data().uid] = movimenti[t.data().uid] || []).push({ ...t.data(), at: t.data().at?.toMillis?.() ?? 0 });
+    const perUtente = perPartecipante(formazioni, 'savedAt');
+    const movimenti = perPartecipante(trasferimenti, 'at');
 
     const batch = db.batch();
     for (const m of membri.docs) {
-        // Chi non ha salvato la formazione per questa giornata gioca con la sua ultima formazione
-        // Chi è arrivato col mercato prima della scadenza prende il posto di chi è partito
+        // Chi non ha salvato la formazione per questa giornata gioca con la sua ultima formazione;
+        // chi è arrivato col mercato dopo il salvataggio e prima della scadenza prende il posto di chi è partito
         const formazione = Mercato.applicaSostituzioni(Punteggi.formazionePer(numero, perUtente[m.id] || []), movimenti[m.id] || [], scadenza);
         const risultato = formazione ? Punteggi.punteggioSquadra(formazione, punti) : { totale: 0, dettaglio: [] };
         batch.set(lega.ref.collection('scores').doc(`${numero}_${m.id}`), {
@@ -149,7 +159,7 @@ async function calcolaLega(lega, numero, punti, scadenza) {
     }
 
     if (lega.data().settings?.mode === 'scontri') {
-        const iscritti = membri.docs.map(m => ({ uid: m.id, joinedAt: m.data().joinedAt?.toMillis() ?? 0 }));
+        const iscritti = membri.docs.map(m => ({ uid: m.id, joinedAt: m.data().joinedAt?.toMillis?.() ?? 0 }));
         const calendario = await calendarioScontri(lega, iscritti, inizio);
         const { classifica: scontri } = Scontri.risultatiScontri({ rounds: calendario.rounds, scores: punteggi, members: iscritti });
         for (const [uid, s] of Object.entries(scontri)) {
@@ -176,15 +186,26 @@ async function calendarioScontri(lega, iscritti, inizio) {
     return calendario;
 }
 
-// Riepilogo stagionale dei giocatori (meta/statistiche), ricostruito da tutte le giornate calcolate
-async function aggiornaStatistiche() {
-    const calcolate = await db.collection('matchdays').where('status', '==', 'scored').get();
-    const giornate = [];
-    for (const g of calcolate.docs) {
-        const stats = await g.ref.collection('stats').get();
-        giornate.push({ number: g.data().number, stats: Object.fromEntries(stats.docs.map(d => [d.id, d.data()])) });
+// Riepilogo stagionale dei giocatori (meta/statistiche): si aggiorna con la sola giornata calcolata;
+// se non c'è ancora viene ricostruito da tutte le giornate calcolate
+async function aggiornaStatistiche(numero, punti) {
+    const ref = db.doc('meta/statistiche');
+    const snap = await ref.get();
+    let players;
+    let giornate;
+    if (snap.exists) {
+        players = Statistiche.aggiornaRiepilogo(snap.data().players || {}, numero, punti);
+        giornate = [...new Set([...(snap.data().giornate || []), numero])];
+    } else {
+        const calcolate = await db.collection('matchdays').where('status', '==', 'scored').get();
+        const tutte = [];
+        for (const g of calcolate.docs) {
+            const stats = await g.ref.collection('stats').get();
+            tutte.push({ number: g.data().number, stats: Object.fromEntries(stats.docs.map(d => [d.id, d.data()])) });
+        }
+        players = Statistiche.costruisciRiepilogo(tutte);
+        giornate = tutte.map(g => g.number);
     }
-    const players = Statistiche.costruisciRiepilogo(giornate);
-    await db.doc('meta/statistiche').set({ players, giornate: giornate.map(g => g.number).sort((a, b) => a - b), updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    await ref.set({ players, giornate: giornate.sort((a, b) => a - b), updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
     state.statistiche = players;
 }

@@ -93,7 +93,7 @@ input:focus, select:focus, button:focus-visible { outline: 2px solid var(--blue)
     display: inline-block; background: var(--blue); color: #fff; font-family: var(--font-title);
     font-size: 0.78rem; font-weight: 700; padding: 1px 6px; border-radius: 4px; min-width: 1.7rem; text-align: center;
 }
-.player-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: var(--blue-soft); flex-shrink: 0; border: 2px solid #fff; box-shadow: var(--shadow); }
+.player-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; object-position: center top; background: var(--blue-soft); flex-shrink: 0; border: 2px solid #fff; box-shadow: var(--shadow); }
 .player-row { display: flex; align-items: center; gap: 0.8rem; }
 .owner { color: var(--navy); font-weight: 700; }
 .free { color: var(--ok); font-weight: 500; }
@@ -254,7 +254,7 @@ details.admin-card > summary { cursor: pointer; font-family: var(--font-title); 
 .player-card { width: min(520px, 100%); }
 .player-head { display: flex; gap: 1rem; align-items: center; }
 .player-head h3 { margin: 0; font-size: 1.3rem; }
-.player-photo { width: 84px; height: 84px; border-radius: 50%; object-fit: cover; background: var(--blue-soft); border: 3px solid var(--orange); flex-shrink: 0; }
+.player-photo { width: 96px; height: 144px; border-radius: 12px; object-fit: contain; object-position: center top; background: #fff; border: 3px solid var(--orange); flex-shrink: 0; }
 .player-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.6rem; }
 .player-stats div { background: var(--card-2); border: 1px solid var(--line); border-radius: 8px; padding: 0.5rem; text-align: center; display: flex; flex-direction: column; }
 .player-stats strong { font-family: var(--font-title); font-size: 1.3rem; color: var(--navy); }
