@@ -12,6 +12,8 @@ const state = {
     schedule: null,     // calendario degli scontri diretti: { teams, rounds: { giornata: [{ a, b }] } }
     transfers: [],      // registro dei movimenti di mercato della lega
     matchdays: [],      // tutte le giornate del calendario
+    statistiche: {},    // playerId -> { g: { giornata: fp }, media, presenze, ultima }
+    lineupSalvata: null, // la formazione della prossima giornata è salvata?
     matchday: null,     // prossima giornata da schierare: { id, number, label, lockAt: Date, provisional }
 };
 
@@ -49,13 +51,13 @@ function initAuth() {
         document.getElementById('mainNav').hidden = !user;
 
         if (!user) {
-            Object.assign(state, { players: [], playersById: {}, leagues: [], league: null, members: [], rosters: {}, standings: {}, scores: [], schedule: null, transfers: [], matchdays: [], matchday: null });
+            Object.assign(state, { players: [], playersById: {}, leagues: [], league: null, members: [], rosters: {}, standings: {}, scores: [], schedule: null, transfers: [], matchdays: [], matchday: null, statistiche: {}, lineupSalvata: null });
             switchTab('welcome');
             return;
         }
-        if (currentTab() === 'welcome') switchTab('field');
+        if (currentTab() === 'welcome') switchTab('home');
         try {
-            await Promise.all([loadPlayers(), loadNextMatchday()]);
+            await Promise.all([loadPlayers(), loadNextMatchday(), loadStatistiche()]);
             await loadMyLeagues();
         } catch (e) {
             console.error(e);
@@ -71,6 +73,11 @@ async function loadPlayers() {
     state.players = all
         .filter(p => p.active !== false)
         .sort((a, b) => a.name.localeCompare(b.name, 'it'));
+}
+
+async function loadStatistiche() {
+    const snap = await db.doc('meta/statistiche').get();
+    state.statistiche = snap.exists ? snap.data().players || {} : {};
 }
 
 // Tutte le giornate (servono anche per la finestra di mercato) e la prossima non ancora bloccata
@@ -92,6 +99,7 @@ function refreshAll() {
     renderRisultati();
     renderMercato();
     renderPresidenteMercato();
+    renderHome();
 }
 
 function currentTab() {
