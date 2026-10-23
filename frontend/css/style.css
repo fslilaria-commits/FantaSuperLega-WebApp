@@ -146,7 +146,7 @@ details.admin-card > summary { cursor: pointer; font-family: var(--font-title); 
 .net { position: absolute; top: 18px; left: 10px; right: 10px; height: 6px; background: repeating-linear-gradient(90deg, #fff 0 6px, #cfd8ea 6px 8px); box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35); z-index: 1; }
 .starter-grid {
     position: relative; z-index: 2;
-    display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.9rem; padding: 1.4rem 0.9rem 0.9rem;
+    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.9rem; padding: 1.4rem 0.9rem 0.9rem;
     grid-template-areas:
         "s1 c1 o"
         "s2 c2 p"
@@ -158,6 +158,7 @@ details.admin-card > summary { cursor: pointer; font-family: var(--font-title); 
 .slot-card {
     background: rgba(255, 255, 255, 0.92); border: 2px dashed rgba(255, 255, 255, 0.9); border-radius: 8px; color: var(--text-sub);
     min-height: 112px; padding: 1.6rem 0.5rem 0.6rem; position: relative; cursor: pointer; transition: transform 0.15s, box-shadow 0.15s;
+    hyphens: auto; overflow-wrap: anywhere; /* nomi lunghi: vanno a capo invece di allargare la colonna sui telefoni stretti */
 }
 .slot-card:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 14px rgba(0, 0, 0, 0.18); }
 .slot-card:disabled { cursor: default; }
@@ -169,6 +170,8 @@ details.admin-card > summary { cursor: pointer; font-family: var(--font-title); 
 .player-slot-content { display: flex; flex-direction: column; align-items: center; gap: 0.25rem; text-align: center; }
 .player-slot-content strong { font-size: 0.92rem; color: var(--navy); }
 .player-slot-content small { color: var(--text-sub); font-size: 0.75rem; }
+.player-slot-text { display: flex; flex-direction: column; gap: 0.15rem; }
+.player-slot-content small.stat-line { color: var(--blue-dark); font-weight: 600; }
 .player-slot-content.empty { justify-content: center; min-height: 60px; font-family: var(--font-title); text-transform: uppercase; color: var(--blue-dark); }
 
 .field-actions { display: flex; align-items: center; gap: 0.8rem; flex-wrap: wrap; margin-bottom: 1.2rem; background: var(--card); padding: 0.8rem 1rem; border-radius: 8px; box-shadow: var(--shadow); }
@@ -176,7 +179,8 @@ details.admin-card > summary { cursor: pointer; font-family: var(--font-title); 
 
 .bench-section { background: var(--card); padding: 1rem; border-radius: 8px; box-shadow: var(--shadow); }
 .bench-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.8rem; margin-top: 0.8rem; }
-.bench-card { background: var(--card-2); border: 1px solid var(--line); border-radius: 8px; padding: 1.6rem 0.5rem 0.6rem; position: relative; }
+.bench-card { background: var(--card-2); border: 1px solid var(--line); border-radius: 8px; padding: 1.6rem 0.5rem 0.6rem; position: relative; color: var(--text); font-size: inherit; cursor: pointer; }
+.bench-card:hover { border-color: var(--blue); background: var(--blue-soft); }
 .bench-card .role-tag { position: absolute; top: 6px; left: 6px; background: var(--blue-light); }
 
 /* FINESTRE DI DIALOGO */
@@ -186,6 +190,8 @@ details.admin-card > summary { cursor: pointer; font-family: var(--font-title); 
 .picker-item { background: var(--card-2); border: 1px solid var(--line); border-radius: 8px; padding: 0.6rem; color: var(--text); cursor: pointer; text-align: left; }
 .picker-item:hover { border-color: var(--blue); background: var(--blue-soft); }
 .picker-item .player-slot-content { flex-direction: row; justify-content: flex-start; gap: 0.7rem; text-align: left; }
+.picker-row { display: flex; gap: 0.5rem; align-items: center; }
+.picker-row .picker-item { flex: 1; min-width: 0; }
 
 /* TABELLE (stile tabelle statistiche: intestazione blu, righe alternate) */
 .market-controls { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
