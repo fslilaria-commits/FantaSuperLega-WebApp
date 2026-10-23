@@ -90,7 +90,7 @@ async function renderHome() {
 
     // Prossima sfida (scontri diretti)
     if (state.league.settings?.mode === 'scontri' && state.schedule && state.matchday) {
-        const sfida = (state.schedule.rounds[state.matchday.number] || []).find(s => s.a === state.user.uid || s.b === state.user.uid);
+        const sfida = Scontri.sfideDi(state.schedule.rounds, state.matchday.number).find(s => s.a === state.user.uid || s.b === state.user.uid);
         if (sfida) {
             const avversario = sfida.a === state.user.uid ? sfida.b : sfida.a;
             lista.push(homeCard('fa-people-arrows', 'Prossima sfida', [
@@ -103,7 +103,7 @@ async function renderHome() {
     const f = finestraCorrente();
     await caricaMercatoPersonale(f);
     const offerteAttive = mercatoDati.offerte.filter(o => o.status === 'active').length;
-    const daRispondere = mercatoDati.scambiRicevuti.filter(t => t.status === 'proposed').length;
+    const daRispondere = mercatoDati.scambiRicevuti.filter(t => t.status === 'proposed' && !scaduto(t)).length;
     lista.push(homeCard('fa-store', 'Mercato', [
         el('p', {}, f.sospeso ? 'Sospeso dal Presidente' : f.offerteAperte ? `Aperto: offerte fino a ${formatDateTime(f.offerteFino)}` : f.aperto ? `Solo scambi fino a ${formatDateTime(f.chiude)}` : f.matchday ? `Chiuso: riapre ${formatDateTime(f.apre)}` : 'Chiuso'),
         el('p', { class: 'admin-sub' }, `${offerteAttive} offerte in corso`),

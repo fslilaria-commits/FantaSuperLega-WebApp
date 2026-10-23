@@ -117,3 +117,38 @@ test('crediti impegnati nelle offerte attive', () => {
     assert.equal(M.creditiImpegnati(offerte, 'u1'), 15);
     assert.equal(M.creditiImpegnati(offerte, 'u1', 'a'), 5);
 });
+
+test('chi viene lasciato torna svincolato solo dalla finestra successiva', () => {
+    // u1 vince sx lasciando s1; u2 aveva offerto meno per s1 (che al momento dell'offerta era di u1)
+    const rosters = { u1: rosa(['s1'], [10], 50), u2: rosa(['s2'], [5], 50) };
+    const offers = [
+        { id: 'o1', uid: 'u1', playerIn: 'sx', playerOut: 's1', role: 'S', extra: 5 },
+        { id: 'o2', uid: 'u2', playerIn: 's1', playerOut: 's2', role: 'S', extra: 0 },
+    ];
+    const r = M.risolviOfferte({ offers, rosters, posizione: {}, playersById: players });
+    assert.deepEqual(r.vinte.map(o => o.id), ['o1']);
+    assert.match(r.perse[0].motivo, /prossima finestra/);
+});
+
+test('rosa alla scadenza: i movimenti dopo si annullano, quelli senza un vero cambio di rosa non contano', () => {
+    const scadenza = 1000;
+    const roster = { all: ['sy', 'c1'] }; // oggi: sx è arrivato prima della scadenza, poi sy dopo
+    const movimenti = [
+        { uid: 'u1', playerIn: 'sx', playerOut: 's1', at: 500 },
+        { uid: 'u1', playerIn: 'sy', playerOut: 'sx', at: 1500 },
+        { uid: 'u1', playerIn: 'a3', playerOut: 'c1', at: 700 }, // registrato ma la rosa non è cambiata
+    ];
+    const { rosa: allaScadenza, movimenti: validi } = M.rosaAllaScadenza(roster, movimenti, scadenza);
+    assert.deepEqual([...allaScadenza].sort(), ['c1', 'sx']);
+    assert.deepEqual(validi.map(m => m.playerIn), ['sx']);
+});
+
+test('rosa alla scadenza: una catena di trasferimenti prima della scadenza si applica in ordine', () => {
+    const roster = { all: ['sy'] };
+    const movimenti = [{ playerIn: 'sx', playerOut: 's1', at: 100 }, { playerIn: 'sy', playerOut: 'sx', at: 200 }];
+    const { rosa: allaScadenza, movimenti: validi } = M.rosaAllaScadenza(roster, movimenti, 1000);
+    assert.deepEqual([...allaScadenza], ['sy']);
+    assert.deepEqual(validi.map(m => m.at), [100, 200]);
+    const lineup = { starters: { S1: 's1' }, bench: [], captain: 's1', savedAt: 50 };
+    assert.equal(M.applicaSostituzioni(lineup, validi, 1000).starters.S1, 'sy');
+});

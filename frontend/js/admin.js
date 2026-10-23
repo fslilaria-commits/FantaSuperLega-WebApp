@@ -3,7 +3,6 @@
 // Le funzioni apply* restituiscono true se l'aggiornamento è riuscito: la routine settimanale si ferma al primo errore.
 const LISTONE_URL = '../data/players.json';
 const CALENDARIO_URL = '../data/calendario.json';
-const BATCH_SIZE = 400; // Firestore accetta al massimo 500 scritture per batch
 
 let listoneDiff = null;
 let calendarioDiff = null;
