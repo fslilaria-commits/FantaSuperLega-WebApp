@@ -30,7 +30,7 @@ async function controllaFormazioneSalvata() {
 }
 
 function aggiornaPallinoCampo() {
-    const rosaCompleta = FormazioneCheck.isRosterComplete(state.rosters[state.user?.uid]);
+    const rosaCompleta = FormazioneCheck.isRosterComplete(myRoster());
     const daFare = !!state.league && !!state.matchday && rosaCompleta && state.lineupSalvata === false && state.matchday.lockAt > new Date();
     document.getElementById('fieldDot').hidden = !daFare;
 }
@@ -53,7 +53,7 @@ async function renderHome() {
     document.getElementById('homeSub').textContent = state.league ? `${state.league.name} · ${myTeamName()}` : '';
 
     if (!state.league) {
-        cards.replaceChildren(homeCard('fa-trophy', 'Inizia', el('p', {}, 'Crea una lega o entra con il codice che ti hanno mandato.'), vaiA('league', 'Vai alla Lega')));
+        riempi(cards, homeCard('fa-trophy', 'Inizia', el('p', {}, 'Crea una lega o entra con il codice che ti hanno mandato.'), vaiA('league', 'Vai alla Lega')));
         aggiornaPallinoCampo();
         return;
     }
@@ -61,7 +61,7 @@ async function renderHome() {
     await controllaFormazioneSalvata();
     aggiornaPallinoCampo();
     const lista = [];
-    const rosa = state.rosters[state.user.uid];
+    const rosa = myRoster();
 
     // Prossima giornata e formazione
     if (state.matchday) {
@@ -77,8 +77,7 @@ async function renderHome() {
     }
 
     // Classifica e ultimo punteggio
-    const iscritti = state.members.map(m => ({ ...m, joinedAt: m.joinedAt?.toMillis?.() ?? 0 }));
-    const ordine = Scontri.ordinaClassifica(iscritti, state.standings, state.league.settings?.mode);
+    const ordine = Scontri.ordinaClassifica(iscrittiConData(), state.standings, state.league.settings?.mode);
     const posizione = ordine.findIndex(m => m.uid === state.user.uid) + 1;
     const mia = state.standings[state.user.uid];
     const ultimo = state.scores.filter(s => s.uid === state.user.uid).sort((a, b) => b.matchday - a.matchday)[0];
@@ -115,7 +114,7 @@ async function renderHome() {
     const daFare = await promemoria(f);
     if (daFare.length) lista.push(homeCard('fa-bell', 'Da fare', el('ul', { class: 'todo-list' }, daFare.map(t => el('li', {}, t)))));
 
-    cards.replaceChildren(...lista);
+    riempi(cards, lista);
 
     clearInterval(homeTimer);
     homeTimer = setInterval(() => {
@@ -139,10 +138,8 @@ async function promemoria(f) {
     }
     if (!document.getElementById('adminNavBtn').hidden) {
         try {
-            const res = await fetch(`../data/tabellini/index.json?t=${Date.now()}`, { cache: 'no-store' });
-            const { giornate } = res.ok ? await res.json() : { giornate: [] };
-            const calcolate = new Set(state.matchdays.filter(g => g.status === 'scored').map(g => g.number));
-            const mancanti = giornate.filter(n => !calcolate.has(n));
+            const calcolate = giornateCalcolate();
+            const mancanti = (await giornateConTabellino()).filter(n => !calcolate.has(n));
             if (mancanti.length) voci.push(`Admin: tabellini da applicare (giornate ${mancanti.join(', ')}): Admin → Routine settimanale`);
         } catch { /* solo un promemoria */ }
     }

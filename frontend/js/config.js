@@ -11,6 +11,10 @@ const firebaseConfig = {
 
 const firebaseConfigured = !firebaseConfig.apiKey.startsWith('YOUR_');
 
+// Chiave del sito reCAPTCHA v3 per App Check (pubblica come la configurazione). Vuota = App Check spento.
+// Come ottenerla: docs/sicurezza.md
+const appCheckSiteKey = '';
+
 // Solo per lo sviluppo: http://localhost:<porta>/frontend/?emulatori usa gli emulatori Firebase locali
 // (npm run emulatori) invece del progetto vero. Sul sito pubblicato non si attiva mai.
 const useEmulators = ['localhost', '127.0.0.1'].includes(location.hostname)
@@ -22,6 +26,11 @@ if (firebaseConfigured) {
     firebase.initializeApp(useEmulators
         ? { apiKey: 'demo', authDomain: 'demo-fantasuperlega.firebaseapp.com', projectId: 'demo-fantasuperlega' }
         : firebaseConfig);
+    if (!useEmulators && appCheckSiteKey) {
+        // App Check, prima di qualsiasi altro servizio: ogni richiesta a Firebase porta la prova
+        // che arriva da questa app (reCAPTCHA v3, invisibile per chi gioca)
+        firebase.appCheck().activate(appCheckSiteKey, true);
+    }
     db = firebase.firestore();
     auth = firebase.auth();
     if (useEmulators) {

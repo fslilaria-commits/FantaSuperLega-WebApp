@@ -7,8 +7,8 @@ Fantavolley sulla SuperLega maschile, per leghe private tra amici. Le regole seg
 | Cartella | Contenuto |
 |---|---|
 | `frontend/` | App web statica (HTML, CSS, JS) con Firebase Auth e Firestore |
-| `backend-bot/` | Script Node che aggiorna il listone giocatori su Firestore |
-| `.github/workflows/` | GitHub Action che esegue lo script del bot |
+| `backend-bot/` | Script Node che scaricano dal sito della Lega listone, calendario e tabellini in `data/` (non scrivono su Firestore) |
+| `.github/workflows/` | Aggiornamento settimanale dei dati (`aggiorna-dati.yaml`) e test a ogni pull request (`test.yaml`) |
 
 ## Avviare il frontend in locale
 
@@ -93,3 +93,7 @@ Svincolati a offerta segreta e scambi tra squadre, come nella Modalità Leghe de
 ## App sul telefono
 
 Il sito si può installare come app: su Android "Aggiungi a schermata Home" / "Installa app" dal menu del browser, su iPhone Condividi → "Aggiungi alla schermata Home". Il service worker (`frontend/sw.js`) carica sempre prima la versione aggiornata dalla rete e usa la copia salvata solo senza connessione.
+
+## Sicurezza
+
+Cosa protegge già l'app e i passaggi facoltativi (chiave web limitata al sito, App Check con reCAPTCHA v3) sono in [`docs/sicurezza.md`](docs/sicurezza.md).

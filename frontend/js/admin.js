@@ -1,19 +1,23 @@
 // Pannello Admin: compare solo a chi è nella collezione `admins` (nominati dalla console Firebase).
 // Le regole Firestore bloccano comunque ogni scrittura di chi non è admin.
+// Le funzioni apply* restituiscono true se l'aggiornamento è riuscito: la routine settimanale si ferma al primo errore.
 const LISTONE_URL = '../data/players.json';
+const CALENDARIO_URL = '../data/calendario.json';
 const BATCH_SIZE = 400; // Firestore accetta al massimo 500 scritture per batch
 
 let listoneDiff = null;
+let calendarioDiff = null;
 
 if (auth) {
     auth.onAuthStateChanged(async user => {
         const isAdmin = user ? await checkAdmin(user.uid) : false;
         document.getElementById('adminNavBtn').hidden = !isAdmin;
         if (isAdmin) {
-            loadListoneInfo();
+            loadMetaInfo('listone', 'listoneInfo');
             loadMetaInfo('calendario', 'calendarioInfo');
+            loadGiornateTabellini();
         } else if (document.getElementById('tab-admin').classList.contains('active')) {
-            switchTab('field');
+            switchTab('home');
         }
     });
 
@@ -23,66 +27,73 @@ if (auth) {
     document.getElementById('calendarioApplyBtn').addEventListener('click', applyCalendario);
 }
 
+async function checkAdmin(uid) {
+    try {
+        return (await db.doc(`admins/${uid}`).get()).exists;
+    } catch {
+        return false;
+    }
+}
+
 async function loadMetaInfo(docId, elementId) {
     const info = document.getElementById(elementId);
     try {
         const snap = await db.doc(`meta/${docId}`).get();
         const appliedAt = snap.exists ? snap.data().appliedAt?.toDate() : null;
         info.textContent = 'Ultimo aggiornamento applicato: ' + (appliedAt ? appliedAt.toLocaleString('it-IT') : 'mai');
-    } catch (e) {
+    } catch {
         info.textContent = 'Ultimo aggiornamento applicato: non disponibile';
     }
 }
 
-async function checkAdmin(uid) {
-    try {
-        return (await db.doc(`admins/${uid}`).get()).exists;
-    } catch (e) {
-        return false;
-    }
+function renderSections(boxId, intro, sezioni) {
+    riempi(document.getElementById(boxId), el('p', { class: 'admin-sub' }, intro), listaDettagli(sezioni));
 }
 
-function loadListoneInfo() {
-    return loadMetaInfo('listone', 'listoneInfo');
+function messaggioErrore(e) {
+    return e.code === 'permission-denied' ? 'permessi da admin mancanti (regole aggiornate?).' : e.message;
 }
+
+async function caricaProposta(url) {
+    const res = await fetch(`${url}?t=${Date.now()}`, { cache: 'no-store' });
+    if (!res.ok) throw new Error(`proposta non trovata (HTTP ${res.status})`);
+    return res.json();
+}
+
+// --- Listone ---
 
 async function checkListone() {
     const status = document.getElementById('listoneStatus');
     const applyBtn = document.getElementById('listoneApplyBtn');
     applyBtn.hidden = true;
+    listoneDiff = null;
     status.textContent = 'Controllo in corso…';
     try {
-        const res = await fetch(`${LISTONE_URL}?t=${Date.now()}`, { cache: 'no-store' });
-        if (!res.ok) throw new Error(`proposta non trovata (HTTP ${res.status})`);
-        const proposta = await res.json();
+        const proposta = await caricaProposta(LISTONE_URL);
         const snap = await db.collection('players').get();
         const attuali = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-
         listoneDiff = ListoneDiff.confrontaListone(proposta, attuali);
-        renderListoneDiff(listoneDiff, proposta.length, attuali.length);
-
+        renderSections('listoneDiff', `Proposta: ${proposta.length} giocatori · Nel gioco: ${attuali.length}`, [
+            ['Nuovi giocatori', listoneDiff.nuovi, p => `${p.name} · ${p.team} · ${ROLE_NAMES[p.role]}`],
+            ['Trasferiti', listoneDiff.trasferiti, t => `${t.player.name}: ${t.da} → ${t.player.team}`],
+            ['Tornati in SuperLega', listoneDiff.rientrati, p => `${p.name} · ${p.team}`],
+            ['Usciti dalla SuperLega (diventano non attivi)', listoneDiff.usciti, p => `${p.name} · ${p.team}`],
+            ['Dati aggiornati (maglia, foto, nome)', listoneDiff.aggiornati, p => `${p.name} · ${p.team}`],
+            ['Ruolo diverso sul sito della Lega (non viene cambiato)', listoneDiff.ruoliDiversi,
+                r => `${r.player.name}: nel gioco ${ROLE_NAMES[r.player.role]}, per la Lega ${ROLE_NAMES[r.ruoloLega]}`],
+        ]);
         const totale = ListoneDiff.totaleModifiche(listoneDiff);
         applyBtn.hidden = totale === 0;
         status.textContent = totale === 0 ? 'Il listone è già aggiornato.' : `${totale} modifiche da applicare.`;
+        return true;
     } catch (e) {
         status.textContent = 'Controllo non riuscito: ' + e.message;
+        return false;
     }
 }
 
-function renderListoneDiff(diff, totaleProposta, totaleAttuale) {
-    renderSections('listoneDiff', `Proposta: ${totaleProposta} giocatori · Nel gioco: ${totaleAttuale}`, [
-        ['Nuovi giocatori', diff.nuovi, p => `${p.name} · ${p.team} · ${ROLE_NAMES[p.role]}`],
-        ['Trasferiti', diff.trasferiti, t => `${t.player.name}: ${t.da} → ${t.player.team}`],
-        ['Tornati in SuperLega', diff.rientrati, p => `${p.name} · ${p.team}`],
-        ['Usciti dalla SuperLega (diventano non attivi)', diff.usciti, p => `${p.name} · ${p.team}`],
-        ['Dati aggiornati (maglia, foto, nome)', diff.aggiornati, p => `${p.name} · ${p.team}`],
-        ['Ruolo diverso sul sito della Lega (non viene cambiato)', diff.ruoliDiversi,
-            r => `${r.player.name}: nel gioco ${ROLE_NAMES[r.player.role]}, per la Lega ${ROLE_NAMES[r.ruoloLega]}`],
-    ]);
-}
-
 async function applyListone() {
-    if (!listoneDiff) return;
+    if (!listoneDiff) return false;
     const status = document.getElementById('listoneStatus');
     const applyBtn = document.getElementById('listoneApplyBtn');
     const scritture = ListoneDiff.scrittureListone(listoneDiff);
@@ -101,11 +112,13 @@ async function applyListone() {
         status.textContent = `Fatto: ${scritture.length} modifiche applicate.`;
         applyBtn.hidden = true;
         listoneDiff = null;
-        loadListoneInfo();
+        loadMetaInfo('listone', 'listoneInfo');
         await loadPlayers();
         refreshAll();
+        return true;
     } catch (e) {
-        status.textContent = 'Aggiornamento non riuscito: ' + (e.code === 'permission-denied' ? 'permessi da admin mancanti.' : e.message);
+        status.textContent = 'Aggiornamento non riuscito: ' + messaggioErrore(e);
+        return false;
     } finally {
         applyBtn.disabled = false;
     }
@@ -113,75 +126,46 @@ async function applyListone() {
 
 // --- Calendario e scadenze ---
 
-const CALENDARIO_URL = '../data/calendario.json';
-let calendarioDiff = null;
-
 function formatRome(iso) {
     return iso ? new Date(iso).toLocaleString('it-IT', { timeZone: 'Europe/Rome', dateStyle: 'medium', timeStyle: 'short' }) : '—';
-}
-
-function renderSections(boxId, intro, sezioni) {
-    const box = document.getElementById(boxId);
-    box.replaceChildren();
-    const p = document.createElement('p');
-    p.className = 'admin-sub';
-    p.textContent = intro;
-    box.append(p);
-    for (const [titolo, elenco, riga] of sezioni) {
-        if (!elenco.length) continue;
-        const det = document.createElement('details');
-        det.className = 'admin-diff';
-        det.open = elenco.length <= 10;
-        const sum = document.createElement('summary');
-        sum.textContent = `${titolo} (${elenco.length})`;
-        const ul = document.createElement('ul');
-        for (const item of elenco) {
-            const li = document.createElement('li');
-            li.textContent = riga(item);
-            ul.append(li);
-        }
-        det.append(sum, ul);
-        box.append(det);
-    }
 }
 
 async function checkCalendario() {
     const status = document.getElementById('calendarioStatus');
     const applyBtn = document.getElementById('calendarioApplyBtn');
     applyBtn.hidden = true;
+    calendarioDiff = null;
     status.textContent = 'Controllo in corso…';
     try {
-        const res = await fetch(`${CALENDARIO_URL}?t=${Date.now()}`, { cache: 'no-store' });
-        if (!res.ok) throw new Error(`proposta non trovata (HTTP ${res.status})`);
-        const proposta = await res.json();
+        const proposta = await caricaProposta(CALENDARIO_URL);
         const snap = await db.collection('matchdays').get();
         const attuali = snap.docs.map(d => {
             const data = d.data();
-            return { id: d.id, ...data, lockAt: data.lockAt ? data.lockAt.toDate().toISOString() : null };
+            return { id: d.id, ...data, lockAt: data.lockAt?.toDate ? data.lockAt.toDate().toISOString() : null };
         });
-
         calendarioDiff = CalendarioDiff.confrontaCalendario(proposta, attuali, new Date());
         const spostate = proposta.flatMap(g => g.matches.filter(m => m.moved).map(m => ({ g, m })));
         renderSections('calendarioDiff', `Proposta: ${proposta.length} giornate · Nel gioco: ${attuali.length}`, [
             ['Giornate nuove', calendarioDiff.nuove, g => `${g.label}: scadenza ${formatRome(g.lockAt)}${g.provisional ? ' (provvisoria)' : ''}`],
-            ['Scadenze spostate', calendarioDiff.scadenzeSpostate, s => `${s.giornata.label}: ${formatRome(s.da)} → ${formatRome(s.giornata.lockAt)}`],
+            ['Scadenze spostate', calendarioDiff.scadenzeSpostate, x => `${x.giornata.label}: ${formatRome(x.da)} → ${formatRome(x.giornata.lockAt)}`],
             ['Giornate già bloccate: scadenza NON spostata, da verificare', calendarioDiff.scadenzeBloccate,
-                s => `${s.giornata.label}: resta ${formatRome(s.da)} (la Lega indica ${formatRome(s.giornata.lockAt)})`],
+                x => `${x.giornata.label}: resta ${formatRome(x.da)} (la Lega indica ${formatRome(x.giornata.lockAt)})`],
             ['Orari delle gare aggiornati', calendarioDiff.gareCambiate, g => g.label],
             ['Gare spostate fuori dalla loro giornata (punteggio medio)', spostate,
                 ({ g, m }) => `${g.label}: ${m.home} – ${m.away}, ${formatRome(m.start)}`],
         ]);
-
         const totale = calendarioDiff.scritture.length;
         applyBtn.hidden = totale === 0;
         status.textContent = totale === 0 ? 'Il calendario è già aggiornato.' : `${totale} giornate da aggiornare.`;
+        return true;
     } catch (e) {
         status.textContent = 'Controllo non riuscito: ' + e.message;
+        return false;
     }
 }
 
 async function applyCalendario() {
-    if (!calendarioDiff) return;
+    if (!calendarioDiff) return false;
     const status = document.getElementById('calendarioStatus');
     const applyBtn = document.getElementById('calendarioApplyBtn');
     const scritture = calendarioDiff.scritture;
@@ -202,8 +186,10 @@ async function applyCalendario() {
         loadMetaInfo('calendario', 'calendarioInfo');
         await loadNextMatchday();
         refreshAll();
+        return true;
     } catch (e) {
-        status.textContent = 'Aggiornamento non riuscito: ' + (e.code === 'permission-denied' ? 'permessi da admin mancanti.' : e.message);
+        status.textContent = 'Aggiornamento non riuscito: ' + messaggioErrore(e);
+        return false;
     } finally {
         applyBtn.disabled = false;
     }

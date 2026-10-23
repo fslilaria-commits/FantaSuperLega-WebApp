@@ -31,6 +31,11 @@ service cloud.firestore {
       return value is string && value.size() > 0 && value.size() <= maxLen;
     }
 
+    // Scadenza (blocco delle formazioni) della giornata numero
+    function scadenzaGiornata(numero) {
+      return get(/databases/$(database)/documents/matchdays/$(string(numero))).data.lockAt;
+    }
+
     // Elenco admin: ognuno può solo verificare se è admin; nessuna scrittura dall'app
     match /admins/{uid} {
       allow get: if signedIn() && uid == request.auth.uid;
@@ -43,6 +48,7 @@ service cloud.firestore {
       allow create: if signedIn()
         && uid == request.auth.uid
         && request.resource.data.keys().hasOnly(['joinedAt'])
+        && request.resource.data.joinedAt == request.time
         && existsAfter(/databases/$(database)/documents/leagues/$(leagueId)/members/$(uid));
       allow delete: if signedIn() && uid == request.auth.uid;
       allow update: if false;
@@ -55,7 +61,8 @@ service cloud.firestore {
           && isString(d.name, 80)
           && isString(d.team, 80)
           && d.role in ['P', 'S', 'C', 'O', 'L']
-          && d.active is bool;
+          && d.active is bool
+          && (!('photo' in d) || d.photo == null || (d.photo is string && d.photo.matches('^https://www[.]legavolley[.]it/.*')));
       }
 
       allow read: if signedIn();
@@ -72,7 +79,11 @@ service cloud.firestore {
     // Giornate e statistiche: gestite dagli admin
     match /matchdays/{n} {
       allow read: if signedIn();
-      allow write: if isAdmin();
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin()
+        && (resource.data.get('lockAt', null) == null
+            || request.time < resource.data.lockAt
+            || request.resource.data.get('lockAt', null) == resource.data.lockAt);
 
       match /stats/{playerId} {
         allow read: if signedIn();
@@ -113,11 +124,17 @@ service cloud.firestore {
       allow read: if isMember(leagueId) || isPresident(leagueId) || isAdmin();
       allow create: if signedIn()
         && request.resource.data.presidentUid == request.auth.uid
-        && validLeague(request.resource.data);
-      // Il Presidente cambia nome e impostazioni, non codice, presidenza o data di creazione
+        && validLeague(request.resource.data)
+        && request.resource.data.createdAt == request.time;
+      // Il Presidente cambia nome e impostazioni, non codice, presidenza o data di creazione.
+      // Giornata di inizio e tipo di lega si cambiano solo prima dell'inizio e prima del calendario delle sfide
       allow update: if isPresident(leagueId)
         && validLeague(request.resource.data)
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'settings']);
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'settings'])
+        && ((request.resource.data.settings.startMatchday == resource.data.settings.startMatchday
+             && request.resource.data.settings.mode == resource.data.settings.mode)
+            || (request.time < scadenzaGiornata(resource.data.settings.startMatchday)
+                && !exists(/databases/$(database)/documents/leagues/$(leagueId)/schedule/main)));
       allow delete: if false;
 
       match /members/{uid} {
@@ -132,6 +149,7 @@ service cloud.firestore {
         allow create: if signedIn()
           && uid == request.auth.uid
           && validMember(request.resource.data)
+          && request.resource.data.joinedAt == request.time
           && request.resource.data.code == getAfter(/databases/$(database)/documents/leagues/$(leagueId)).data.code
           && !(getAfter(/databases/$(database)/documents/leagues/$(leagueId)).data.settings.mode == 'scontri'
                && exists(/databases/$(database)/documents/leagues/$(leagueId)/schedule/main));
@@ -170,15 +188,12 @@ service cloud.firestore {
           return get(/databases/$(database)/documents/leagues/$(leagueId)/rosters/$(uid)).data;
         }
 
-        function lockAt(matchday) {
-          return get(/databases/$(database)/documents/matchdays/$(string(matchday))).data.lockAt;
-        }
-
         function validLineup(d) {
           let s = d.starters;
           let r = roster(request.auth.uid);
           let starters = [s.P, s.S1, s.S2, s.C1, s.C2, s.O, s.L];
-          return d.keys().hasOnly(['uid', 'matchday', 'starters', 'bench', 'captain'])
+          return d.keys().hasOnly(['uid', 'matchday', 'starters', 'bench', 'captain', 'savedAt'])
+            && d.savedAt == request.time
             && d.uid == request.auth.uid
             && d.matchday is int
             && lineupId == string(d.matchday) + '_' + request.auth.uid
@@ -197,34 +212,31 @@ service cloud.firestore {
 
         // La propria formazione sempre; quelle degli altri solo dopo la scadenza; gli admin per calcolare i punteggi
         allow read: if isAdmin() || (isMember(leagueId)
-          && (resource.data.uid == request.auth.uid || request.time >= lockAt(resource.data.matchday)));
+          && (resource.data.uid == request.auth.uid || request.time >= scadenzaGiornata(resource.data.matchday)));
         allow create, update: if isMember(leagueId)
           && validLineup(request.resource.data)
-          && request.time < lockAt(request.resource.data.matchday);
+          && request.time < scadenzaGiornata(request.resource.data.matchday);
         allow delete: if false;
       }
 
       // Calendario degli scontri diretti: lo genera il Presidente prima della giornata di inizio,
       // oppure un admin (anche dopo, se il Presidente se ne è dimenticato)
       match /schedule/{docId} {
-        function primaDellInizio() {
-          let inizio = league(leagueId).settings.startMatchday;
-          return request.time < get(/databases/$(database)/documents/matchdays/$(string(inizio))).data.lockAt;
+        function validSchedule(d) {
+          return docId == 'main'
+            && d.keys().hasOnly(['teams', 'rounds', 'createdAt', 'createdBy'])
+            && d.rounds is map;
         }
 
         allow read: if isMember(leagueId) || isAdmin();
-        allow create, update: if docId == 'main'
-          && request.resource.data.keys().hasOnly(['teams', 'rounds', 'createdAt', 'createdBy'])
-          && request.resource.data.rounds is map
-          && ((isPresident(leagueId) && primaDellInizio()) || isAdmin());
+        allow create: if validSchedule(request.resource.data)
+          && ((isPresident(leagueId) && request.time < scadenzaGiornata(league(leagueId).settings.startMatchday))
+              || isAdmin());
+        allow update: if isAdmin() && validSchedule(request.resource.data);
         allow delete: if false;
       }
 
       // --- Mercato (Modalità Leghe FantaLVF). Le assegnazioni le applica il Presidente con un clic ---
-
-      function scadenza(numero) {
-        return get(/databases/$(database)/documents/matchdays/$(string(numero))).data.lockAt;
-      }
 
       function rosaDi(uid) {
         return get(/databases/$(database)/documents/leagues/$(leagueId)/rosters/$(uid)).data;
@@ -235,13 +247,13 @@ service cloud.firestore {
       function finestra(numero, fino) {
         return !league(leagueId).settings.get('marketSuspended', false)
           && request.time < fino
-          && (numero == 1 || request.time >= scadenza(numero - 1));
+          && (numero == 1 || request.time >= scadenzaGiornata(numero - 1));
       }
 
       // Offerte segrete per gli svincolati: nessuno legge quelle degli altri prima della chiusura
       match /markets/{n}/offers/{offerId} {
         function chiusuraOfferte() {
-          return scadenza(int(n)) - duration.value(3, 'h');
+          return scadenzaGiornata(int(n)) - duration.value(3, 'h');
         }
 
         function validOffer(d) {
@@ -259,11 +271,14 @@ service cloud.firestore {
           && request.resource.data.uid == request.auth.uid
           && offerId == request.auth.uid + '_' + request.resource.data.playerIn
           && request.resource.data.status == 'active'
+          && request.resource.data.createdAt == request.time
+          && request.resource.data.updatedAt == request.time
           && validOffer(request.resource.data)
           && finestra(int(n), chiusuraOfferte());
         allow update: if (
             // chi ha fatto l'offerta la modifica, la ritira o la rifà finché le offerte sono aperte
             signedIn() && resource.data.uid == request.auth.uid && resource.data.status in ['active', 'withdrawn']
+            && request.resource.data.updatedAt == request.time
             && finestra(int(n), chiusuraOfferte())
             && ((request.resource.data.status == 'active'
                  && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['playerOut', 'extra', 'status', 'updatedAt'])
@@ -273,6 +288,7 @@ service cloud.firestore {
           ) || (
             // il Presidente segna l'esito dopo la chiusura
             isPresident(leagueId) && request.time >= chiusuraOfferte()
+            && request.resource.data.updatedAt == request.time
             && resource.data.status == 'active'
             && request.resource.data.status in ['won', 'lost']
             && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt', 'motivo'])
@@ -298,9 +314,11 @@ service cloud.firestore {
         allow create: if isMember(leagueId)
           && request.resource.data.from == request.auth.uid
           && request.resource.data.status == 'proposed'
+          && request.resource.data.createdAt == request.time
+          && request.resource.data.updatedAt == request.time
           && validTrade(request.resource.data)
-          && finestra(request.resource.data.matchday, scadenza(request.resource.data.matchday));
-        allow update: if (
+          && finestra(request.resource.data.matchday, scadenzaGiornata(request.resource.data.matchday));
+        allow update: if request.resource.data.updatedAt == request.time && ((
             signedIn() && resource.data.from == request.auth.uid && resource.data.status == 'proposed'
             && request.resource.data.status == 'withdrawn'
             && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt'])
@@ -310,12 +328,12 @@ service cloud.firestore {
             && request.resource.data.status in ['accepted', 'refused', 'countered']
             && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt'])
             && (request.resource.data.status != 'accepted'
-                || finestra(resource.data.matchday, scadenza(resource.data.matchday)))
+                || finestra(resource.data.matchday, scadenzaGiornata(resource.data.matchday)))
           ) || (
             isPresident(leagueId) && resource.data.status == 'accepted'
             && request.resource.data.status in ['executed', 'void']
             && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt', 'motivo'])
-          );
+          ));
         allow delete: if false;
       }
 
