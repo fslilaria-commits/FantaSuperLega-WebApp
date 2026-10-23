@@ -9,13 +9,23 @@ const firebaseConfig = {
     appId: "1:744640932398:web:6841966d19cd3158820dbf"
 };
 
-// Finché la configurazione non è compilata l'app resta offline con i dati di esempio
 const firebaseConfigured = !firebaseConfig.apiKey.startsWith('YOUR_');
+
+// Solo per lo sviluppo: http://localhost:<porta>/frontend/?emulatori usa gli emulatori Firebase locali
+// (npm run emulatori) invece del progetto vero. Sul sito pubblicato non si attiva mai.
+const useEmulators = ['localhost', '127.0.0.1'].includes(location.hostname)
+    && new URLSearchParams(location.search).has('emulatori');
 
 let db = null;
 let auth = null;
 if (firebaseConfigured) {
-    firebase.initializeApp(firebaseConfig);
+    firebase.initializeApp(useEmulators
+        ? { apiKey: 'demo', authDomain: 'demo-fantasuperlega.firebaseapp.com', projectId: 'demo-fantasuperlega' }
+        : firebaseConfig);
     db = firebase.firestore();
     auth = firebase.auth();
+    if (useEmulators) {
+        db.useEmulator('localhost', 8080);
+        auth.useEmulator('http://localhost:9099', { disableWarnings: true });
+    }
 }
