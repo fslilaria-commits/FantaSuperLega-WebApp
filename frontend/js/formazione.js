@@ -161,6 +161,8 @@ async function saveLineup() {
     try {
         await db.doc(`leagues/${state.league.id}/lineups/${state.matchday.number}_${state.user.uid}`).set(lineup);
         lineupEdit.saved = true;
+        state.lineupSalvata = true;
+        aggiornaPallinoCampo();
         drawField();
         status.textContent = `Formazione salvata alle ${new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}.`;
     } catch (e) {

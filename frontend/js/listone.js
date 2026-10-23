@@ -1,5 +1,5 @@
 // Scheda Mercato: listone con ricerca, filtro per ruolo e fanta-squadra proprietaria nella lega selezionata
-const marketFilter = { q: '', role: 'ALL', freeOnly: false };
+const marketFilter = { q: '', role: 'ALL', freeOnly: false, sort: 'nome' };
 
 document.getElementById('searchPlayer').addEventListener('input', e => {
     marketFilter.q = e.target.value.trim().toLowerCase();
@@ -14,6 +14,10 @@ document.getElementById('roleFilters').addEventListener('click', e => {
 });
 document.getElementById('freeOnly').addEventListener('change', e => {
     marketFilter.freeOnly = e.target.checked;
+    renderMarket();
+});
+document.getElementById('marketSort').addEventListener('change', e => {
+    marketFilter.sort = e.target.value;
     renderMarket();
 });
 
@@ -33,13 +37,18 @@ function renderMarket() {
         (marketFilter.role === 'ALL' || p.role === marketFilter.role)
         && (!marketFilter.q || p.name.toLowerCase().includes(marketFilter.q) || p.team.toLowerCase().includes(marketFilter.q))
         && (!marketFilter.freeOnly || !owners[p.id]));
+    const stat = id => state.statistiche[id];
+    if (marketFilter.sort === 'media') visibili.sort((a, b) => (stat(b.id)?.media ?? -999) - (stat(a.id)?.media ?? -999));
+    if (marketFilter.sort === 'ultima') visibili.sort((a, b) => (stat(b.id)?.ultima.fp ?? -999) - (stat(a.id)?.ultima.fp ?? -999));
 
     document.getElementById('marketTableBody').replaceChildren(...visibili.map(p => el('tr', {},
         el('td', {}, el('div', { class: 'player-row' },
             el('img', { src: p.photo || 'img/avatar.svg', class: 'player-avatar', alt: '', loading: 'lazy', onerror: e => { e.target.onerror = null; e.target.src = 'img/avatar.svg'; } }),
-            el('strong', {}, p.name))),
+            el('button', { class: 'link-player', onclick: () => apriGiocatore(p.id), title: 'Apri la scheda del giocatore' }, p.name))),
         el('td', {}, p.team),
         el('td', {}, el('span', { class: 'role-tag', title: ROLE_NAMES[p.role] }, p.role)),
+        el('td', { class: 'num' }, stat(p.id) ? stat(p.id).media.toFixed(2) : '—'),
+        el('td', { class: 'num' }, stat(p.id) ? stat(p.id).ultima.fp.toFixed(2) : '—'),
         el('td', {}, state.league ? (owners[p.id] ? el('span', { class: 'owner' }, owners[p.id].nome) : el('span', { class: 'free' }, 'Svincolato')) : '—'),
         el('td', {}, azioneMercato(p, owners[p.id]?.uid)),
     )));
