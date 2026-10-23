@@ -11,9 +11,9 @@ const firebaseConfig = {
 
 const firebaseConfigured = !firebaseConfig.apiKey.startsWith('YOUR_');
 
-// Chiave del sito reCAPTCHA v3 per App Check (pubblica come la configurazione). Vuota = App Check spento.
-// Vale solo sul dominio fslilaria-commits.github.io; come ottenerla o cambiarla: docs/sicurezza.md
-const appCheckSiteKey = '6Lda_PwtAAAAACq0phKN4Kyu9qi-C6hHB9J-kRvv';
+// Chiave Fraud Defense (ex reCAPTCHA Enterprise) per App Check, pubblica come la configurazione.
+// Vuota = App Check spento. Vale solo sul dominio fslilaria-commits.github.io; come ottenerla: docs/sicurezza.md
+const appCheckSiteKey = '6Ld65fwtAAAAAFED9z41fucCMASqP3qwT8ZWj2My';
 
 // Solo per lo sviluppo: http://localhost:<porta>/frontend/?emulatori usa gli emulatori Firebase locali
 // (npm run emulatori) invece del progetto vero. Sul sito pubblicato non si attiva mai.
@@ -28,8 +28,8 @@ if (firebaseConfigured) {
         : firebaseConfig);
     if (!useEmulators && appCheckSiteKey) {
         // App Check, prima di qualsiasi altro servizio: ogni richiesta a Firebase porta la prova
-        // che arriva da questa app (reCAPTCHA v3, invisibile per chi gioca)
-        firebase.appCheck().activate(appCheckSiteKey, true);
+        // che arriva da questa app (chiave a punteggio, invisibile per chi gioca)
+        firebase.appCheck().activate(new firebase.appCheck.ReCaptchaEnterpriseProvider(appCheckSiteKey), true);
     }
     db = firebase.firestore();
     auth = firebase.auth();
