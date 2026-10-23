@@ -127,11 +127,13 @@ service cloud.firestore {
         }
 
         allow read: if isMember(leagueId) || isAdmin();
-        // Si entra solo con il codice giusto, e solo per sé stessi
+        // Si entra solo con il codice giusto, e solo per sé stessi; negli scontri diretti non più dopo il calendario
         allow create: if signedIn()
           && uid == request.auth.uid
           && validMember(request.resource.data)
-          && request.resource.data.code == getAfter(/databases/$(database)/documents/leagues/$(leagueId)).data.code;
+          && request.resource.data.code == getAfter(/databases/$(database)/documents/leagues/$(leagueId)).data.code
+          && !(getAfter(/databases/$(database)/documents/leagues/$(leagueId)).data.settings.mode == 'scontri'
+               && exists(/databases/$(database)/documents/leagues/$(leagueId)/schedule/main));
         allow update: if signedIn()
           && uid == request.auth.uid
           && validMember(request.resource.data)
@@ -198,6 +200,22 @@ service cloud.firestore {
         allow create, update: if isMember(leagueId)
           && validLineup(request.resource.data)
           && request.time < lockAt(request.resource.data.matchday);
+        allow delete: if false;
+      }
+
+      // Calendario degli scontri diretti: lo genera il Presidente prima della giornata di inizio,
+      // oppure un admin (anche dopo, se il Presidente se ne è dimenticato)
+      match /schedule/{docId} {
+        function primaDellInizio() {
+          let inizio = league(leagueId).settings.startMatchday;
+          return request.time < get(/databases/$(database)/documents/matchdays/$(string(inizio))).data.lockAt;
+        }
+
+        allow read: if isMember(leagueId) || isAdmin();
+        allow create, update: if docId == 'main'
+          && request.resource.data.keys().hasOnly(['teams', 'rounds', 'createdAt', 'createdBy'])
+          && request.resource.data.rounds is map
+          && ((isPresident(leagueId) && primaDellInizio()) || isAdmin());
         allow delete: if false;
       }
 
