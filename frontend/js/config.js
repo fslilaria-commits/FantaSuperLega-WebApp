@@ -1,11 +1,12 @@
-// Sostituisci i valori sottostanti con le tue credenziali Firebase Console
+// Configurazione dell'app web del progetto Firebase fanta-superlega-734b1.
+// Questi valori sono pubblici per natura: la sicurezza la fanno le regole in firestore.rules.
 const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_PROJECT_ID.appspot.com",
-    messagingSenderId: "YOUR_SENDER_ID",
-    appId: "YOUR_APP_ID"
+    apiKey: "AIzaSyDwTmcD9I4-Yn05jvjmSb_1O4e-OClQ7NM",
+    authDomain: "fanta-superlega-734b1.firebaseapp.com",
+    projectId: "fanta-superlega-734b1",
+    storageBucket: "fanta-superlega-734b1.firebasestorage.app",
+    messagingSenderId: "744640932398",
+    appId: "1:744640932398:web:6841966d19cd3158820dbf"
 };
 
 // Finché la configurazione non è compilata l'app resta offline con i dati di esempio
