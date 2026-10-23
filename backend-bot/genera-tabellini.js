@@ -4,15 +4,10 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { scaricaCalendario } = require('./lib/calendario');
 const { urlStatistiche, parseStatistiche, parseRisultato, validiDal, checkTabellino } = require('./lib/tabellini');
+const { scaricaPagina } = require('./lib/rete');
 
 const DIR = path.join(__dirname, '..', 'data', 'tabellini');
 const GIORNI_DI_CORREZIONE = 14; // per due settimane si riscarica, nel caso la Lega corregga qualche dato
-
-async function scarica(url) {
-    const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0 (FantaSuperLega tabellini)' } });
-    if (!res.ok) throw new Error(`HTTP ${res.status} per ${url}`);
-    return res.text();
-}
 
 async function main() {
     const now = new Date();
@@ -40,7 +35,7 @@ async function main() {
         };
         for (const m of g.matches.filter(x => !x.moved)) {
             for (const [teamId, team] of [[m.homeId, m.home], [m.awayId, m.away]]) {
-                const stats = parseStatistiche(await scarica(urlStatistiche(g.legaId, teamId)));
+                const stats = parseStatistiche(await scaricaPagina(urlStatistiche(g.legaId, teamId)));
                 if (stats) tabellino.teams[teamId] = { team, ...stats };
             }
         }

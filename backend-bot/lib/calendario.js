@@ -1,5 +1,6 @@
 const cheerio = require('cheerio');
 const { ANNO, SQUADRE } = require('../../frontend/js/stagione');
+const { scaricaPagina } = require('./rete');
 
 const GIORNATE_PER_FASE = SQUADRE - 1;
 const GARE_PER_GIORNATA = SQUADRE / 2;
@@ -124,9 +125,8 @@ const URL_CALENDARIO = fase => `https://www.legavolley.it/calendario/?Anno=${ANN
 async function scaricaCalendario() {
     const giornate = [];
     for (const fase of [1, 2]) {
-        const res = await fetch(URL_CALENDARIO(fase), { headers: { 'User-Agent': 'Mozilla/5.0 (FantaSuperLega calendario)' } });
-        if (!res.ok) throw new Error(`calendario fase ${fase}: HTTP ${res.status}`);
-        giornate.push(...parseCalendario(await res.text(), fase));
+        const pagina = await scaricaPagina(URL_CALENDARIO(fase)).catch(e => { throw new Error(`calendario fase ${fase}: ${e.message}`); });
+        giornate.push(...parseCalendario(pagina, fase));
     }
     return giornate;
 }
