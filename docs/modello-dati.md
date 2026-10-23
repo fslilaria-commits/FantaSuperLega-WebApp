@@ -6,7 +6,7 @@ Le regole del gioco seguono la Modalità Leghe del [FantaLVF](https://fantaking.
 
 | Ruolo | Chi | Cosa può fare |
 |---|---|---|
-| **Admin** | Chi è nella collezione `admins` (si nomina solo dalla console Firebase) | Dati di gioco: listone, giornate e scadenze, statistiche, punteggi e classifiche. Legge tutte le leghe, ma non fa il Presidente e non schiera formazioni altrui |
+| **Admin** | Chi è nella collezione `admins` (si nomina solo dalla console Firebase) | Dati di gioco: listone, giornate e scadenze, statistiche, punteggi e classifiche. Legge tutte le leghe, comprese rose e formazioni per il calcolo dei punteggi, ma non fa il Presidente e non schiera formazioni altrui |
 | **Presidente** | Chi ha creato la lega | Impostazioni della lega e rose dopo l'asta, rimozione dei partecipanti |
 | **Partecipante** | Chi è entrato con il codice | Il proprio nome squadra e la propria formazione, solo prima della scadenza |
 | **Visitatore** | Chi non ha fatto l'accesso | Solo la schermata di benvenuto con l'invito ad accedere |
@@ -57,7 +57,7 @@ Un documento per admin, con id uguale all'uid di Firebase Authentication. Si cre
 
 Una gara giocata più di 4 giorni prima o 3 giorni dopo la data della sua giornata è **spostata** (`moved: true`): non conta per la scadenza e, come nel FantaLVF, i suoi giocatori prenderanno il punteggio medio. La scadenza di una giornata già bloccata non viene mai spostata dagli aggiornamenti.
 
-Sottocollezione `matchdays/{n}/stats/{playerId}` con le statistiche del tabellino (Fase 5). Lettura per utenti autenticati, scrittura solo admin.
+Sottocollezione `matchdays/{n}/stats/{playerId}` con le statistiche del tabellino (Fase 5). Lettura per utenti autenticati, scrittura solo admin. Dopo il calcolo contiene i fanta-punti di ogni giocatore (`fp`, voci, moltiplicatore, `media` per le gare spostate).
 
 ### `users/{uid}/leagues/{leagueId}` — le mie leghe
 Un documento (`joinedAt`) per ogni lega in cui l'utente è entrato, per ritrovarle all'accesso. Lo scrive l'utente stesso, solo insieme alla propria iscrizione alla lega; nessuno legge quelle degli altri.
