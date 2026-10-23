@@ -113,6 +113,16 @@ function renderLeague() {
     renderSfide();
 }
 
+// Perché le regole hanno rifiutato l'ingresso: chi era già entrato ed è stato tolto, o calendario delle sfide già fatto
+async function motivoIngressoNegato(leagueId) {
+    try {
+        if (leagueId && (await db.doc(`users/${state.user.uid}/leagues/${leagueId}`).get()).exists) {
+            return 'Eri già entrato in questa lega e sei stato tolto: per rientrare chiedi al Presidente di scrivere all\'admin.';
+        }
+    } catch { /* si usa il messaggio generico */ }
+    return 'Non puoi entrare: la lega è a scontri diretti e il calendario delle sfide è già stato generato.';
+}
+
 function randomCode() {
     return String(Math.floor(100000 + Math.random() * 900000));
 }
@@ -171,6 +181,7 @@ async function joinLeague(e) {
     }
 
     status.textContent = 'Cerco la lega…';
+    let legaTrovata = null; // per spiegare un eventuale rifiuto delle regole
     try {
         const codeDoc = await db.doc(`leagueCodes/${code}`).get();
         if (!codeDoc.exists) {
@@ -178,6 +189,7 @@ async function joinLeague(e) {
             return;
         }
         const leagueId = codeDoc.data().leagueId;
+        legaTrovata = leagueId;
         if (state.leagues.some(l => l.id === leagueId)) {
             status.textContent = 'Sei già in questa lega.';
             await selectLeague(leagueId);
@@ -195,7 +207,7 @@ async function joinLeague(e) {
     } catch (err) {
         console.error(err);
         status.textContent = err.code === 'permission-denied'
-            ? 'Non puoi entrare: la lega è a scontri diretti e il calendario delle sfide è già stato generato.'
+            ? await motivoIngressoNegato(legaTrovata)
             : 'Non sono riuscito a entrare nella lega, riprova.';
     }
 }

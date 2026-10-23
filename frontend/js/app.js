@@ -25,6 +25,7 @@ const STATO_VUOTO = {
 const ROLE_NAMES = { P: 'Palleggiatore', S: 'Schiacciatore', C: 'Centrale', O: 'Opposto', L: 'Libero' };
 const TABELLINI_INDICE = '../data/tabellini/index.json';
 const AVATAR = 'img/avatar.svg';
+const BATCH_SIZE = 400; // Firestore accetta al massimo 500 scritture per batch
 
 document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.nav-btn[data-tab]').forEach(b => b.addEventListener('click', () => switchTab(b.dataset.tab)));
@@ -168,13 +169,6 @@ function listaDettagli(sezioni, apriFinoA = 10) {
         el('details', { class: 'admin-diff', open: elenco.length <= apriFinoA },
             el('summary', {}, `${titolo} (${elenco.length})`),
             el('ul', {}, elenco.map(item => el('li', {}, riga(item))))));
-}
-
-// JSON con le chiavi in ordine: due documenti uguali danno lo stesso testo qualunque sia l'ordine delle chiavi
-function jsonStabile(valore) {
-    return JSON.stringify(valore, (k, v) => (v && typeof v === 'object' && !Array.isArray(v)
-        ? Object.fromEntries(Object.keys(v).sort().map(c => [c, v[c]]))
-        : v));
 }
 
 function formatDateTime(date) {

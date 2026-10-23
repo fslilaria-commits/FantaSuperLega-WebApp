@@ -113,3 +113,12 @@ test('senza formazione per la giornata vale l\'ultima precedente', () => {
     assert.equal(P.formazionePer(7, f).id, 'g7');
     assert.equal(P.formazionePer(1, f), null);
 });
+
+test('chi alla scadenza non era più nella rosa resta in formazione ma prende 0', () => {
+    const lineup = { starters: { P: 'p', S1: 's1' }, bench: ['b1'], captain: 's1' };
+    const punti = { p: { fp: 10 }, s1: { fp: 20 }, b1: { fp: 8 } };
+    const r = P.punteggioSquadra(lineup, punti, new Set(['p', 'b1']));
+    assert.equal(r.totale, 14);
+    assert.equal(r.dettaglio.find(d => d.id === 's1').fuoriRosa, true);
+    assert.equal(P.punteggioSquadra(lineup, punti).totale, 54, 'senza rosa conta tutto come prima');
+});
