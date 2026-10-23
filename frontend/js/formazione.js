@@ -1,0 +1,166 @@
+// Scheda Campo: formazione della prossima giornata, capitano e blocco alla scadenza
+const lineupEdit = { key: null, starters: {}, captain: null, saved: false };
+let pickerSlot = null;
+
+document.getElementById('saveLineupBtn').addEventListener('click', saveLineup);
+document.getElementById('captainSelect').addEventListener('change', e => {
+    lineupEdit.captain = e.target.value || null;
+    lineupEdit.saved = false;
+    drawField();
+});
+document.getElementById('pickerCloseBtn').addEventListener('click', closePicker);
+document.getElementById('slotPicker').addEventListener('click', e => {
+    if (e.target.id === 'slotPicker') closePicker();
+});
+
+function myRoster() {
+    return state.rosters[state.user?.uid];
+}
+
+function isLocked() {
+    return !state.matchday || new Date() >= state.matchday.lockAt;
+}
+
+function fieldNotice(text) {
+    const notice = document.getElementById('fieldNotice');
+    notice.textContent = text || '';
+    notice.hidden = !text;
+    document.getElementById('fieldBody').hidden = !!text;
+}
+
+async function renderField() {
+    const roster = myRoster();
+    document.getElementById('squadNameDisplay').textContent = myTeamName() || 'La mia formazione';
+    document.getElementById('budgetDisplay').textContent = roster ? `${roster.creditsLeft}` : '—';
+    const badge = document.getElementById('deadlineBadge');
+    badge.textContent = state.matchday
+        ? `${state.matchday.label} · si blocca ${formatDateTime(state.matchday.lockAt)}${state.matchday.provisional ? ' (orario provvisorio)' : ''}`
+        : '';
+
+    if (!state.league) return fieldNotice('Per schierare la formazione entra in una lega dalla scheda Lega.');
+    if (!state.matchday) return fieldNotice('Nessuna giornata da schierare: il calendario non è ancora stato caricato da un admin.');
+    if (!FormazioneCheck.isRosterComplete(roster)) {
+        return fieldNotice(`La tua rosa ha ${roster?.all?.length || 0} giocatori su 12: il Presidente deve completarla dopo l'asta.`);
+    }
+    fieldNotice('');
+
+    const key = `${state.league.id}_${state.matchday.number}_${state.user.uid}`;
+    if (lineupEdit.key !== key) {
+        lineupEdit.key = key;
+        Object.assign(lineupEdit, await loadLineupForEdit(roster));
+    }
+    drawField();
+}
+
+// La formazione salvata per questa giornata, oppure la precedente ancora valida come punto di partenza
+async function loadLineupForEdit(roster) {
+    const base = `leagues/${state.league.id}/lineups`;
+    try {
+        const current = await db.doc(`${base}/${state.matchday.number}_${state.user.uid}`).get();
+        if (current.exists) {
+            const d = current.data();
+            return { starters: { ...d.starters }, captain: d.captain, saved: true };
+        }
+        const mine = await db.collection(base).where('uid', '==', state.user.uid).get();
+        const previous = mine.docs.map(d => d.data()).sort((a, b) => b.matchday - a.matchday)[0];
+        return { ...FormazioneCheck.suggestFrom(roster, previous), saved: false };
+    } catch (e) {
+        console.error(e);
+        return { starters: {}, captain: null, saved: false };
+    }
+}
+
+function playerCard(id, extra = {}) {
+    const p = state.playersById[id];
+    if (!p) return el('div', { class: 'player-slot-content empty' }, extra.placeholder || 'Scegli');
+    return el('div', { class: 'player-slot-content' },
+        el('img', { src: p.photo || 'img/avatar.svg', class: 'player-avatar', alt: '', onerror: e => { e.target.onerror = null; e.target.src = 'img/avatar.svg'; } }),
+        el('strong', {}, p.name),
+        el('small', {}, p.team));
+}
+
+function drawField() {
+    const roster = myRoster();
+    const locked = isLocked();
+
+    document.getElementById('starterGrid').replaceChildren(...FormazioneCheck.SLOTS.map(({ slot, role }) => {
+        const id = lineupEdit.starters[slot];
+        return el('button', {
+            class: `slot-card slot-${slot.toLowerCase()}${id ? ' filled' : ''}${id && id === lineupEdit.captain ? ' captain' : ''}`,
+            disabled: locked,
+            title: locked ? 'Giornata bloccata' : `Scegli ${ROLE_NAMES[role].toLowerCase()}`,
+            onclick: () => openPicker(slot, role),
+        },
+        el('span', { class: 'role-tag' }, slot),
+        id && id === lineupEdit.captain ? el('span', { class: 'captain-tag', title: 'Capitano' }, 'C') : null,
+        playerCard(id, { placeholder: ROLE_NAMES[role] }));
+    }));
+
+    const titolari = Object.values(lineupEdit.starters).filter(Boolean);
+    const captainSelect = document.getElementById('captainSelect');
+    captainSelect.replaceChildren(el('option', { value: '' }, 'Scegli il capitano…'),
+        ...titolari.map(id => el('option', { value: id, selected: id === lineupEdit.captain }, state.playersById[id]?.name || id)));
+    captainSelect.disabled = locked;
+
+    document.getElementById('benchGrid').replaceChildren(...roster.all
+        .filter(id => !titolari.includes(id))
+        .map(id => el('div', { class: 'bench-card' },
+            el('span', { class: 'role-tag' }, state.playersById[id]?.role || '?'),
+            playerCard(id))));
+
+    const errors = FormazioneCheck.checkLineup(roster, lineupEdit.starters, lineupEdit.captain);
+    const saveBtn = document.getElementById('saveLineupBtn');
+    saveBtn.disabled = locked || errors.length > 0;
+    const status = document.getElementById('lineupStatus');
+    if (locked) status.textContent = lineupEdit.saved ? 'Giornata bloccata: questa è la formazione in gara.' : 'Giornata bloccata.';
+    else if (errors.length) status.textContent = errors[0];
+    else status.textContent = lineupEdit.saved ? 'Formazione salvata.' : 'Formazione pronta: ricordati di salvarla.';
+}
+
+function openPicker(slot, role) {
+    if (isLocked()) return;
+    pickerSlot = slot;
+    const roster = myRoster();
+    const usati = Object.entries(lineupEdit.starters).filter(([s]) => s !== slot).map(([, id]) => id);
+    document.getElementById('pickerTitle').textContent = `${slot}: scegli ${ROLE_NAMES[role].toLowerCase()}`;
+    document.getElementById('pickerList').replaceChildren(...(roster[role] || [])
+        .filter(id => !usati.includes(id))
+        .map(id => el('button', { class: 'picker-item', onclick: () => choose(id) }, playerCard(id))));
+    document.getElementById('slotPicker').hidden = false;
+}
+
+function choose(id) {
+    lineupEdit.starters[pickerSlot] = id;
+    lineupEdit.saved = false;
+    closePicker();
+    drawField();
+}
+
+function closePicker() {
+    document.getElementById('slotPicker').hidden = true;
+    pickerSlot = null;
+}
+
+async function saveLineup() {
+    const roster = myRoster();
+    const status = document.getElementById('lineupStatus');
+    const errors = FormazioneCheck.checkLineup(roster, lineupEdit.starters, lineupEdit.captain);
+    if (errors.length) {
+        status.textContent = errors[0];
+        return;
+    }
+    const lineup = FormazioneCheck.buildLineup({
+        roster, starters: lineupEdit.starters, captain: lineupEdit.captain,
+        matchday: state.matchday.number, uid: state.user.uid,
+    });
+    try {
+        await db.doc(`leagues/${state.league.id}/lineups/${state.matchday.number}_${state.user.uid}`).set(lineup);
+        lineupEdit.saved = true;
+        drawField();
+        status.textContent = `Formazione salvata alle ${new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}.`;
+    } catch (e) {
+        status.textContent = e.code === 'permission-denied'
+            ? 'Salvataggio rifiutato: la giornata potrebbe essere già bloccata.'
+            : 'Salvataggio non riuscito: ' + e.message;
+    }
+}

@@ -21,7 +21,7 @@
             <i class="fas fa-volleyball logo-icon"></i>
             <span>FANTA<b>SUPERLEGA</b> <small>26/27</small></span>
         </div>
-        <nav class="nav-links">
+        <nav class="nav-links" id="mainNav" hidden>
             <button class="nav-btn active" data-tab="field" onclick="switchTab('field')"><i class="fas fa-person-running"></i> Campo</button>
             <button class="nav-btn" data-tab="market" onclick="switchTab('market')"><i class="fas fa-store"></i> Mercato</button>
             <button class="nav-btn" data-tab="league" onclick="switchTab('league')"><i class="fas fa-trophy"></i> Lega</button>
@@ -36,79 +36,71 @@
     </header>
 
     <main class="container">
-        <!-- SEZIONE CAMPO DA GIOCO -->
-        <section id="tab-field" class="tab-content active">
+        <!-- BENVENUTO: l'unica schermata per chi non ha fatto l'accesso -->
+        <section id="tab-welcome" class="tab-content active">
+            <div class="welcome">
+                <i class="fas fa-volleyball welcome-icon"></i>
+                <h2>Il fantavolley della SuperLega 2026/27</h2>
+                <p>Crea una lega con i tuoi amici, fate l'asta e schierate ogni giornata la vostra formazione: i punti arrivano dai tabellini ufficiali della Lega.</p>
+                <button class="btn btn-primary" id="welcomeLoginBtn"><i class="fab fa-google"></i> Accedi con Google</button>
+            </div>
+        </section>
+
+        <!-- FORMAZIONE DI GIORNATA -->
+        <section id="tab-field" class="tab-content">
             <div class="squad-header">
                 <div class="squad-info">
-                    <h2 id="squadNameDisplay">La Mia Rosa</h2>
-                    <span class="deadline-badge"><i class="fas fa-clock"></i> Cambio rosa entro sabato 18:00</span>
+                    <h2 id="squadNameDisplay">La mia formazione</h2>
+                    <span class="deadline-badge" id="deadlineBadge"></span>
                 </div>
                 <div class="budget-card">
-                    <span>Budget Residuo</span>
-                    <strong id="budgetDisplay">1000 G</strong>
+                    <span>Crediti residui</span>
+                    <strong id="budgetDisplay">—</strong>
+                </div>
+            </div>
+            <p class="notice" id="fieldNotice" hidden></p>
+
+            <div id="fieldBody" hidden>
+                <div class="volleyball-court">
+                    <div class="net"></div>
+                    <div class="starter-grid" id="starterGrid"></div>
+                </div>
+
+                <div class="field-actions">
+                    <label for="captainSelect"><i class="fas fa-copyright"></i> Capitano (punti x2)</label>
+                    <select id="captainSelect"></select>
+                    <button class="btn btn-primary" id="saveLineupBtn"><i class="fas fa-floppy-disk"></i> Salva formazione</button>
+                    <span class="admin-sub" id="lineupStatus"></span>
+                </div>
+
+                <div class="bench-section">
+                    <h3><i class="fas fa-couch"></i> Panchina (punti al 50%)</h3>
+                    <div class="bench-grid" id="benchGrid"></div>
                 </div>
             </div>
 
-            <!-- CAMPO DA PALLAVOLO -->
-            <div class="volleyball-court">
-                <div class="net"></div>
-                <div class="attack-line line-top"></div>
-                <div class="attack-line line-bottom"></div>
-
-                <!-- Titolari in Posizione Tattica -->
-                <div class="starter-grid">
-                    <div class="slot-card" id="slot-P" onclick="openSlotPicker('P')">
-                        <span class="role-tag">P</span>
-                        <div class="player-slot-content">Palleggiatore</div>
-                    </div>
-                    <div class="slot-card" id="slot-S1" onclick="openSlotPicker('S')">
-                        <span class="role-tag">S1</span>
-                        <div class="player-slot-content">Schiacciatore 1</div>
-                    </div>
-                    <div class="slot-card" id="slot-S2" onclick="openSlotPicker('S')">
-                        <span class="role-tag">S2</span>
-                        <div class="player-slot-content">Schiacciatore 2</div>
-                    </div>
-                    <div class="slot-card" id="slot-C1" onclick="openSlotPicker('C')">
-                        <span class="role-tag">C1</span>
-                        <div class="player-slot-content">Centrale 1</div>
-                    </div>
-                    <div class="slot-card" id="slot-C2" onclick="openSlotPicker('C')">
-                        <span class="role-tag">C2</span>
-                        <div class="player-slot-content">Centrale 2</div>
-                    </div>
-                    <div class="slot-card" id="slot-O" onclick="openSlotPicker('O')">
-                        <span class="role-tag">O</span>
-                        <div class="player-slot-content">Opposto</div>
-                    </div>
-                    <div class="slot-card" id="slot-L" onclick="openSlotPicker('L')">
-                        <span class="role-tag">L</span>
-                        <div class="player-slot-content">Libero</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- PANCHINA -->
-            <div class="bench-section">
-                <h3><i class="fas fa-couch"></i> Panchina (Punti x0.5)</h3>
-                <div class="bench-grid" id="benchGrid">
-                    <!-- Generato via JS: 5 slot panchina -->
+            <div class="picker" id="slotPicker" hidden>
+                <div class="picker-box">
+                    <h3 id="pickerTitle">Scegli il giocatore</h3>
+                    <div class="picker-list" id="pickerList"></div>
+                    <button class="btn btn-secondary" id="pickerCloseBtn">Annulla</button>
                 </div>
             </div>
         </section>
 
-        <!-- SEZIONE MERCATO -->
+        <!-- LISTONE -->
         <section id="tab-market" class="tab-content">
             <div class="market-controls">
-                <input type="text" id="searchPlayer" placeholder="Cerca giocatore o squadra..." oninput="filterMarket()">
-                <div class="role-filters">
-                    <button class="filter-chip active" onclick="setRoleFilter('ALL')">Tutti</button>
-                    <button class="filter-chip" onclick="setRoleFilter('P')">P</button>
-                    <button class="filter-chip" onclick="setRoleFilter('S')">S</button>
-                    <button class="filter-chip" onclick="setRoleFilter('C')">C</button>
-                    <button class="filter-chip" onclick="setRoleFilter('O')">O</button>
-                    <button class="filter-chip" onclick="setRoleFilter('L')">L</button>
+                <input type="search" id="searchPlayer" placeholder="Cerca giocatore o squadra…">
+                <div class="role-filters" id="roleFilters">
+                    <button class="filter-chip active" data-role="ALL">Tutti</button>
+                    <button class="filter-chip" data-role="P">P</button>
+                    <button class="filter-chip" data-role="S">S</button>
+                    <button class="filter-chip" data-role="C">C</button>
+                    <button class="filter-chip" data-role="O">O</button>
+                    <button class="filter-chip" data-role="L">L</button>
                 </div>
+                <label class="check-inline"><input type="checkbox" id="freeOnly"> Solo svincolati</label>
             </div>
             <div class="market-table-wrapper">
                 <table class="market-table">
@@ -117,58 +109,93 @@
                             <th>Atleta</th>
                             <th>Squadra</th>
                             <th>Ruolo</th>
-                            <th>Prezzo</th>
-                            <th>Azione</th>
+                            <th>Fanta-squadra</th>
                         </tr>
                     </thead>
-                    <tbody id="marketTableBody">
-                        <!-- Giocatori caricati via JS -->
-                    </tbody>
+                    <tbody id="marketTableBody"></tbody>
                 </table>
             </div>
+            <p class="admin-sub" id="marketCount"></p>
         </section>
 
-        <!-- SEZIONE LEGA MULTIPLAYER -->
+        <!-- LEGA -->
         <section id="tab-league" class="tab-content">
-            <div class="league-box" id="leagueJoinBox">
-                <h2>Partecipa o Crea una Lega</h2>
-                <div class="form-group">
-                    <input type="text" id="squadInputName" placeholder="Nome della tua Squadra">
+            <div class="league-select" id="leagueSelectBox" hidden>
+                <label for="leagueSelect">Lega</label>
+                <select id="leagueSelect"></select>
+            </div>
+
+            <div id="leagueDashboard" hidden>
+                <div class="league-header">
+                    <div>
+                        <h2 id="leagueTitle">Lega</h2>
+                        <p class="admin-sub" id="leagueMeta"></p>
+                    </div>
+                    <div class="code-box">Codice invito: <strong id="leagueCodeDisplay">------</strong></div>
                 </div>
-                <div class="actions-row">
-                    <button class="btn btn-primary" onclick="createNewLeague()">Crea Nuova Lega</button>
-                    <div class="join-inline">
-                        <input type="text" id="leagueCodeInput" placeholder="Codice 6 Cifre">
-                        <button class="btn btn-secondary" onclick="joinLeague()">Unisciti</button>
+
+                <div class="market-table-wrapper">
+                    <table class="market-table">
+                        <thead>
+                            <tr>
+                                <th>Pos</th>
+                                <th>Squadra</th>
+                                <th>Rosa</th>
+                                <th>Punti</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leaderboardBody"></tbody>
+                    </table>
+                </div>
+                <p class="admin-sub">I punti arriveranno con il calcolo delle giornate.</p>
+
+                <div class="admin-card" id="presidentBox" hidden>
+                    <div class="admin-card-head">
+                        <div>
+                            <h3><i class="fas fa-crown"></i> Rose della lega (Presidente)</h3>
+                            <p class="admin-sub">Dopo l'asta inserisci i giocatori e il prezzo pagato. Puoi salvare anche a rosa incompleta.</p>
+                        </div>
+                        <select id="rosterMemberSelect" aria-label="Squadra da modificare"></select>
+                    </div>
+                    <div id="rosterEditor"></div>
+                    <div class="admin-actions">
+                        <button class="btn btn-primary" id="saveRosterBtn"><i class="fas fa-floppy-disk"></i> Salva rosa</button>
+                        <span class="admin-sub" id="rosterStatus"></span>
                     </div>
                 </div>
             </div>
 
-            <div class="league-dashboard hidden" id="leagueDashboard">
-                <div class="league-header">
-                    <h2 id="leagueTitle">Lega Superlega</h2>
-                    <div class="code-box">Codice Invito: <strong id="leagueCodeDisplay">------</strong></div>
+            <details class="admin-card" id="joinCreateBox">
+                <summary><strong>Crea una lega o unisciti con un codice</strong></summary>
+                <div class="join-create">
+                    <form id="createLeagueForm" class="form-col">
+                        <h3>Crea una lega</h3>
+                        <input type="text" id="newLeagueName" placeholder="Nome della lega" maxlength="60" required>
+                        <input type="text" id="newLeagueTeam" placeholder="Nome della tua squadra" maxlength="40" required>
+                        <label class="admin-sub" for="newLeagueBudget">Crediti per l'asta (0 = senza crediti)</label>
+                        <input type="number" id="newLeagueBudget" min="0" max="10000" value="300" required>
+                        <label class="admin-sub" for="newLeagueMode">Tipo di competizione</label>
+                        <select id="newLeagueMode">
+                            <option value="classifica">Classifica generale</option>
+                            <option value="scontri">Scontri diretti</option>
+                        </select>
+                        <button class="btn btn-primary" type="submit">Crea lega</button>
+                    </form>
+                    <form id="joinLeagueForm" class="form-col">
+                        <h3>Unisciti</h3>
+                        <input type="text" id="joinCode" placeholder="Codice a 6 cifre" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required>
+                        <input type="text" id="joinTeam" placeholder="Nome della tua squadra" maxlength="40" required>
+                        <button class="btn btn-secondary" type="submit">Unisciti</button>
+                    </form>
                 </div>
-                <table class="leaderboard-table">
-                    <thead>
-                        <tr>
-                            <th>Pos</th>
-                            <th>Squadra</th>
-                            <th>Utente</th>
-                            <th>Ultima Giornata</th>
-                            <th>Punti Totali</th>
-                        </tr>
-                    </thead>
-                    <tbody id="leaderboardBody"></tbody>
-                </table>
-            </div>
+                <p class="admin-sub" id="leagueFormStatus"></p>
+            </details>
         </section>
 
-        <!-- SEZIONE TABELLINI & CALCOLATORE -->
+        <!-- TABELLINI -->
         <section id="tab-calculator" class="tab-content">
-            <h2>Calcolatore Giornata & Tabellini</h2>
-            <p>Inserisci i tabellini ufficiali o simula la giornata per calcolare i punteggi di tutte le squadre della lega.</p>
-            <button class="btn btn-primary" onclick="simulateMatchday()">Calcola e Sincronizza Giornata</button>
+            <h2>Tabellini e punteggi</h2>
+            <p class="admin-sub">In arrivo: i punteggi di ogni giornata calcolati dai tabellini ufficiali della Lega, con le regole del FantaLVF.</p>
         </section>
 
         <!-- SEZIONE ADMIN: visibile solo agli admin (le regole Firestore bloccano comunque chi non lo è) -->
@@ -190,13 +217,35 @@
                     <span class="admin-sub" id="listoneStatus"></span>
                 </div>
             </div>
+
+            <div class="admin-card">
+                <div class="admin-card-head">
+                    <div>
+                        <h3>Calendario e scadenze</h3>
+                        <p class="admin-sub" id="calendarioInfo">Ultimo aggiornamento applicato: —</p>
+                    </div>
+                    <button class="btn btn-secondary" id="calendarioCheckBtn"><i class="fas fa-magnifying-glass"></i> Controlla proposta</button>
+                </div>
+                <p class="admin-sub">La formazione si blocca 1 minuto prima della prima gara di ogni giornata. Le gare spostate lontano dalla loro giornata non contano per la scadenza. La scadenza di una giornata già bloccata non viene mai spostata.</p>
+                <div id="calendarioDiff"></div>
+                <div class="admin-actions">
+                    <button class="btn btn-primary" id="calendarioApplyBtn" hidden><i class="fas fa-check"></i> Applica aggiornamento</button>
+                    <span class="admin-sub" id="calendarioStatus"></span>
+                </div>
+            </div>
         </section>
     </main>
 
     <script src="js/config.js"></script>
-    <script src="js/players-data.js"></script>
-    <script src="js/app.js"></script>
     <script src="js/listone-diff.js"></script>
+    <script src="js/calendario-diff.js"></script>
+    <script src="js/rose-check.js"></script>
+    <script src="js/formazione-check.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/listone.js"></script>
+    <script src="js/lega.js"></script>
+    <script src="js/rose.js"></script>
+    <script src="js/formazione.js"></script>
     <script src="js/admin.js"></script>
 </body>
 </html>

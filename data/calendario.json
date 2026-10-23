@@ -1,0 +1,1388 @@
+[
+  {
+    "number": 1,
+    "label": "1ª Andata",
+    "legaId": 8485,
+    "lockAt": "2026-10-17T15:59:00.000Z",
+    "provisional": false,
+    "matches": [
+      {
+        "home": "Rana Verona",
+        "homeId": 6864,
+        "away": "Cucine Lube Civitanova",
+        "awayId": 6860,
+        "start": "2026-10-17T16:00:00.000Z",
+        "matchId": 40285,
+        "moved": false
+      },
+      {
+        "home": "Valsa Group Modena",
+        "homeId": 6867,
+        "away": "Itas Trentino",
+        "awayId": 6862,
+        "start": "2026-10-18T17:00:00.000Z",
+        "matchId": 40286,
+        "moved": false
+      },
+      {
+        "home": "Pallavolo Padova",
+        "homeId": 6866,
+        "away": "Gas Sales Bluenergy Piacenza",
+        "awayId": 6861,
+        "start": "2026-10-18T15:00:00.000Z",
+        "matchId": 40287,
+        "moved": false
+      },
+      {
+        "home": "Cisterna Volley",
+        "homeId": 6859,
+        "away": "Allianz Milano",
+        "awayId": 6858,
+        "start": "2026-10-18T16:00:00.000Z",
+        "matchId": 40288,
+        "moved": false
+      },
+      {
+        "home": "Acqua Sant'Anna Cuneo",
+        "homeId": 6863,
+        "away": "Sir Susa Scai Perugia",
+        "awayId": 6865,
+        "start": "2026-10-18T16:00:00.000Z",
+        "matchId": 40289,
+        "moved": false
+      },
+      {
+        "home": "Tinet Prata di Pordenone",
+        "homeId": 6897,
+        "away": "Vero Volley Monza",
+        "awayId": 6868,
+        "start": "2026-10-18T16:00:00.000Z",
+        "matchId": 40290,
+        "moved": false
+      }
+    ]
+  },
+  {
+    "number": 2,
+    "label": "2ª Andata",
+    "legaId": 8486,
+    "lockAt": "2026-10-25T15:59:00.000Z",
+    "provisional": false,
+    "matches": [
+      {
+        "home": "Sir Susa Scai Perugia",
+        "homeId": 6865,
+        "away": "Tinet Prata di Pordenone",
+        "awayId": 6897,
+        "start": "2026-10-25T17:00:00.000Z",
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Itas Trentino",
+        "homeId": 6862,
+        "away": "Cisterna Volley",
+        "awayId": 6859,
+        "start": "2026-10-25T16:00:00.000Z",
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Gas Sales Bluenergy Piacenza",
+        "homeId": 6861,
+        "away": "Valsa Group Modena",
+        "awayId": 6867,
+        "start": "2026-10-25T17:00:00.000Z",
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Cucine Lube Civitanova",
+        "homeId": 6860,
+        "away": "Pallavolo Padova",
+        "awayId": 6866,
+        "start": "2026-10-25T17:00:00.000Z",
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Allianz Milano",
+        "homeId": 6858,
+        "away": "Acqua Sant'Anna Cuneo",
+        "awayId": 6863,
+        "start": "2026-10-25T18:00:00.000Z",
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Vero Volley Monza",
+        "homeId": 6868,
+        "away": "Rana Verona",
+        "awayId": 6864,
+        "start": "2026-10-25T17:00:00.000Z",
+        "matchId": null,
+        "moved": false
+      }
+    ]
+  },
+  {
+    "number": 3,
+    "label": "3ª Andata",
+    "legaId": 8487,
+    "lockAt": "2026-10-31T16:59:00.000Z",
+    "provisional": false,
+    "matches": [
+      {
+        "home": "Valsa Group Modena",
+        "homeId": 6867,
+        "away": "Rana Verona",
+        "awayId": 6864,
+        "start": "2026-11-01T16:00:00.000Z",
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Allianz Milano",
+        "homeId": 6858,
+        "away": "Pallavolo Padova",
+        "awayId": 6866,
+        "start": "2026-11-01T17:00:00.000Z",
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Vero Volley Monza",
+        "homeId": 6868,
+        "away": "Sir Susa Scai Perugia",
+        "awayId": 6865,
+        "start": "2026-10-31T17:00:00.000Z",
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Cisterna Volley",
+        "homeId": 6859,
+        "away": "Gas Sales Bluenergy Piacenza",
+        "awayId": 6861,
+        "start": "2026-11-01T17:00:00.000Z",
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Acqua Sant'Anna Cuneo",
+        "homeId": 6863,
+        "away": "Cucine Lube Civitanova",
+        "awayId": 6860,
+        "start": "2026-11-01T17:00:00.000Z",
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Tinet Prata di Pordenone",
+        "homeId": 6897,
+        "away": "Itas Trentino",
+        "awayId": 6862,
+        "start": "2026-11-01T17:00:00.000Z",
+        "matchId": null,
+        "moved": false
+      }
+    ]
+  },
+  {
+    "number": 4,
+    "label": "4ª Andata",
+    "legaId": 8488,
+    "lockAt": "2026-11-04T19:29:00.000Z",
+    "provisional": false,
+    "matches": [
+      {
+        "home": "Sir Susa Scai Perugia",
+        "homeId": 6865,
+        "away": "Cisterna Volley",
+        "awayId": 6859,
+        "start": "2026-11-04T19:30:00.000Z",
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Rana Verona",
+        "homeId": 6864,
+        "away": "Allianz Milano",
+        "awayId": 6858,
+        "start": "2026-11-04T19:30:00.000Z",
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Itas Trentino",
+        "homeId": 6862,
+        "away": "Gas Sales Bluenergy Piacenza",
+        "awayId": 6861,
+        "start": "2026-11-04T19:30:00.000Z",
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Cucine Lube Civitanova",
+        "homeId": 6860,
+        "away": "Valsa Group Modena",
+        "awayId": 6867,
+        "start": "2026-11-04T19:30:00.000Z",
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Pallavolo Padova",
+        "homeId": 6866,
+        "away": "Tinet Prata di Pordenone",
+        "awayId": 6897,
+        "start": "2026-11-16T19:30:00.000Z",
+        "matchId": null,
+        "moved": true
+      },
+      {
+        "home": "Acqua Sant'Anna Cuneo",
+        "homeId": 6863,
+        "away": "Vero Volley Monza",
+        "awayId": 6868,
+        "start": "2026-11-04T19:30:00.000Z",
+        "matchId": null,
+        "moved": false
+      }
+    ]
+  },
+  {
+    "number": 5,
+    "label": "5ª Andata",
+    "legaId": 8489,
+    "lockAt": "2026-11-08T14:59:00.000Z",
+    "provisional": false,
+    "matches": [
+      {
+        "home": "Itas Trentino",
+        "homeId": 6862,
+        "away": "Sir Susa Scai Perugia",
+        "awayId": 6865,
+        "start": "2026-11-08T17:00:00.000Z",
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Gas Sales Bluenergy Piacenza",
+        "homeId": 6861,
+        "away": "Rana Verona",
+        "awayId": 6864,
+        "start": "2026-11-08T17:00:00.000Z",
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Allianz Milano",
+        "homeId": 6858,
+        "away": "Cucine Lube Civitanova",
+        "awayId": 6860,
+        "start": "2026-11-08T15:00:00.000Z",
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Vero Volley Monza",
+        "homeId": 6868,
+        "away": "Valsa Group Modena",
+        "awayId": 6867,
+        "start": "2026-11-08T19:00:00.000Z",
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Cisterna Volley",
+        "homeId": 6859,
+        "away": "Pallavolo Padova",
+        "awayId": 6866,
+        "start": "2026-11-08T17:00:00.000Z",
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Tinet Prata di Pordenone",
+        "homeId": 6897,
+        "away": "Acqua Sant'Anna Cuneo",
+        "awayId": 6863,
+        "start": "2026-11-08T17:00:00.000Z",
+        "matchId": null,
+        "moved": false
+      }
+    ]
+  },
+  {
+    "number": 6,
+    "label": "6ª Andata",
+    "legaId": 8490,
+    "lockAt": "2026-11-22T16:59:00.000Z",
+    "provisional": true,
+    "matches": [
+      {
+        "home": "Valsa Group Modena",
+        "homeId": 6867,
+        "away": "Cisterna Volley",
+        "awayId": 6859,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Gas Sales Bluenergy Piacenza",
+        "homeId": 6861,
+        "away": "Sir Susa Scai Perugia",
+        "awayId": 6865,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Cucine Lube Civitanova",
+        "homeId": 6860,
+        "away": "Tinet Prata di Pordenone",
+        "awayId": 6897,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Allianz Milano",
+        "homeId": 6858,
+        "away": "Itas Trentino",
+        "awayId": 6862,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Pallavolo Padova",
+        "homeId": 6866,
+        "away": "Vero Volley Monza",
+        "awayId": 6868,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Acqua Sant'Anna Cuneo",
+        "homeId": 6863,
+        "away": "Rana Verona",
+        "awayId": 6864,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      }
+    ]
+  },
+  {
+    "number": 7,
+    "label": "7ª Andata",
+    "legaId": 8491,
+    "lockAt": "2026-11-29T16:59:00.000Z",
+    "provisional": true,
+    "matches": [
+      {
+        "home": "Sir Susa Scai Perugia",
+        "homeId": 6865,
+        "away": "Valsa Group Modena",
+        "awayId": 6867,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Rana Verona",
+        "homeId": 6864,
+        "away": "Itas Trentino",
+        "awayId": 6862,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Cucine Lube Civitanova",
+        "homeId": 6860,
+        "away": "Gas Sales Bluenergy Piacenza",
+        "awayId": 6861,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Vero Volley Monza",
+        "homeId": 6868,
+        "away": "Allianz Milano",
+        "awayId": 6858,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Pallavolo Padova",
+        "homeId": 6866,
+        "away": "Acqua Sant'Anna Cuneo",
+        "awayId": 6863,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Tinet Prata di Pordenone",
+        "homeId": 6897,
+        "away": "Cisterna Volley",
+        "awayId": 6859,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      }
+    ]
+  },
+  {
+    "number": 8,
+    "label": "8ª Andata",
+    "legaId": 8492,
+    "lockAt": "2026-12-02T19:29:00.000Z",
+    "provisional": true,
+    "matches": [
+      {
+        "home": "Rana Verona",
+        "homeId": 6864,
+        "away": "Tinet Prata di Pordenone",
+        "awayId": 6897,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Itas Trentino",
+        "homeId": 6862,
+        "away": "Pallavolo Padova",
+        "awayId": 6866,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Valsa Group Modena",
+        "homeId": 6867,
+        "away": "Acqua Sant'Anna Cuneo",
+        "awayId": 6863,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Gas Sales Bluenergy Piacenza",
+        "homeId": 6861,
+        "away": "Vero Volley Monza",
+        "awayId": 6868,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Allianz Milano",
+        "homeId": 6858,
+        "away": "Sir Susa Scai Perugia",
+        "awayId": 6865,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Cisterna Volley",
+        "homeId": 6859,
+        "away": "Cucine Lube Civitanova",
+        "awayId": 6860,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      }
+    ]
+  },
+  {
+    "number": 9,
+    "label": "9ª Andata",
+    "legaId": 8493,
+    "lockAt": "2026-12-06T16:59:00.000Z",
+    "provisional": true,
+    "matches": [
+      {
+        "home": "Sir Susa Scai Perugia",
+        "homeId": 6865,
+        "away": "Rana Verona",
+        "awayId": 6864,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Cucine Lube Civitanova",
+        "homeId": 6860,
+        "away": "Itas Trentino",
+        "awayId": 6862,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Vero Volley Monza",
+        "homeId": 6868,
+        "away": "Cisterna Volley",
+        "awayId": 6859,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Pallavolo Padova",
+        "homeId": 6866,
+        "away": "Valsa Group Modena",
+        "awayId": 6867,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Acqua Sant'Anna Cuneo",
+        "homeId": 6863,
+        "away": "Gas Sales Bluenergy Piacenza",
+        "awayId": 6861,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Tinet Prata di Pordenone",
+        "homeId": 6897,
+        "away": "Allianz Milano",
+        "awayId": 6858,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      }
+    ]
+  },
+  {
+    "number": 10,
+    "label": "10ª Andata",
+    "legaId": 8494,
+    "lockAt": "2026-12-13T16:59:00.000Z",
+    "provisional": true,
+    "matches": [
+      {
+        "home": "Sir Susa Scai Perugia",
+        "homeId": 6865,
+        "away": "Cucine Lube Civitanova",
+        "awayId": 6860,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Rana Verona",
+        "homeId": 6864,
+        "away": "Pallavolo Padova",
+        "awayId": 6866,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Itas Trentino",
+        "homeId": 6862,
+        "away": "Vero Volley Monza",
+        "awayId": 6868,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Valsa Group Modena",
+        "homeId": 6867,
+        "away": "Tinet Prata di Pordenone",
+        "awayId": 6897,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Allianz Milano",
+        "homeId": 6858,
+        "away": "Gas Sales Bluenergy Piacenza",
+        "awayId": 6861,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Cisterna Volley",
+        "homeId": 6859,
+        "away": "Acqua Sant'Anna Cuneo",
+        "awayId": 6863,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      }
+    ]
+  },
+  {
+    "number": 11,
+    "label": "11ª Andata",
+    "legaId": 8495,
+    "lockAt": "2026-12-20T16:59:00.000Z",
+    "provisional": true,
+    "matches": [
+      {
+        "home": "Sir Susa Scai Perugia",
+        "homeId": 6865,
+        "away": "Pallavolo Padova",
+        "awayId": 6866,
+        "start": "2026-10-28T19:30:00.000Z",
+        "matchId": null,
+        "moved": true
+      },
+      {
+        "home": "Rana Verona",
+        "homeId": 6864,
+        "away": "Cisterna Volley",
+        "awayId": 6859,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Itas Trentino",
+        "homeId": 6862,
+        "away": "Acqua Sant'Anna Cuneo",
+        "awayId": 6863,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Valsa Group Modena",
+        "homeId": 6867,
+        "away": "Allianz Milano",
+        "awayId": 6858,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Gas Sales Bluenergy Piacenza",
+        "homeId": 6861,
+        "away": "Tinet Prata di Pordenone",
+        "awayId": 6897,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Vero Volley Monza",
+        "homeId": 6868,
+        "away": "Cucine Lube Civitanova",
+        "awayId": 6860,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      }
+    ]
+  },
+  {
+    "number": 12,
+    "label": "1ª Ritorno",
+    "legaId": 8496,
+    "lockAt": "2026-12-26T16:59:00.000Z",
+    "provisional": true,
+    "matches": [
+      {
+        "home": "Gas Sales Bluenergy Piacenza",
+        "homeId": 6861,
+        "away": "Itas Trentino",
+        "awayId": 6862,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Cucine Lube Civitanova",
+        "homeId": 6860,
+        "away": "Rana Verona",
+        "awayId": 6864,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Allianz Milano",
+        "homeId": 6858,
+        "away": "Vero Volley Monza",
+        "awayId": 6868,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Cisterna Volley",
+        "homeId": 6859,
+        "away": "Sir Susa Scai Perugia",
+        "awayId": 6865,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Acqua Sant'Anna Cuneo",
+        "homeId": 6863,
+        "away": "Valsa Group Modena",
+        "awayId": 6867,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Tinet Prata di Pordenone",
+        "homeId": 6897,
+        "away": "Pallavolo Padova",
+        "awayId": 6866,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      }
+    ]
+  },
+  {
+    "number": 13,
+    "label": "2ª Ritorno",
+    "legaId": 8497,
+    "lockAt": "2027-01-03T16:59:00.000Z",
+    "provisional": true,
+    "matches": [
+      {
+        "home": "Sir Susa Scai Perugia",
+        "homeId": 6865,
+        "away": "Allianz Milano",
+        "awayId": 6858,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Itas Trentino",
+        "homeId": 6862,
+        "away": "Rana Verona",
+        "awayId": 6864,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Valsa Group Modena",
+        "homeId": 6867,
+        "away": "Gas Sales Bluenergy Piacenza",
+        "awayId": 6861,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Cucine Lube Civitanova",
+        "homeId": 6860,
+        "away": "Acqua Sant'Anna Cuneo",
+        "awayId": 6863,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Vero Volley Monza",
+        "homeId": 6868,
+        "away": "Tinet Prata di Pordenone",
+        "awayId": 6897,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Pallavolo Padova",
+        "homeId": 6866,
+        "away": "Cisterna Volley",
+        "awayId": 6859,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      }
+    ]
+  },
+  {
+    "number": 14,
+    "label": "3ª Ritorno",
+    "legaId": 8498,
+    "lockAt": "2027-01-10T16:59:00.000Z",
+    "provisional": true,
+    "matches": [
+      {
+        "home": "Rana Verona",
+        "homeId": 6864,
+        "away": "Valsa Group Modena",
+        "awayId": 6867,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Gas Sales Bluenergy Piacenza",
+        "homeId": 6861,
+        "away": "Cucine Lube Civitanova",
+        "awayId": 6860,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Pallavolo Padova",
+        "homeId": 6866,
+        "away": "Itas Trentino",
+        "awayId": 6862,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Cisterna Volley",
+        "homeId": 6859,
+        "away": "Vero Volley Monza",
+        "awayId": 6868,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Acqua Sant'Anna Cuneo",
+        "homeId": 6863,
+        "away": "Allianz Milano",
+        "awayId": 6858,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Tinet Prata di Pordenone",
+        "homeId": 6897,
+        "away": "Sir Susa Scai Perugia",
+        "awayId": 6865,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      }
+    ]
+  },
+  {
+    "number": 15,
+    "label": "4ª Ritorno",
+    "legaId": 8499,
+    "lockAt": "2027-01-13T19:29:00.000Z",
+    "provisional": true,
+    "matches": [
+      {
+        "home": "Sir Susa Scai Perugia",
+        "homeId": 6865,
+        "away": "Gas Sales Bluenergy Piacenza",
+        "awayId": 6861,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Valsa Group Modena",
+        "homeId": 6867,
+        "away": "Cucine Lube Civitanova",
+        "awayId": 6860,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Allianz Milano",
+        "homeId": 6858,
+        "away": "Cisterna Volley",
+        "awayId": 6859,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Vero Volley Monza",
+        "homeId": 6868,
+        "away": "Pallavolo Padova",
+        "awayId": 6866,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Acqua Sant'Anna Cuneo",
+        "homeId": 6863,
+        "away": "Itas Trentino",
+        "awayId": 6862,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Tinet Prata di Pordenone",
+        "homeId": 6897,
+        "away": "Rana Verona",
+        "awayId": 6864,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      }
+    ]
+  },
+  {
+    "number": 16,
+    "label": "5ª Ritorno",
+    "legaId": 8500,
+    "lockAt": "2027-01-17T16:59:00.000Z",
+    "provisional": true,
+    "matches": [
+      {
+        "home": "Rana Verona",
+        "homeId": 6864,
+        "away": "Acqua Sant'Anna Cuneo",
+        "awayId": 6863,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Itas Trentino",
+        "homeId": 6862,
+        "away": "Valsa Group Modena",
+        "awayId": 6867,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Gas Sales Bluenergy Piacenza",
+        "homeId": 6861,
+        "away": "Allianz Milano",
+        "awayId": 6858,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Cucine Lube Civitanova",
+        "homeId": 6860,
+        "away": "Vero Volley Monza",
+        "awayId": 6868,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Pallavolo Padova",
+        "homeId": 6866,
+        "away": "Sir Susa Scai Perugia",
+        "awayId": 6865,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Cisterna Volley",
+        "homeId": 6859,
+        "away": "Tinet Prata di Pordenone",
+        "awayId": 6897,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      }
+    ]
+  },
+  {
+    "number": 17,
+    "label": "6ª Ritorno",
+    "legaId": 8501,
+    "lockAt": "2027-01-24T16:59:00.000Z",
+    "provisional": true,
+    "matches": [
+      {
+        "home": "Sir Susa Scai Perugia",
+        "homeId": 6865,
+        "away": "Itas Trentino",
+        "awayId": 6862,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Allianz Milano",
+        "homeId": 6858,
+        "away": "Rana Verona",
+        "awayId": 6864,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Vero Volley Monza",
+        "homeId": 6868,
+        "away": "Acqua Sant'Anna Cuneo",
+        "awayId": 6863,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Pallavolo Padova",
+        "homeId": 6866,
+        "away": "Cucine Lube Civitanova",
+        "awayId": 6860,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Cisterna Volley",
+        "homeId": 6859,
+        "away": "Valsa Group Modena",
+        "awayId": 6867,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Tinet Prata di Pordenone",
+        "homeId": 6897,
+        "away": "Gas Sales Bluenergy Piacenza",
+        "awayId": 6861,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      }
+    ]
+  },
+  {
+    "number": 18,
+    "label": "7ª Ritorno",
+    "legaId": 8502,
+    "lockAt": "2027-01-31T16:59:00.000Z",
+    "provisional": true,
+    "matches": [
+      {
+        "home": "Rana Verona",
+        "homeId": 6864,
+        "away": "Sir Susa Scai Perugia",
+        "awayId": 6865,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Itas Trentino",
+        "homeId": 6862,
+        "away": "Allianz Milano",
+        "awayId": 6858,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Valsa Group Modena",
+        "homeId": 6867,
+        "away": "Vero Volley Monza",
+        "awayId": 6868,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Gas Sales Bluenergy Piacenza",
+        "homeId": 6861,
+        "away": "Pallavolo Padova",
+        "awayId": 6866,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Cucine Lube Civitanova",
+        "homeId": 6860,
+        "away": "Cisterna Volley",
+        "awayId": 6859,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Acqua Sant'Anna Cuneo",
+        "homeId": 6863,
+        "away": "Tinet Prata di Pordenone",
+        "awayId": 6897,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      }
+    ]
+  },
+  {
+    "number": 19,
+    "label": "8ª Ritorno",
+    "legaId": 8503,
+    "lockAt": "2027-02-14T16:59:00.000Z",
+    "provisional": true,
+    "matches": [
+      {
+        "home": "Sir Susa Scai Perugia",
+        "homeId": 6865,
+        "away": "Acqua Sant'Anna Cuneo",
+        "awayId": 6863,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Allianz Milano",
+        "homeId": 6858,
+        "away": "Valsa Group Modena",
+        "awayId": 6867,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Vero Volley Monza",
+        "homeId": 6868,
+        "away": "Gas Sales Bluenergy Piacenza",
+        "awayId": 6861,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Pallavolo Padova",
+        "homeId": 6866,
+        "away": "Rana Verona",
+        "awayId": 6864,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Cisterna Volley",
+        "homeId": 6859,
+        "away": "Itas Trentino",
+        "awayId": 6862,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Tinet Prata di Pordenone",
+        "homeId": 6897,
+        "away": "Cucine Lube Civitanova",
+        "awayId": 6860,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      }
+    ]
+  },
+  {
+    "number": 20,
+    "label": "9ª Ritorno",
+    "legaId": 8504,
+    "lockAt": "2027-02-21T16:59:00.000Z",
+    "provisional": true,
+    "matches": [
+      {
+        "home": "Rana Verona",
+        "homeId": 6864,
+        "away": "Vero Volley Monza",
+        "awayId": 6868,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Itas Trentino",
+        "homeId": 6862,
+        "away": "Tinet Prata di Pordenone",
+        "awayId": 6897,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Valsa Group Modena",
+        "homeId": 6867,
+        "away": "Sir Susa Scai Perugia",
+        "awayId": 6865,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Gas Sales Bluenergy Piacenza",
+        "homeId": 6861,
+        "away": "Cisterna Volley",
+        "awayId": 6859,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Cucine Lube Civitanova",
+        "homeId": 6860,
+        "away": "Allianz Milano",
+        "awayId": 6858,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Acqua Sant'Anna Cuneo",
+        "homeId": 6863,
+        "away": "Pallavolo Padova",
+        "awayId": 6866,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      }
+    ]
+  },
+  {
+    "number": 21,
+    "label": "10ª Ritorno",
+    "legaId": 8505,
+    "lockAt": "2027-02-24T19:29:00.000Z",
+    "provisional": true,
+    "matches": [
+      {
+        "home": "Gas Sales Bluenergy Piacenza",
+        "homeId": 6861,
+        "away": "Acqua Sant'Anna Cuneo",
+        "awayId": 6863,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Cucine Lube Civitanova",
+        "homeId": 6860,
+        "away": "Sir Susa Scai Perugia",
+        "awayId": 6865,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Vero Volley Monza",
+        "homeId": 6868,
+        "away": "Itas Trentino",
+        "awayId": 6862,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Pallavolo Padova",
+        "homeId": 6866,
+        "away": "Allianz Milano",
+        "awayId": 6858,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Cisterna Volley",
+        "homeId": 6859,
+        "away": "Rana Verona",
+        "awayId": 6864,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Tinet Prata di Pordenone",
+        "homeId": 6897,
+        "away": "Valsa Group Modena",
+        "awayId": 6867,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      }
+    ]
+  },
+  {
+    "number": 22,
+    "label": "11ª Ritorno",
+    "legaId": 8506,
+    "lockAt": "2027-02-28T16:59:00.000Z",
+    "provisional": true,
+    "matches": [
+      {
+        "home": "Sir Susa Scai Perugia",
+        "homeId": 6865,
+        "away": "Vero Volley Monza",
+        "awayId": 6868,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Rana Verona",
+        "homeId": 6864,
+        "away": "Gas Sales Bluenergy Piacenza",
+        "awayId": 6861,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Itas Trentino",
+        "homeId": 6862,
+        "away": "Cucine Lube Civitanova",
+        "awayId": 6860,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Valsa Group Modena",
+        "homeId": 6867,
+        "away": "Pallavolo Padova",
+        "awayId": 6866,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Allianz Milano",
+        "homeId": 6858,
+        "away": "Tinet Prata di Pordenone",
+        "awayId": 6897,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      },
+      {
+        "home": "Acqua Sant'Anna Cuneo",
+        "homeId": 6863,
+        "away": "Cisterna Volley",
+        "awayId": 6859,
+        "start": null,
+        "matchId": null,
+        "moved": false
+      }
+    ]
+  }
+]
