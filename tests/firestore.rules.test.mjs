@@ -346,6 +346,49 @@ describe('ruolo Admin', () => {
     });
 });
 
+describe('scontri diretti', () => {
+    const SCONTRI = 'lega-scontri';
+    const calendario = { teams: ['pres', 'anna'], rounds: { 1: [{ a: 'pres', b: 'anna' }] }, createdAt: Timestamp.now(), createdBy: 'pres' };
+
+    beforeEach(async () => {
+        await env.withSecurityRulesDisabled(async ctx => {
+            const db = ctx.firestore();
+            for (const [id, code, start] of [[SCONTRI, '222222', 1], ['lega-iniziata', '333333', 2]]) {
+                await setDoc(doc(db, `leagues/${id}`), {
+                    name: 'Scontri', code, presidentUid: 'pres',
+                    settings: { budget: 300, mode: 'scontri', startMatchday: start }, createdAt: Timestamp.now(),
+                });
+                await setDoc(doc(db, `leagueCodes/${code}`), { leagueId: id });
+                await setDoc(doc(db, `leagues/${id}/members/pres`), { teamName: 'Presidenti', code, joinedAt: Timestamp.now() });
+            }
+        });
+    });
+
+    test('il Presidente genera il calendario prima della giornata di inizio', async () => {
+        await assertSucceeds(setDoc(doc(as('pres'), `leagues/${SCONTRI}/schedule/main`), calendario));
+    });
+
+    test('dopo l\'inizio il Presidente non lo cambia più, l\'admin sì', async () => {
+        await assertFails(setDoc(doc(as('pres'), 'leagues/lega-iniziata/schedule/main'), calendario));
+        await assertSucceeds(setDoc(doc(as('boss'), 'leagues/lega-iniziata/schedule/main'), calendario));
+    });
+
+    test('un partecipante non scrive il calendario', async () => {
+        await assertFails(setDoc(doc(as('anna'), `leagues/${SCONTRI}/schedule/main`), calendario));
+    });
+
+    test('senza calendario si entra, con il calendario generato no', async () => {
+        const entra = uid => setDoc(doc(as(uid), `leagues/${SCONTRI}/members/${uid}`), { teamName: uid, code: '222222', joinedAt: Timestamp.now() });
+        await assertSucceeds(entra('marco'));
+        await env.withSecurityRulesDisabled(ctx => setDoc(doc(ctx.firestore(), `leagues/${SCONTRI}/schedule/main`), calendario));
+        await assertFails(entra('luca'));
+    });
+
+    test('nella classifica generale si entra anche a campionato iniziato', async () => {
+        await assertSucceeds(setDoc(doc(as('marco'), `leagues/${LEAGUE}/members/marco`), { teamName: 'Marco FC', code: CODE, joinedAt: Timestamp.now() }));
+    });
+});
+
 describe('punteggi e classifica', () => {
     test('nessun utente scrive punteggi o classifica', async () => {
         await assertFails(setDoc(doc(as('pres'), `leagues/${LEAGUE}/scores/1_pres`), { total: 999 }));
