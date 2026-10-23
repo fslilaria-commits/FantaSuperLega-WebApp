@@ -6,7 +6,7 @@ Le regole del gioco seguono la Modalità Leghe del [FantaLVF](https://fantaking.
 
 | Ruolo | Chi | Cosa può fare |
 |---|---|---|
-| **Admin** | Chi è nella collezione `admins` (si nomina solo dalla console Firebase) | Dati di gioco: listone, giornate e scadenze, statistiche, punteggi e classifiche. Legge tutte le leghe, comprese rose e formazioni per il calcolo dei punteggi, ma non fa il Presidente e non schiera formazioni altrui |
+| **Admin** | Chi è nella collezione `admins` (si nomina solo dalla console Firebase) | Dati di gioco: listone, giornate e scadenze, statistiche, punteggi e classifiche. Legge tutte le leghe, comprese rose e formazioni per il calcolo dei punteggi, ma non fa il Presidente e non schiera formazioni altrui. A ogni stagione nuova archivia le classifiche e cancella i dati della stagione finita (pulsante «Inizia la stagione») |
 | **Presidente** | Chi ha creato la lega | Impostazioni della lega e rose dopo l'asta, assegnazioni di mercato e scambi |
 | **Partecipante** | Chi è entrato con il codice | Il proprio nome squadra e la propria formazione, solo prima della scadenza |
 | **Visitatore** | Chi non ha fatto l'accesso | Solo la schermata di benvenuto con l'invito ad accedere |
@@ -18,7 +18,9 @@ Un workflow GitHub settimanale (`.github/workflows/aggiorna-dati.yaml`, martedì
 Regole del listone, come nei fantasy più diffusi:
 - i nuovi giocatori entrano con il ruolo indicato dalla Lega;
 - per chi c'è già **il ruolo non cambia mai da solo**: un ruolo diverso sul sito viene solo segnalato;
-- nessuno viene cancellato: chi lascia la SuperLega diventa `active: false` e resta nelle rose.
+- durante la stagione nessuno viene cancellato: chi lascia la SuperLega diventa `active: false` e resta nelle rose.
+
+**Stagione.** Anno e numero di squadre stanno in `frontend/js/stagione.js`, che usano sia il sito sia il bot. `data/stagione.json` dice di che stagione sono le proposte in `data/`: quando il codice passa all'anno nuovo il bot (`backend-bot/prepara-stagione.js`, primo passo del workflow, che parte da solo quando nel `main` cambiano la stagione o l'elenco delle squadre) toglie listone, calendario e tabellini della stagione finita e scarica i nuovi. Nel gioco la stagione nuova parte solo quando un admin preme **Inizia la stagione** nel pannello (`frontend/js/admin-stagione.js`): archivia le classifiche finali in `archivio`, cancella tutti i dati di gioco tranne `admins` e `archivio`, applica listone e calendario nuovi e infine segna l'anno in `meta/stagione`. Il pulsante compare solo se il codice è a una stagione successiva a quella di `meta/stagione`, se le giornate nel gioco sono tutte passate e se il bot ha già scaricato listone e calendario della stagione nuova.
 
 ## Collezioni
 
@@ -27,6 +29,22 @@ Un documento per admin, con id uguale all'uid di Firebase Authentication. Si cre
 
 ### `meta/listone`
 `appliedAt`, `appliedBy`, `changes`: quando e da chi è stato applicato l'ultimo aggiornamento del listone. Scrittura solo admin.
+
+### `meta/stagione`
+`anno` (anno di inizio della stagione in corso nel gioco, per esempio `2026` per il 2026/27), `iniziataAt`, `iniziataBy`. Lo crea il pannello Admin alla prima apertura con l'anno del codice; lo aggiorna il pulsante «Inizia la stagione» come ultimo passo. Durante il passaggio `archiviata` (anno) segna che le classifiche sono già state archiviate, così ripremendo dopo un'interruzione non si rifanno.
+
+### `archivio/{anno}_{leagueId}` — stagioni passate
+La classifica finale di una lega, salvata dal pulsante «Inizia la stagione» prima di cancellare i dati.
+
+| Campo | Tipo | Note |
+|---|---|---|
+| `anno`, `stagione` | number, string | Es. `2026`, `2026/27` |
+| `lega`, `modalita` | string | Nome della lega, `classifica` o `scontri` |
+| `uids` | list | Partecipanti: solo loro (e gli admin) leggono il documento |
+| `classifica` | list | `{ pos, squadra, total, presidente? }`, negli scontri diretti anche `points, won, tbWon, tbLost, lost` |
+| `archiviatoAt`, `archiviatoBy` | | Data del server e admin che l'ha salvato |
+
+Lo scrivono solo gli admin, nessuno lo cancella dall'app.
 
 ### `players/{playerId}` — listone
 | Campo | Tipo | Note |

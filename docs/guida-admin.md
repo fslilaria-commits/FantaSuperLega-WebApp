@@ -10,7 +10,7 @@ Questa guida spiega cosa fare ogni settimana per far girare il Fanta SuperLega e
 
 | Ruolo | Chi è | Cosa fa |
 |---|---|---|
-| **Admin** | Chi è nella collezione `admins` di Firebase (chi gestisce il progetto) | Ogni settimana applica listone, calendario e punteggi dal **pannello Admin**. Vale per tutte le leghe |
+| **Admin** | Chi è nella collezione `admins` di Firebase (chi gestisce il progetto) | Ogni settimana applica listone, calendario e punteggi dal **pannello Admin**; in estate fa partire la stagione nuova (punto 9). Vale per tutte le leghe |
 | **Presidente** | Chi ha creato una lega | Inserisce le rose dopo l'asta, genera il calendario degli scontri diretti, applica il mercato della sua lega |
 | **Partecipante** | Chi è entrato in una lega con il codice | Schiera la formazione, fa offerte e scambi |
 | **Visitatore** | Chi non ha fatto l'accesso | Vede solo la pagina di benvenuto |
@@ -134,21 +134,27 @@ Si fanno da https://console.firebase.google.com/project/fanta-superlega-734b1 co
 
 ## 9. Nuova stagione (ogni estate)
 
-A ogni stagione il gioco riparte da zero, come nel FantaLVF: nuovo listone, nuove leghe, nuova asta. Si fa in estate, quando la Lega ha pubblicato rose e calendario (di solito tra luglio e settembre). L'ordine dei passi conta.
+A ogni stagione il gioco riparte da zero, come nel FantaLVF: nuovo listone, nuove leghe, nuova asta. Si fa in estate, quando la Lega ha pubblicato rose e calendario (di solito tra luglio e settembre). Bastano due passi.
 
-1. **Prima di cancellare**, salva quello che vuoi ricordare, per esempio uno screenshot della classifica finale di ogni lega. Dopo il passo 3 non si recupera più: il piano gratuito non ha backup.
-2. **Nella repo** (chi sviluppa il progetto):
+1. **Chi sviluppa il progetto** prepara una modifica e la unisce nel `main`:
    - in `frontend/js/stagione.js` cambia `ANNO` (2027 per la stagione 2027/28) e, se la SuperLega cambia numero di squadre, `SQUADRE`. Da lì si aggiornano da soli la scritta della stagione nel sito e nell'invito WhatsApp, il numero di giornate e gli indirizzi del sito della Lega usati dal bot;
-   - in `backend-bot/lib/listone.js` aggiorna l'elenco delle squadre (cambiano promosse e retrocesse): nome, `teamId` (il numero nell'indirizzo della pagina della squadra, `legavolley.it/team/…`) e `codiceStatistiche` (il valore di `Squadra` nell'indirizzo della pagina statistiche della Lega, scegliendo quella squadra). Di solito gli id cambiano a ogni stagione anche per le squadre che restano: vanno ricontrollati tutti. I test controllano che le squadre siano tante quante `SQUADRE` e senza doppioni;
-   - cancella i dati della stagione finita: `data/players.json` (altrimenti il bot si ferma perché «spariscono troppi giocatori») e la cartella `data/tabellini/` (altrimenti il pannello Admin vedrebbe i tabellini dell'anno prima, con gli stessi numeri di giornata);
-   - unisci la modifica nel `main`.
-3. **Nella console Firebase** (admin): in **Firestore Database → Dati** elimina tutte le raccolte **tranne `admins`**, cioè `leagues`, `leagueCodes`, `users`, `matchdays`, `players` e `meta` (menu ⋮ della raccolta → **Elimina raccolta**, che cancella anche quello che c'è dentro). Regole e App Check restano come sono. Vanno cancellati anche giornate e listone: le giornate vecchie risultano già bloccate e calcolate, e il nuovo calendario non le sovrascriverebbe; ripartendo da un listone vuoto ogni giocatore entra con il ruolo che gli dà la Lega quest'anno.
-4. **Su GitHub → Actions → «Aggiorna dati SuperLega» → Run workflow**: scarica listone e calendario nuovi. Se la Lega non ha ancora pubblicato tutto, l'esecuzione resta rossa: riprova più avanti.
-5. **Nel pannello Admin** applica listone e calendario come nella routine (punto 1). Da qui si torna alla settimana tipo: i Presidenti creano le nuove leghe e mandano gli inviti (punto 3).
+   - in `backend-bot/lib/listone.js` aggiorna l'elenco delle squadre (cambiano promosse e retrocesse): nome, `teamId` (il numero nell'indirizzo della pagina della squadra, `legavolley.it/team/…`) e `codiceStatistiche` (il valore di `Squadra` nell'indirizzo della pagina statistiche della Lega, scegliendo quella squadra). Di solito gli id cambiano a ogni stagione anche per le squadre che restano: vanno ricontrollati tutti. I test controllano che le squadre siano tante quante `SQUADRE` e senza doppioni.
 
-## Per approfondire
+   Appena la modifica è nel `main`, il **bot** (su GitHub, «Aggiorna dati SuperLega») parte da solo: toglie da `data/` listone, calendario e tabellini della stagione finita e scarica quelli nuovi. Se la Lega non ha ancora pubblicato tutto, l'esecuzione resta rossa: il bot riprova da solo ogni martedì, oppure si rilancia a mano da **Actions → Run workflow**.
+2. **Un admin**, nel **pannello Admin → Nuova stagione**, preme **Controlla**. Se tutto è pronto compare il riepilogo: per confermare si scrive la stagione nuova (per esempio `2027/28`) e si preme **Inizia la stagione**. In un colpo il pulsante:
+   - salva la classifica finale di ogni lega nell'**archivio**: ogni partecipante la ritrova nella scheda **Lega → Stagioni passate**;
+   - cancella i dati della stagione finita: leghe con rose, formazioni, mercato e punteggi, codici invito, giornate con statistiche e correzioni, listone. Restano gli admin e l'archivio;
+   - applica listone e calendario nuovi.
 
-- [`README.md`](../README.md): come è fatto il progetto e come provarlo in locale
-- [`docs/punteggio.md`](punteggio.md): come si calcolano i punti
-- [`docs/modello-dati.md`](modello-dati.md): dati, regole di mercato e scontri diretti
-- [`docs/sicurezza.md`](sicurezza.md): chiavi, App Check e rischi
+   Ci vuole circa un minuto: lascia la pagina aperta finché non compare «Fatto». Se si interrompe (connessione persa, pagina chiusa), premi di nuovo **Controlla** e **Inizia la stagione**: riprende da dove si era fermato. Poi i Presidenti creano le nuove leghe e mandano gli inviti (punto 3).
+
+Se **Controlla** non mostra il pulsante, dice il motivo:
+
+| Messaggio | Cosa fare |
+|---|---|
+| «La stagione … è in corso» | Niente: il codice non è ancora passato alla stagione nuova (passo 1) |
+| «La stagione nel gioco non è finita» | Ci sono giornate con la scadenza ancora da passare: si aspetta la fine del campionato |
+| «Il bot non ha ancora preparato i dati» | Aspetta l'esecuzione del bot dopo il passo 1, o lancialo a mano da Actions |
+| «Manca il listone nuovo» o «Manca il calendario nuovo» | La Lega non li ha ancora pubblicati: il bot riprova ogni martedì |
+
+Se il riepilogo segnala **giornate giocate ma non calcolate**, calcolale prima con la routine settimanale: altrimenti i loro punti non entrano nella classifica archiviata.

@@ -71,6 +71,7 @@ function initAuth() {
         if (!user) {
             Object.assign(state, structuredClone(STATO_VUOTO));
             chiudiInvito({ svuota: true });
+            caricaArchivio();
             switchTab('welcome');
             return;
         }
@@ -78,6 +79,7 @@ function initAuth() {
         try {
             await Promise.all([loadPlayers(), loadNextMatchday(), loadStatistiche()]);
             await loadMyLeagues();
+            caricaArchivio();
             await gestisciInvito();
         } catch (e) {
             console.error(e);

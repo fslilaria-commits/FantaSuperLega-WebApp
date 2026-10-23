@@ -62,18 +62,20 @@ I ruoli (Admin, Presidente, Partecipante, Visitatore) sono descritti in [`docs/m
 
 ## Aggiornamento di listone, calendario e tabellini
 
-Il workflow **Aggiorna dati SuperLega** (`.github/workflows/aggiorna-dati.yaml`) gira ogni martedì mattina, o a mano da **Actions → Aggiorna dati SuperLega → Run workflow**:
-1. legge dal sito della Lega le rose delle 12 squadre (`backend-bot/genera-listone.js`), il calendario di andata e ritorno (`backend-bot/genera-calendario.js`) e i tabellini delle giornate concluse (`backend-bot/genera-tabellini.js`);
-2. si ferma senza scrivere niente se i dati sembrano sbagliati (squadre con meno di 10 giocatori, più di un quarto dei giocatori spariti, doppioni, giornate o gare mancanti);
-3. se ci sono novità, salva le proposte in `data/` con un commit.
+Il workflow **Aggiorna dati SuperLega** (`.github/workflows/aggiorna-dati.yaml`) gira ogni martedì mattina, a mano da **Actions → Aggiorna dati SuperLega → Run workflow**, e da solo quando nel `main` cambiano la stagione (`frontend/js/stagione.js`) o l'elenco delle squadre:
+1. se il codice è passato a una stagione nuova, toglie da `data/` le proposte di quella finita (`backend-bot/prepara-stagione.js`, vedi `data/stagione.json`);
+2. legge dal sito della Lega le rose delle 12 squadre (`backend-bot/genera-listone.js`), il calendario di andata e ritorno (`backend-bot/genera-calendario.js`) e i tabellini delle giornate concluse (`backend-bot/genera-tabellini.js`);
+3. si ferma senza scrivere niente se i dati sembrano sbagliati (squadre con meno di 10 giocatori, più di un quarto dei giocatori spariti, doppioni, giornate o gare mancanti);
+4. se ci sono novità, salva le proposte in `data/` con un commit.
 
-Nel gioco non cambia niente finché un admin non apre il **pannello Admin → Controlla proposta → Applica aggiornamento**. Il ruolo dei giocatori già presenti non cambia mai da solo e nessuno viene cancellato: chi esce dalla SuperLega diventa non attivo. La scadenza di ogni giornata è 1 minuto prima della prima gara; quella di una giornata già bloccata non viene mai spostata.
+Nel gioco non cambia niente finché un admin non apre il **pannello Admin → Controlla proposta → Applica aggiornamento**. Il ruolo dei giocatori già presenti non cambia mai da solo e durante la stagione nessuno viene cancellato: chi esce dalla SuperLega diventa non attivo. A ogni stagione nuova un admin usa invece **pannello Admin → Nuova stagione** (vedi `docs/guida-admin.md`, sezione 9). La scadenza di ogni giornata è 1 minuto prima della prima gara; quella di una giornata già bloccata non viene mai spostata.
 
 Per lanciare il generatore in locale:
 
 ```bash
 cd backend-bot
 npm install
+npm run prepara-stagione
 npm run genera-listone
 npm run genera-calendario
 npm run genera-tabellini

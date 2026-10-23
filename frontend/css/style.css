@@ -76,6 +76,8 @@ h4 { font-size: 0.95rem; font-weight: 700; }
 .navbar .btn-primary { background: var(--orange); }
 .navbar .btn-secondary { background: transparent; color: #fff; border-color: rgba(255, 255, 255, 0.5); }
 .btn-small { padding: 0.3rem 0.65rem; font-size: 0.8rem; }
+.btn-danger { background: var(--error); color: #fff; }
+.btn-danger:hover:not(:disabled) { background: #b91c1c; }
 
 input[type="text"], input[type="search"], input[type="number"], select {
     background: #fff; color: var(--text); border: 1px solid var(--line); border-radius: 6px;
@@ -289,6 +291,12 @@ details.admin-card > summary { cursor: pointer; font-family: var(--font-title); 
 
 /* ROUTINE ADMIN */
 .routine-card { border-top-color: var(--orange); }
+.stagione-card { border-top-color: var(--error); }
+
+/* ARCHIVIO DELLE STAGIONI */
+.archivio-lega { margin-top: 1rem; }
+.archivio-lega h3 { margin-bottom: 0.2rem; }
+.archivio-oro { color: var(--gold); }
 .routine-list { list-style: none; display: flex; flex-direction: column; gap: 0.35rem; }
 .routine-ok { color: var(--ok); }
 .routine-da { color: var(--warn); }

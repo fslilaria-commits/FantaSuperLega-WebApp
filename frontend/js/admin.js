@@ -15,6 +15,7 @@ if (auth) {
             loadMetaInfo('listone', 'listoneInfo');
             loadMetaInfo('calendario', 'calendarioInfo');
             loadGiornateTabellini();
+            mostraStagioneGioco();
         } else if (document.getElementById('tab-admin').classList.contains('active')) {
             switchTab('home');
         }
