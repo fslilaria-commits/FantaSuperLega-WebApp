@@ -33,16 +33,22 @@ async function selectLeague(id) {
     state.league = state.leagues.find(l => l.id === id) || null;
     state.members = [];
     state.rosters = {};
+    state.standings = {};
+    state.scores = [];
     if (state.league) {
         saveSelectedLeague(id);
-        const [members, rosters] = await Promise.all([
+        const [members, rosters, standings, scores] = await Promise.all([
             db.collection(`leagues/${id}/members`).get(),
             db.collection(`leagues/${id}/rosters`).get(),
+            db.collection(`leagues/${id}/standings`).get(),
+            db.collection(`leagues/${id}/scores`).get(),
         ]);
         state.members = members.docs
             .map(d => ({ uid: d.id, ...d.data() }))
             .sort((a, b) => a.teamName.localeCompare(b.teamName, 'it'));
         state.rosters = Object.fromEntries(rosters.docs.map(d => [d.id, d.data()]));
+        state.standings = Object.fromEntries(standings.docs.map(d => [d.id, d.data()]));
+        state.scores = scores.docs.map(d => d.data());
     }
     refreshAll();
 }
@@ -69,8 +75,12 @@ function renderLeague() {
     document.getElementById('leagueMeta').textContent = `${modalita} · ${crediti} · dalla giornata ${l.settings?.startMatchday ?? 1}`;
     document.getElementById('leagueCodeDisplay').textContent = l.code;
 
-    document.getElementById('leaderboardBody').replaceChildren(...state.members.map((m, i) => {
+    // Classifica generale: somma dei punti delle giornate calcolate
+    const ordinati = state.members.slice().sort((a, b) =>
+        (state.standings[b.uid]?.total ?? 0) - (state.standings[a.uid]?.total ?? 0) || a.teamName.localeCompare(b.teamName, 'it'));
+    document.getElementById('leaderboardBody').replaceChildren(...ordinati.map((m, i) => {
         const rosa = state.rosters[m.uid]?.all?.length || 0;
+        const c = state.standings[m.uid];
         return el('tr', {},
             el('td', {}, i + 1),
             el('td', {},
@@ -78,8 +88,12 @@ function renderLeague() {
                 m.uid === l.presidentUid ? el('i', { class: 'fas fa-crown president-icon', title: 'Presidente' }) : null,
                 m.uid === state.user.uid ? el('span', { class: 'admin-sub' }, ' (tu)') : null),
             el('td', {}, `${rosa}/12`),
-            el('td', {}, '—'));
+            el('td', {}, c?.ultima ? `${c.ultima.total.toFixed(2)} (G${c.ultima.matchday})` : '—'),
+            el('td', {}, el('strong', {}, c ? c.total.toFixed(2) : '—')));
     }));
+    document.getElementById('leaderboardNote').textContent = Object.keys(state.standings).length
+        ? (l.settings?.mode === 'scontri' ? 'Per ora la classifica somma i punti: gli scontri diretti arrivano con il prossimo aggiornamento.' : '')
+        : 'I punti compaiono dopo il calcolo della prima giornata.';
 }
 
 function randomCode() {

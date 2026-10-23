@@ -7,6 +7,8 @@ const state = {
     league: null,       // lega selezionata
     members: [],        // partecipanti della lega: [{ uid, teamName, ... }]
     rosters: {},        // uid -> rosa
+    standings: {},      // uid -> { total, giornate, ultima: { matchday, total } }
+    scores: [],         // punteggi di giornata della lega: [{ uid, matchday, total, dettaglio }]
     matchday: null,     // prossima giornata da schierare: { id, number, label, lockAt: Date, provisional }
 };
 
@@ -44,7 +46,7 @@ function initAuth() {
         document.getElementById('mainNav').hidden = !user;
 
         if (!user) {
-            Object.assign(state, { players: [], playersById: {}, leagues: [], league: null, members: [], rosters: {}, matchday: null });
+            Object.assign(state, { players: [], playersById: {}, leagues: [], league: null, members: [], rosters: {}, standings: {}, scores: [], matchday: null });
             switchTab('welcome');
             return;
         }
@@ -85,6 +87,7 @@ function refreshAll() {
     renderLeague();
     renderRosterEditor();
     renderField();
+    renderRisultati();
 }
 
 function currentTab() {

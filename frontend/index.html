@@ -141,13 +141,14 @@
                                 <th>Pos</th>
                                 <th>Squadra</th>
                                 <th>Rosa</th>
+                                <th>Ultima giornata</th>
                                 <th>Punti</th>
                             </tr>
                         </thead>
                         <tbody id="leaderboardBody"></tbody>
                     </table>
                 </div>
-                <p class="admin-sub">I punti arriveranno con il calcolo delle giornate.</p>
+                <p class="admin-sub" id="leaderboardNote"></p>
 
                 <div class="admin-card" id="presidentBox" hidden>
                     <div class="admin-card-head">
@@ -194,8 +195,44 @@
 
         <!-- TABELLINI -->
         <section id="tab-calculator" class="tab-content">
-            <h2>Tabellini e punteggi</h2>
-            <p class="admin-sub">In arrivo: i punteggi di ogni giornata calcolati dai tabellini ufficiali della Lega, con le regole del FantaLVF.</p>
+            <div class="league-header">
+                <div>
+                    <h2>Punteggi di giornata</h2>
+                    <p class="admin-sub">Calcolati dai tabellini ufficiali della Lega con le regole del FantaLVF: titolari al 100%, capitano x2, panchina al 50%.</p>
+                </div>
+                <select id="risultatiGiornata" aria-label="Giornata"></select>
+            </div>
+            <p class="notice" id="risultatiNotice" hidden></p>
+            <div class="market-table-wrapper" id="risultatiTabella" hidden>
+                <table class="market-table">
+                    <thead>
+                        <tr>
+                            <th>Pos</th>
+                            <th>Squadra</th>
+                            <th>Punti</th>
+                        </tr>
+                    </thead>
+                    <tbody id="risultatiBody"></tbody>
+                </table>
+            </div>
+            <div class="admin-card" id="risultatiDettaglio" hidden>
+                <h3 id="dettaglioTitolo"></h3>
+                <p class="admin-sub" id="dettaglioNota"></p>
+                <div class="market-table-wrapper">
+                    <table class="market-table">
+                        <thead>
+                            <tr>
+                                <th>Ruolo</th>
+                                <th>Giocatore</th>
+                                <th>Fanta-punti</th>
+                                <th>Conta</th>
+                                <th>Punti</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dettaglioBody"></tbody>
+                    </table>
+                </div>
+            </div>
         </section>
 
         <!-- SEZIONE ADMIN: visibile solo agli admin (le regole Firestore bloccano comunque chi non lo è) -->
@@ -233,6 +270,25 @@
                     <span class="admin-sub" id="calendarioStatus"></span>
                 </div>
             </div>
+
+            <div class="admin-card">
+                <div class="admin-card-head">
+                    <div>
+                        <h3>Tabellini e punteggi</h3>
+                        <p class="admin-sub" id="punteggiInfo">Ultimo calcolo: —</p>
+                    </div>
+                    <div class="admin-actions">
+                        <select id="punteggiGiornata" aria-label="Giornata"></select>
+                        <button class="btn btn-secondary" id="punteggiCheckBtn"><i class="fas fa-magnifying-glass"></i> Controlla tabellino</button>
+                    </div>
+                </div>
+                <p class="admin-sub">I tabellini vengono scaricati ogni martedì, dalle 19 del giorno dopo l'ultima partita. Il calcolo assegna i punti ai giocatori con le regole FantaLVF e aggiorna punteggi e classifiche di tutte le leghe. Si può rifare: sovrascrive il calcolo precedente.</p>
+                <div id="punteggiDiff"></div>
+                <div class="admin-actions">
+                    <button class="btn btn-primary" id="punteggiApplyBtn" hidden><i class="fas fa-calculator"></i> Calcola e applica</button>
+                    <span class="admin-sub" id="punteggiStatus"></span>
+                </div>
+            </div>
         </section>
     </main>
 
@@ -241,11 +297,14 @@
     <script src="js/calendario-diff.js"></script>
     <script src="js/rose-check.js"></script>
     <script src="js/formazione-check.js"></script>
+    <script src="js/punteggi.js"></script>
     <script src="js/app.js"></script>
     <script src="js/listone.js"></script>
     <script src="js/lega.js"></script>
     <script src="js/rose.js"></script>
     <script src="js/formazione.js"></script>
+    <script src="js/risultati.js"></script>
     <script src="js/admin.js"></script>
+    <script src="js/admin-punteggi.js"></script>
 </body>
 </html>

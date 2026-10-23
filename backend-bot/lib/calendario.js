@@ -69,6 +69,7 @@ function parseCalendario(html, fase) {
             awayId: teamId(squadre[1]),
             start: parseDataGara($(cells[1]).text()),
             matchId: matchId ? parseInt(matchId[1], 10) : null,
+            score: row.find('td.DettaglioRisCal').text().trim(),
         });
     });
 
@@ -116,4 +117,17 @@ function checkCalendario(giornate) {
     return errors;
 }
 
-module.exports = { romeToUtc, parseDataGara, parseDataGiornata, parseCalendario, checkCalendario };
+const URL_CALENDARIO = fase => `https://www.legavolley.it/calendario/?Anno=2026&IdCampionato=999&IdFase=${fase}&IdSquadra=0`;
+
+// Andata e ritorno dal sito della Lega, con i risultati delle gare giocate (campo score)
+async function scaricaCalendario() {
+    const giornate = [];
+    for (const fase of [1, 2]) {
+        const res = await fetch(URL_CALENDARIO(fase), { headers: { 'User-Agent': 'Mozilla/5.0 (FantaSuperLega calendario)' } });
+        if (!res.ok) throw new Error(`calendario fase ${fase}: HTTP ${res.status}`);
+        giornate.push(...parseCalendario(await res.text(), fase));
+    }
+    return giornate;
+}
+
+module.exports = { romeToUtc, parseDataGara, parseDataGiornata, parseCalendario, checkCalendario, scaricaCalendario };

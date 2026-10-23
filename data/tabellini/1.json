@@ -1,0 +1,4079 @@
+{
+  "number": 1,
+  "label": "1ª Andata",
+  "legaId": 8485,
+  "matches": [
+    {
+      "home": "Rana Verona",
+      "homeId": 6864,
+      "away": "Cucine Lube Civitanova",
+      "awayId": 6860,
+      "moved": false,
+      "result": {
+        "home": 0,
+        "away": 3
+      }
+    },
+    {
+      "home": "Valsa Group Modena",
+      "homeId": 6867,
+      "away": "Itas Trentino",
+      "awayId": 6862,
+      "moved": false,
+      "result": {
+        "home": 0,
+        "away": 3
+      }
+    },
+    {
+      "home": "Pallavolo Padova",
+      "homeId": 6866,
+      "away": "Gas Sales Bluenergy Piacenza",
+      "awayId": 6861,
+      "moved": false,
+      "result": {
+        "home": 0,
+        "away": 3
+      }
+    },
+    {
+      "home": "Cisterna Volley",
+      "homeId": 6859,
+      "away": "Allianz Milano",
+      "awayId": 6858,
+      "moved": false,
+      "result": {
+        "home": 3,
+        "away": 0
+      }
+    },
+    {
+      "home": "Acqua Sant'Anna Cuneo",
+      "homeId": 6863,
+      "away": "Sir Susa Scai Perugia",
+      "awayId": 6865,
+      "moved": false,
+      "result": {
+        "home": 2,
+        "away": 3
+      }
+    },
+    {
+      "home": "Tinet Prata di Pordenone",
+      "homeId": 6897,
+      "away": "Vero Volley Monza",
+      "awayId": 6868,
+      "moved": false,
+      "result": {
+        "home": 3,
+        "away": 1
+      }
+    }
+  ],
+  "teams": {
+    "6858": {
+      "team": "Allianz Milano",
+      "players": [
+        {
+          "name": "Bartolucci Filippo",
+          "set": 2,
+          "points": 1,
+          "serve": {
+            "tot": 4,
+            "ace": 0,
+            "err": 2
+          },
+          "rec": {
+            "tot": 1,
+            "err": 0,
+            "neg": 0,
+            "perf": 1,
+            "perfPct": 100,
+            "eff": 1
+          },
+          "att": {
+            "tot": 2,
+            "err": 0,
+            "blocked": 0,
+            "kills": 1,
+            "killPct": 50,
+            "eff": 0.5
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Benacchio Alessandro",
+          "set": 2,
+          "points": 0,
+          "serve": {
+            "tot": 4,
+            "ace": 0,
+            "err": 2
+          },
+          "rec": {
+            "tot": 0,
+            "err": 0,
+            "neg": 0,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": 0
+          },
+          "att": {
+            "tot": 2,
+            "err": 0,
+            "blocked": 0,
+            "kills": 0,
+            "killPct": 0,
+            "eff": 0
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Catania Damiano",
+          "set": 3,
+          "points": 0,
+          "serve": {
+            "tot": 0,
+            "ace": 0,
+            "err": 0
+          },
+          "rec": {
+            "tot": 12,
+            "err": 2,
+            "neg": 6,
+            "perf": 1,
+            "perfPct": 8.3,
+            "eff": -0.08
+          },
+          "att": {
+            "tot": 0,
+            "err": 0,
+            "blocked": 0,
+            "kills": 0,
+            "killPct": 0,
+            "eff": 0
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Dermaux Basil",
+          "set": 3,
+          "points": 15,
+          "serve": {
+            "tot": 9,
+            "ace": 1,
+            "err": 3
+          },
+          "rec": {
+            "tot": 0,
+            "err": 0,
+            "neg": 0,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": 0
+          },
+          "att": {
+            "tot": 26,
+            "err": 4,
+            "blocked": 6,
+            "kills": 11,
+            "killPct": 42.3,
+            "eff": 0.27
+          },
+          "block": {
+            "pts": 3
+          }
+        },
+        {
+          "name": "Ichino Tommaso",
+          "set": 1,
+          "points": 0,
+          "serve": {
+            "tot": 0,
+            "ace": 0,
+            "err": 0
+          },
+          "rec": {
+            "tot": 0,
+            "err": 0,
+            "neg": 0,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": 0
+          },
+          "att": {
+            "tot": 0,
+            "err": 0,
+            "blocked": 0,
+            "kills": 0,
+            "killPct": 0,
+            "eff": 0
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Orduna Santiago",
+          "set": 3,
+          "points": 1,
+          "serve": {
+            "tot": 9,
+            "ace": 1,
+            "err": 0
+          },
+          "rec": {
+            "tot": 0,
+            "err": 0,
+            "neg": 0,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": 0
+          },
+          "att": {
+            "tot": 1,
+            "err": 0,
+            "blocked": 0,
+            "kills": 0,
+            "killPct": 0,
+            "eff": 0
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Otsuka Tatsunori",
+          "set": 3,
+          "points": 14,
+          "serve": {
+            "tot": 9,
+            "ace": 0,
+            "err": 3
+          },
+          "rec": {
+            "tot": 24,
+            "err": 2,
+            "neg": 9,
+            "perf": 4,
+            "perfPct": 16.7,
+            "eff": 0.08
+          },
+          "att": {
+            "tot": 20,
+            "err": 1,
+            "blocked": 1,
+            "kills": 12,
+            "killPct": 60,
+            "eff": 0.55
+          },
+          "block": {
+            "pts": 2
+          }
+        },
+        {
+          "name": "Porro Simone",
+          "set": 2,
+          "points": 0,
+          "serve": {
+            "tot": 1,
+            "ace": 0,
+            "err": 0
+          },
+          "rec": {
+            "tot": 0,
+            "err": 0,
+            "neg": 0,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": 0
+          },
+          "att": {
+            "tot": 0,
+            "err": 0,
+            "blocked": 0,
+            "kills": 0,
+            "killPct": 0,
+            "eff": 0
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Rotty Seppe",
+          "set": 3,
+          "points": 7,
+          "serve": {
+            "tot": 10,
+            "ace": 0,
+            "err": 4
+          },
+          "rec": {
+            "tot": 23,
+            "err": 0,
+            "neg": 11,
+            "perf": 6,
+            "perfPct": 26.1,
+            "eff": 0.26
+          },
+          "att": {
+            "tot": 19,
+            "err": 0,
+            "blocked": 4,
+            "kills": 7,
+            "killPct": 36.8,
+            "eff": 0.37
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Simon Robertlandy",
+          "set": 3,
+          "points": 6,
+          "serve": {
+            "tot": 12,
+            "ace": 0,
+            "err": 5
+          },
+          "rec": {
+            "tot": 3,
+            "err": 0,
+            "neg": 2,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": 0
+          },
+          "att": {
+            "tot": 8,
+            "err": 1,
+            "blocked": 0,
+            "kills": 5,
+            "killPct": 62.5,
+            "eff": 0.5
+          },
+          "block": {
+            "pts": 1
+          }
+        },
+        {
+          "name": "Tatarov Georgi",
+          "set": 2,
+          "points": 1,
+          "serve": {
+            "tot": 0,
+            "ace": 0,
+            "err": 0
+          },
+          "rec": {
+            "tot": 6,
+            "err": 0,
+            "neg": 2,
+            "perf": 2,
+            "perfPct": 33.3,
+            "eff": 0.33
+          },
+          "att": {
+            "tot": 6,
+            "err": 0,
+            "blocked": 2,
+            "kills": 1,
+            "killPct": 16.7,
+            "eff": 0.17
+          },
+          "block": {
+            "pts": 0
+          }
+        }
+      ],
+      "totals": {
+        "name": "Totali di Squadra",
+        "set": 3,
+        "points": 45,
+        "serve": {
+          "tot": 58,
+          "ace": 2,
+          "err": 19
+        },
+        "rec": {
+          "tot": 69,
+          "err": 4,
+          "neg": 30,
+          "perf": 14,
+          "perfPct": 20.3,
+          "eff": 0.14
+        },
+        "att": {
+          "tot": 84,
+          "err": 6,
+          "blocked": 13,
+          "kills": 37,
+          "killPct": 44,
+          "eff": 0.37
+        },
+        "block": {
+          "pts": 6
+        }
+      }
+    },
+    "6859": {
+      "team": "Cisterna Volley",
+      "players": [
+        {
+          "name": "Duflos-Rossi Noa",
+          "set": 3,
+          "points": 8,
+          "serve": {
+            "tot": 10,
+            "ace": 0,
+            "err": 5
+          },
+          "rec": {
+            "tot": 0,
+            "err": 0,
+            "neg": 0,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": 0
+          },
+          "att": {
+            "tot": 16,
+            "err": 0,
+            "blocked": 1,
+            "kills": 6,
+            "killPct": 37.5,
+            "eff": 0.37
+          },
+          "block": {
+            "pts": 2
+          }
+        },
+        {
+          "name": "Fanizza Alessandro",
+          "set": 3,
+          "points": 1,
+          "serve": {
+            "tot": 19,
+            "ace": 0,
+            "err": 1
+          },
+          "rec": {
+            "tot": 0,
+            "err": 0,
+            "neg": 0,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": 0
+          },
+          "att": {
+            "tot": 2,
+            "err": 1,
+            "blocked": 0,
+            "kills": 1,
+            "killPct": 50,
+            "eff": 0
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Federici Filippo",
+          "set": 3,
+          "points": 0,
+          "serve": {
+            "tot": 0,
+            "ace": 0,
+            "err": 0
+          },
+          "rec": {
+            "tot": 9,
+            "err": 1,
+            "neg": 5,
+            "perf": 2,
+            "perfPct": 22.2,
+            "eff": 0.11
+          },
+          "att": {
+            "tot": 0,
+            "err": 0,
+            "blocked": 0,
+            "kills": 0,
+            "killPct": 0,
+            "eff": 0
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Lanza Filippo",
+          "set": 3,
+          "points": 11,
+          "serve": {
+            "tot": 16,
+            "ace": 2,
+            "err": 1
+          },
+          "rec": {
+            "tot": 12,
+            "err": 0,
+            "neg": 4,
+            "perf": 2,
+            "perfPct": 16.7,
+            "eff": 0.17
+          },
+          "att": {
+            "tot": 21,
+            "err": 1,
+            "blocked": 1,
+            "kills": 9,
+            "killPct": 42.9,
+            "eff": 0.38
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Magalini Giulio",
+          "set": 3,
+          "points": 14,
+          "serve": {
+            "tot": 10,
+            "ace": 0,
+            "err": 1
+          },
+          "rec": {
+            "tot": 14,
+            "err": 0,
+            "neg": 1,
+            "perf": 2,
+            "perfPct": 14.3,
+            "eff": 0.14
+          },
+          "att": {
+            "tot": 17,
+            "err": 0,
+            "blocked": 2,
+            "kills": 11,
+            "killPct": 64.7,
+            "eff": 0.65
+          },
+          "block": {
+            "pts": 3
+          }
+        },
+        {
+          "name": "Martinez Palacios Miguel Angel",
+          "set": 1,
+          "points": 1,
+          "serve": {
+            "tot": 0,
+            "ace": 0,
+            "err": 0
+          },
+          "rec": {
+            "tot": 0,
+            "err": 0,
+            "neg": 0,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": 0
+          },
+          "att": {
+            "tot": 2,
+            "err": 0,
+            "blocked": 1,
+            "kills": 1,
+            "killPct": 50,
+            "eff": 0.5
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Mazzone Daniele",
+          "set": 3,
+          "points": 5,
+          "serve": {
+            "tot": 10,
+            "ace": 1,
+            "err": 0
+          },
+          "rec": {
+            "tot": 1,
+            "err": 0,
+            "neg": 1,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": 0
+          },
+          "att": {
+            "tot": 5,
+            "err": 0,
+            "blocked": 0,
+            "kills": 4,
+            "killPct": 80,
+            "eff": 0.8
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Peng Shikun",
+          "set": 3,
+          "points": 12,
+          "serve": {
+            "tot": 12,
+            "ace": 1,
+            "err": 0
+          },
+          "rec": {
+            "tot": 3,
+            "err": 1,
+            "neg": 0,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": -0.33
+          },
+          "att": {
+            "tot": 4,
+            "err": 0,
+            "blocked": 1,
+            "kills": 3,
+            "killPct": 75,
+            "eff": 0.75
+          },
+          "block": {
+            "pts": 8
+          }
+        },
+        {
+          "name": "Szabo Vilmos",
+          "set": 1,
+          "points": 0,
+          "serve": {
+            "tot": 0,
+            "ace": 0,
+            "err": 0
+          },
+          "rec": {
+            "tot": 0,
+            "err": 0,
+            "neg": 0,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": 0
+          },
+          "att": {
+            "tot": 0,
+            "err": 0,
+            "blocked": 0,
+            "kills": 0,
+            "killPct": 0,
+            "eff": 0
+          },
+          "block": {
+            "pts": 0
+          }
+        }
+      ],
+      "totals": {
+        "name": "Totali di Squadra",
+        "set": 3,
+        "points": 52,
+        "serve": {
+          "tot": 77,
+          "ace": 4,
+          "err": 8
+        },
+        "rec": {
+          "tot": 39,
+          "err": 2,
+          "neg": 11,
+          "perf": 6,
+          "perfPct": 15.4,
+          "eff": 0.1
+        },
+        "att": {
+          "tot": 67,
+          "err": 2,
+          "blocked": 6,
+          "kills": 35,
+          "killPct": 52.2,
+          "eff": 0.49
+        },
+        "block": {
+          "pts": 13
+        }
+      }
+    },
+    "6860": {
+      "team": "Cucine Lube Civitanova",
+      "players": [
+        {
+          "name": "Balaso Fabio",
+          "set": 3,
+          "points": 0,
+          "serve": {
+            "tot": 0,
+            "ace": 0,
+            "err": 0
+          },
+          "rec": {
+            "tot": 9,
+            "err": 0,
+            "neg": 6,
+            "perf": 1,
+            "perfPct": 11.1,
+            "eff": 0.11
+          },
+          "att": {
+            "tot": 0,
+            "err": 0,
+            "blocked": 0,
+            "kills": 0,
+            "killPct": 0,
+            "eff": 0
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Bisotto Francesco",
+          "set": 3,
+          "points": 0,
+          "serve": {
+            "tot": 0,
+            "ace": 0,
+            "err": 0
+          },
+          "rec": {
+            "tot": 3,
+            "err": 0,
+            "neg": 2,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": 0
+          },
+          "att": {
+            "tot": 0,
+            "err": 0,
+            "blocked": 0,
+            "kills": 0,
+            "killPct": 0,
+            "eff": 0
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Bottolo Mattia",
+          "set": 3,
+          "points": 6,
+          "serve": {
+            "tot": 11,
+            "ace": 0,
+            "err": 4
+          },
+          "rec": {
+            "tot": 14,
+            "err": 1,
+            "neg": 8,
+            "perf": 2,
+            "perfPct": 14.3,
+            "eff": 0.07
+          },
+          "att": {
+            "tot": 6,
+            "err": 0,
+            "blocked": 0,
+            "kills": 5,
+            "killPct": 83.3,
+            "eff": 0.83
+          },
+          "block": {
+            "pts": 1
+          }
+        },
+        {
+          "name": "Gargiulo Giovanni Maria",
+          "set": 3,
+          "points": 5,
+          "serve": {
+            "tot": 16,
+            "ace": 2,
+            "err": 1
+          },
+          "rec": {
+            "tot": 2,
+            "err": 0,
+            "neg": 1,
+            "perf": 1,
+            "perfPct": 50,
+            "eff": 0.5
+          },
+          "att": {
+            "tot": 4,
+            "err": 0,
+            "blocked": 0,
+            "kills": 3,
+            "killPct": 75,
+            "eff": 0.75
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Howe Jackson",
+          "set": 3,
+          "points": 6,
+          "serve": {
+            "tot": 8,
+            "ace": 0,
+            "err": 1
+          },
+          "rec": {
+            "tot": 1,
+            "err": 0,
+            "neg": 1,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": 0
+          },
+          "att": {
+            "tot": 6,
+            "err": 0,
+            "blocked": 1,
+            "kills": 4,
+            "killPct": 66.7,
+            "eff": 0.67
+          },
+          "block": {
+            "pts": 2
+          }
+        },
+        {
+          "name": "Klimes Antonin",
+          "set": 3,
+          "points": 0,
+          "serve": {
+            "tot": 2,
+            "ace": 0,
+            "err": 2
+          },
+          "rec": {
+            "tot": 0,
+            "err": 0,
+            "neg": 0,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": 0
+          },
+          "att": {
+            "tot": 1,
+            "err": 0,
+            "blocked": 0,
+            "kills": 0,
+            "killPct": 0,
+            "eff": 0
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Loeppky Eric",
+          "set": 3,
+          "points": 8,
+          "serve": {
+            "tot": 10,
+            "ace": 0,
+            "err": 4
+          },
+          "rec": {
+            "tot": 11,
+            "err": 0,
+            "neg": 5,
+            "perf": 2,
+            "perfPct": 18.2,
+            "eff": 0.18
+          },
+          "att": {
+            "tot": 10,
+            "err": 1,
+            "blocked": 0,
+            "kills": 7,
+            "killPct": 70,
+            "eff": 0.6
+          },
+          "block": {
+            "pts": 1
+          }
+        },
+        {
+          "name": "Nikolov Aleksandar",
+          "set": 3,
+          "points": 19,
+          "serve": {
+            "tot": 16,
+            "ace": 5,
+            "err": 3
+          },
+          "rec": {
+            "tot": 3,
+            "err": 1,
+            "neg": 1,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": -0.33
+          },
+          "att": {
+            "tot": 26,
+            "err": 4,
+            "blocked": 1,
+            "kills": 13,
+            "killPct": 50,
+            "eff": 0.35
+          },
+          "block": {
+            "pts": 1
+          }
+        },
+        {
+          "name": "Nikolov Simeon",
+          "set": 3,
+          "points": 5,
+          "serve": {
+            "tot": 14,
+            "ace": 2,
+            "err": 3
+          },
+          "rec": {
+            "tot": 1,
+            "err": 1,
+            "neg": 0,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": -1
+          },
+          "att": {
+            "tot": 1,
+            "err": 0,
+            "blocked": 0,
+            "kills": 1,
+            "killPct": 100,
+            "eff": 1
+          },
+          "block": {
+            "pts": 2
+          }
+        },
+        {
+          "name": "Tonkonoh Maksym",
+          "set": 1,
+          "points": 0,
+          "serve": {
+            "tot": 0,
+            "ace": 0,
+            "err": 0
+          },
+          "rec": {
+            "tot": 0,
+            "err": 0,
+            "neg": 0,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": 0
+          },
+          "att": {
+            "tot": 0,
+            "err": 0,
+            "blocked": 0,
+            "kills": 0,
+            "killPct": 0,
+            "eff": 0
+          },
+          "block": {
+            "pts": 0
+          }
+        }
+      ],
+      "totals": {
+        "name": "Totali di Squadra",
+        "set": 3,
+        "points": 49,
+        "serve": {
+          "tot": 77,
+          "ace": 9,
+          "err": 18
+        },
+        "rec": {
+          "tot": 44,
+          "err": 3,
+          "neg": 24,
+          "perf": 6,
+          "perfPct": 13.6,
+          "eff": 0.07
+        },
+        "att": {
+          "tot": 54,
+          "err": 5,
+          "blocked": 2,
+          "kills": 33,
+          "killPct": 61.1,
+          "eff": 0.52
+        },
+        "block": {
+          "pts": 7
+        }
+      }
+    },
+    "6861": {
+      "team": "Gas Sales Bluenergy Piacenza",
+      "players": [
+        {
+          "name": "Bovolenta Alessandro",
+          "set": 3,
+          "points": 15,
+          "serve": {
+            "tot": 10,
+            "ace": 0,
+            "err": 5
+          },
+          "rec": {
+            "tot": 1,
+            "err": 0,
+            "neg": 1,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": 0
+          },
+          "att": {
+            "tot": 22,
+            "err": 2,
+            "blocked": 1,
+            "kills": 14,
+            "killPct": 63.6,
+            "eff": 0.55
+          },
+          "block": {
+            "pts": 1
+          }
+        },
+        {
+          "name": "Brboric Nikola",
+          "set": 3,
+          "points": 1,
+          "serve": {
+            "tot": 4,
+            "ace": 1,
+            "err": 1
+          },
+          "rec": {
+            "tot": 0,
+            "err": 0,
+            "neg": 0,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": 0
+          },
+          "att": {
+            "tot": 0,
+            "err": 0,
+            "blocked": 0,
+            "kills": 0,
+            "killPct": 0,
+            "eff": 0
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Comparoni Francesco",
+          "set": 2,
+          "points": 0,
+          "serve": {
+            "tot": 0,
+            "ace": 0,
+            "err": 0
+          },
+          "rec": {
+            "tot": 0,
+            "err": 0,
+            "neg": 0,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": 0
+          },
+          "att": {
+            "tot": 0,
+            "err": 0,
+            "blocked": 0,
+            "kills": 0,
+            "killPct": 0,
+            "eff": 0
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Galassi Gianluca",
+          "set": 3,
+          "points": 8,
+          "serve": {
+            "tot": 11,
+            "ace": 0,
+            "err": 2
+          },
+          "rec": {
+            "tot": 1,
+            "err": 0,
+            "neg": 1,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": 0
+          },
+          "att": {
+            "tot": 8,
+            "err": 0,
+            "blocked": 1,
+            "kills": 6,
+            "killPct": 75,
+            "eff": 0.75
+          },
+          "block": {
+            "pts": 2
+          }
+        },
+        {
+          "name": "Gutierrez Josè Miguel",
+          "set": 3,
+          "points": 10,
+          "serve": {
+            "tot": 13,
+            "ace": 1,
+            "err": 1
+          },
+          "rec": {
+            "tot": 13,
+            "err": 3,
+            "neg": 7,
+            "perf": 1,
+            "perfPct": 7.7,
+            "eff": -0.15
+          },
+          "att": {
+            "tot": 15,
+            "err": 2,
+            "blocked": 0,
+            "kills": 8,
+            "killPct": 53.3,
+            "eff": 0.4
+          },
+          "block": {
+            "pts": 1
+          }
+        },
+        {
+          "name": "McHenry Merrick",
+          "set": 3,
+          "points": 5,
+          "serve": {
+            "tot": 15,
+            "ace": 1,
+            "err": 1
+          },
+          "rec": {
+            "tot": 2,
+            "err": 0,
+            "neg": 1,
+            "perf": 1,
+            "perfPct": 50,
+            "eff": 0.5
+          },
+          "att": {
+            "tot": 5,
+            "err": 0,
+            "blocked": 0,
+            "kills": 2,
+            "killPct": 40,
+            "eff": 0.4
+          },
+          "block": {
+            "pts": 2
+          }
+        },
+        {
+          "name": "Pace Domenico",
+          "set": 3,
+          "points": 0,
+          "serve": {
+            "tot": 0,
+            "ace": 0,
+            "err": 0
+          },
+          "rec": {
+            "tot": 14,
+            "err": 0,
+            "neg": 7,
+            "perf": 4,
+            "perfPct": 28.6,
+            "eff": 0.29
+          },
+          "att": {
+            "tot": 0,
+            "err": 0,
+            "blocked": 0,
+            "kills": 0,
+            "killPct": 0,
+            "eff": 0
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Porro Paolo",
+          "set": 3,
+          "points": 2,
+          "serve": {
+            "tot": 12,
+            "ace": 2,
+            "err": 2
+          },
+          "rec": {
+            "tot": 1,
+            "err": 0,
+            "neg": 1,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": 0
+          },
+          "att": {
+            "tot": 0,
+            "err": 0,
+            "blocked": 0,
+            "kills": 0,
+            "killPct": 0,
+            "eff": 0
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Zlatanov Manuel",
+          "set": 3,
+          "points": 14,
+          "serve": {
+            "tot": 9,
+            "ace": 2,
+            "err": 3
+          },
+          "rec": {
+            "tot": 14,
+            "err": 2,
+            "neg": 8,
+            "perf": 1,
+            "perfPct": 7.1,
+            "eff": -0.07
+          },
+          "att": {
+            "tot": 18,
+            "err": 1,
+            "blocked": 2,
+            "kills": 9,
+            "killPct": 50,
+            "eff": 0.44
+          },
+          "block": {
+            "pts": 3
+          }
+        }
+      ],
+      "totals": {
+        "name": "Totali di Squadra",
+        "set": 3,
+        "points": 55,
+        "serve": {
+          "tot": 74,
+          "ace": 7,
+          "err": 15
+        },
+        "rec": {
+          "tot": 46,
+          "err": 5,
+          "neg": 26,
+          "perf": 7,
+          "perfPct": 15.2,
+          "eff": 0.04
+        },
+        "att": {
+          "tot": 68,
+          "err": 5,
+          "blocked": 4,
+          "kills": 39,
+          "killPct": 57.4,
+          "eff": 0.5
+        },
+        "block": {
+          "pts": 9
+        }
+      }
+    },
+    "6862": {
+      "team": "Itas Trentino",
+      "players": [
+        {
+          "name": "Faure Theo",
+          "set": 3,
+          "points": 23,
+          "serve": {
+            "tot": 12,
+            "ace": 3,
+            "err": 1
+          },
+          "rec": {
+            "tot": 0,
+            "err": 0,
+            "neg": 0,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": 0
+          },
+          "att": {
+            "tot": 25,
+            "err": 0,
+            "blocked": 2,
+            "kills": 20,
+            "killPct": 80,
+            "eff": 0.8
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Laurenzano Gabriele",
+          "set": 3,
+          "points": 0,
+          "serve": {
+            "tot": 0,
+            "ace": 0,
+            "err": 0
+          },
+          "rec": {
+            "tot": 16,
+            "err": 1,
+            "neg": 7,
+            "perf": 3,
+            "perfPct": 18.7,
+            "eff": 0.12
+          },
+          "att": {
+            "tot": 0,
+            "err": 0,
+            "blocked": 0,
+            "kills": 0,
+            "killPct": 0,
+            "eff": 0
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Lavia Daniele",
+          "set": 3,
+          "points": 6,
+          "serve": {
+            "tot": 13,
+            "ace": 0,
+            "err": 2
+          },
+          "rec": {
+            "tot": 13,
+            "err": 0,
+            "neg": 4,
+            "perf": 3,
+            "perfPct": 23.1,
+            "eff": 0.23
+          },
+          "att": {
+            "tot": 14,
+            "err": 1,
+            "blocked": 2,
+            "kills": 4,
+            "killPct": 28.6,
+            "eff": 0.21
+          },
+          "block": {
+            "pts": 2
+          }
+        },
+        {
+          "name": "Michieletto Alessandro",
+          "set": 3,
+          "points": 12,
+          "serve": {
+            "tot": 12,
+            "ace": 3,
+            "err": 3
+          },
+          "rec": {
+            "tot": 18,
+            "err": 1,
+            "neg": 7,
+            "perf": 3,
+            "perfPct": 16.7,
+            "eff": 0.11
+          },
+          "att": {
+            "tot": 13,
+            "err": 2,
+            "blocked": 2,
+            "kills": 8,
+            "killPct": 61.5,
+            "eff": 0.46
+          },
+          "block": {
+            "pts": 1
+          }
+        },
+        {
+          "name": "Nedeljkovic Aleksandar",
+          "set": 3,
+          "points": 10,
+          "serve": {
+            "tot": 13,
+            "ace": 1,
+            "err": 1
+          },
+          "rec": {
+            "tot": 5,
+            "err": 1,
+            "neg": 2,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": -0.2
+          },
+          "att": {
+            "tot": 9,
+            "err": 0,
+            "blocked": 0,
+            "kills": 8,
+            "killPct": 88.9,
+            "eff": 0.89
+          },
+          "block": {
+            "pts": 1
+          }
+        },
+        {
+          "name": "Resende Gualberto Flavio",
+          "set": 3,
+          "points": 8,
+          "serve": {
+            "tot": 5,
+            "ace": 0,
+            "err": 0
+          },
+          "rec": {
+            "tot": 1,
+            "err": 0,
+            "neg": 0,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": 0
+          },
+          "att": {
+            "tot": 7,
+            "err": 0,
+            "blocked": 0,
+            "kills": 5,
+            "killPct": 71.4,
+            "eff": 0.71
+          },
+          "block": {
+            "pts": 3
+          }
+        },
+        {
+          "name": "Roberti Federico",
+          "set": 2,
+          "points": 0,
+          "serve": {
+            "tot": 2,
+            "ace": 0,
+            "err": 1
+          },
+          "rec": {
+            "tot": 0,
+            "err": 0,
+            "neg": 0,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": 0
+          },
+          "att": {
+            "tot": 0,
+            "err": 0,
+            "blocked": 0,
+            "kills": 0,
+            "killPct": 0,
+            "eff": 0
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Sbertoli Riccardo",
+          "set": 3,
+          "points": 3,
+          "serve": {
+            "tot": 16,
+            "ace": 0,
+            "err": 2
+          },
+          "rec": {
+            "tot": 0,
+            "err": 0,
+            "neg": 0,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": 0
+          },
+          "att": {
+            "tot": 1,
+            "err": 0,
+            "blocked": 0,
+            "kills": 1,
+            "killPct": 100,
+            "eff": 1
+          },
+          "block": {
+            "pts": 2
+          }
+        }
+      ],
+      "totals": {
+        "name": "Totali di Squadra",
+        "set": 3,
+        "points": 62,
+        "serve": {
+          "tot": 73,
+          "ace": 7,
+          "err": 10
+        },
+        "rec": {
+          "tot": 53,
+          "err": 3,
+          "neg": 20,
+          "perf": 9,
+          "perfPct": 17,
+          "eff": 0.11
+        },
+        "att": {
+          "tot": 69,
+          "err": 3,
+          "blocked": 6,
+          "kills": 46,
+          "killPct": 66.7,
+          "eff": 0.62
+        },
+        "block": {
+          "pts": 9
+        }
+      }
+    },
+    "6863": {
+      "team": "Acqua Sant'Anna Cuneo",
+      "players": [
+        {
+          "name": "Argilagos Bryan",
+          "set": 5,
+          "points": 3,
+          "serve": {
+            "tot": 14,
+            "ace": 0,
+            "err": 4
+          },
+          "rec": {
+            "tot": 0,
+            "err": 0,
+            "neg": 0,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": 0
+          },
+          "att": {
+            "tot": 6,
+            "err": 1,
+            "blocked": 2,
+            "kills": 1,
+            "killPct": 16.7,
+            "eff": 0
+          },
+          "block": {
+            "pts": 2
+          }
+        },
+        {
+          "name": "Cavaccini Domenico",
+          "set": 3,
+          "points": 0,
+          "serve": {
+            "tot": 0,
+            "ace": 0,
+            "err": 0
+          },
+          "rec": {
+            "tot": 18,
+            "err": 4,
+            "neg": 9,
+            "perf": 3,
+            "perfPct": 16.7,
+            "eff": -0.06
+          },
+          "att": {
+            "tot": 0,
+            "err": 0,
+            "blocked": 0,
+            "kills": 0,
+            "killPct": 0,
+            "eff": 0
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Champlin Ethan",
+          "set": 5,
+          "points": 12,
+          "serve": {
+            "tot": 23,
+            "ace": 1,
+            "err": 1
+          },
+          "rec": {
+            "tot": 22,
+            "err": 2,
+            "neg": 14,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": -0.09
+          },
+          "att": {
+            "tot": 23,
+            "err": 0,
+            "blocked": 3,
+            "kills": 10,
+            "killPct": 43.5,
+            "eff": 0.43
+          },
+          "block": {
+            "pts": 1
+          }
+        },
+        {
+          "name": "Codarin Lorenzo",
+          "set": 5,
+          "points": 6,
+          "serve": {
+            "tot": 13,
+            "ace": 1,
+            "err": 2
+          },
+          "rec": {
+            "tot": 0,
+            "err": 0,
+            "neg": 0,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": 0
+          },
+          "att": {
+            "tot": 10,
+            "err": 2,
+            "blocked": 2,
+            "kills": 3,
+            "killPct": 30,
+            "eff": 0.1
+          },
+          "block": {
+            "pts": 2
+          }
+        },
+        {
+          "name": "Coscione Manuel",
+          "set": 4,
+          "points": 0,
+          "serve": {
+            "tot": 4,
+            "ace": 0,
+            "err": 2
+          },
+          "rec": {
+            "tot": 0,
+            "err": 0,
+            "neg": 0,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": 0
+          },
+          "att": {
+            "tot": 0,
+            "err": 0,
+            "blocked": 0,
+            "kills": 0,
+            "killPct": 0,
+            "eff": 0
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Feral Nathan",
+          "set": 5,
+          "points": 22,
+          "serve": {
+            "tot": 13,
+            "ace": 2,
+            "err": 9
+          },
+          "rec": {
+            "tot": 2,
+            "err": 0,
+            "neg": 1,
+            "perf": 1,
+            "perfPct": 50,
+            "eff": 0.5
+          },
+          "att": {
+            "tot": 32,
+            "err": 5,
+            "blocked": 0,
+            "kills": 20,
+            "killPct": 62.5,
+            "eff": 0.47
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Hossein Khanzadeh Poriya",
+          "set": 5,
+          "points": 11,
+          "serve": {
+            "tot": 9,
+            "ace": 0,
+            "err": 5
+          },
+          "rec": {
+            "tot": 21,
+            "err": 4,
+            "neg": 11,
+            "perf": 3,
+            "perfPct": 14.3,
+            "eff": -0.05
+          },
+          "att": {
+            "tot": 22,
+            "err": 3,
+            "blocked": 0,
+            "kills": 9,
+            "killPct": 40.9,
+            "eff": 0.27
+          },
+          "block": {
+            "pts": 2
+          }
+        },
+        {
+          "name": "Loubeyre Thibault",
+          "set": 3,
+          "points": 0,
+          "serve": {
+            "tot": 0,
+            "ace": 0,
+            "err": 0
+          },
+          "rec": {
+            "tot": 21,
+            "err": 3,
+            "neg": 8,
+            "perf": 7,
+            "perfPct": 33.3,
+            "eff": 0.19
+          },
+          "att": {
+            "tot": 0,
+            "err": 0,
+            "blocked": 0,
+            "kills": 0,
+            "killPct": 0,
+            "eff": 0
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Mosca Leandro",
+          "set": 5,
+          "points": 3,
+          "serve": {
+            "tot": 13,
+            "ace": 0,
+            "err": 1
+          },
+          "rec": {
+            "tot": 0,
+            "err": 0,
+            "neg": 0,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": 0
+          },
+          "att": {
+            "tot": 5,
+            "err": 1,
+            "blocked": 0,
+            "kills": 2,
+            "killPct": 40,
+            "eff": 0.2
+          },
+          "block": {
+            "pts": 1
+          }
+        },
+        {
+          "name": "Sala Lorenzo",
+          "set": 5,
+          "points": 1,
+          "serve": {
+            "tot": 2,
+            "ace": 0,
+            "err": 2
+          },
+          "rec": {
+            "tot": 1,
+            "err": 0,
+            "neg": 0,
+            "perf": 1,
+            "perfPct": 100,
+            "eff": 1
+          },
+          "att": {
+            "tot": 4,
+            "err": 0,
+            "blocked": 0,
+            "kills": 1,
+            "killPct": 25,
+            "eff": 0.25
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Strehlau Alexandre",
+          "set": 2,
+          "points": 1,
+          "serve": {
+            "tot": 3,
+            "ace": 0,
+            "err": 1
+          },
+          "rec": {
+            "tot": 2,
+            "err": 0,
+            "neg": 0,
+            "perf": 2,
+            "perfPct": 100,
+            "eff": 1
+          },
+          "att": {
+            "tot": 7,
+            "err": 1,
+            "blocked": 0,
+            "kills": 1,
+            "killPct": 14.3,
+            "eff": 0
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Volpe Nicolò",
+          "set": 2,
+          "points": 0,
+          "serve": {
+            "tot": 2,
+            "ace": 0,
+            "err": 0
+          },
+          "rec": {
+            "tot": 0,
+            "err": 0,
+            "neg": 0,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": 0
+          },
+          "att": {
+            "tot": 0,
+            "err": 0,
+            "blocked": 0,
+            "kills": 0,
+            "killPct": 0,
+            "eff": 0
+          },
+          "block": {
+            "pts": 0
+          }
+        }
+      ],
+      "totals": {
+        "name": "Totali di Squadra",
+        "set": 5,
+        "points": 59,
+        "serve": {
+          "tot": 96,
+          "ace": 4,
+          "err": 27
+        },
+        "rec": {
+          "tot": 87,
+          "err": 13,
+          "neg": 43,
+          "perf": 17,
+          "perfPct": 19.5,
+          "eff": 0.05
+        },
+        "att": {
+          "tot": 109,
+          "err": 13,
+          "blocked": 7,
+          "kills": 47,
+          "killPct": 43.1,
+          "eff": 0.31
+        },
+        "block": {
+          "pts": 8
+        }
+      }
+    },
+    "6864": {
+      "team": "Rana Verona",
+      "players": [
+        {
+          "name": "Anzani Simone",
+          "set": 3,
+          "points": 5,
+          "serve": {
+            "tot": 10,
+            "ace": 0,
+            "err": 1
+          },
+          "rec": {
+            "tot": 0,
+            "err": 0,
+            "neg": 0,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": 0
+          },
+          "att": {
+            "tot": 8,
+            "err": 0,
+            "blocked": 1,
+            "kills": 4,
+            "killPct": 50,
+            "eff": 0.5
+          },
+          "block": {
+            "pts": 1
+          }
+        },
+        {
+          "name": "Buchegger Paul",
+          "set": 3,
+          "points": 13,
+          "serve": {
+            "tot": 12,
+            "ace": 2,
+            "err": 8
+          },
+          "rec": {
+            "tot": 0,
+            "err": 0,
+            "neg": 0,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": 0
+          },
+          "att": {
+            "tot": 19,
+            "err": 2,
+            "blocked": 1,
+            "kills": 11,
+            "killPct": 57.9,
+            "eff": 0.47
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Glatz Lukas",
+          "set": 3,
+          "points": 6,
+          "serve": {
+            "tot": 8,
+            "ace": 0,
+            "err": 3
+          },
+          "rec": {
+            "tot": 9,
+            "err": 2,
+            "neg": 6,
+            "perf": 1,
+            "perfPct": 11.1,
+            "eff": -0.11
+          },
+          "att": {
+            "tot": 9,
+            "err": 0,
+            "blocked": 1,
+            "kills": 6,
+            "killPct": 66.7,
+            "eff": 0.67
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Keita Noumory",
+          "set": 3,
+          "points": 11,
+          "serve": {
+            "tot": 13,
+            "ace": 0,
+            "err": 4
+          },
+          "rec": {
+            "tot": 29,
+            "err": 6,
+            "neg": 17,
+            "perf": 4,
+            "perfPct": 13.8,
+            "eff": -0.07
+          },
+          "att": {
+            "tot": 19,
+            "err": 1,
+            "blocked": 3,
+            "kills": 10,
+            "killPct": 52.6,
+            "eff": 0.47
+          },
+          "block": {
+            "pts": 1
+          }
+        },
+        {
+          "name": "Mol Anders",
+          "set": 2,
+          "points": 0,
+          "serve": {
+            "tot": 0,
+            "ace": 0,
+            "err": 0
+          },
+          "rec": {
+            "tot": 0,
+            "err": 0,
+            "neg": 0,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": 0
+          },
+          "att": {
+            "tot": 0,
+            "err": 0,
+            "blocked": 0,
+            "kills": 0,
+            "killPct": 0,
+            "eff": 0
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Motta Paes Kellian",
+          "set": 3,
+          "points": 0,
+          "serve": {
+            "tot": 11,
+            "ace": 0,
+            "err": 4
+          },
+          "rec": {
+            "tot": 1,
+            "err": 0,
+            "neg": 1,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": 0
+          },
+          "att": {
+            "tot": 0,
+            "err": 0,
+            "blocked": 0,
+            "kills": 0,
+            "killPct": 0,
+            "eff": 0
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Mozic Rok",
+          "set": 2,
+          "points": 3,
+          "serve": {
+            "tot": 3,
+            "ace": 0,
+            "err": 0
+          },
+          "rec": {
+            "tot": 7,
+            "err": 1,
+            "neg": 4,
+            "perf": 1,
+            "perfPct": 14.3,
+            "eff": 0
+          },
+          "att": {
+            "tot": 8,
+            "err": 1,
+            "blocked": 1,
+            "kills": 3,
+            "killPct": 37.5,
+            "eff": 0.25
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Sani Francesco",
+          "set": 3,
+          "points": 0,
+          "serve": {
+            "tot": 2,
+            "ace": 0,
+            "err": 1
+          },
+          "rec": {
+            "tot": 1,
+            "err": 0,
+            "neg": 0,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": 0
+          },
+          "att": {
+            "tot": 0,
+            "err": 0,
+            "blocked": 0,
+            "kills": 0,
+            "killPct": 0,
+            "eff": 0
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Scanferla Leonardo",
+          "set": 2,
+          "points": 0,
+          "serve": {
+            "tot": 0,
+            "ace": 0,
+            "err": 0
+          },
+          "rec": {
+            "tot": 2,
+            "err": 0,
+            "neg": 2,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": 0
+          },
+          "att": {
+            "tot": 0,
+            "err": 0,
+            "blocked": 0,
+            "kills": 0,
+            "killPct": 0,
+            "eff": 0
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Staforini Matteo",
+          "set": 3,
+          "points": 0,
+          "serve": {
+            "tot": 0,
+            "ace": 0,
+            "err": 0
+          },
+          "rec": {
+            "tot": 10,
+            "err": 1,
+            "neg": 4,
+            "perf": 3,
+            "perfPct": 30,
+            "eff": 0.2
+          },
+          "att": {
+            "tot": 0,
+            "err": 0,
+            "blocked": 0,
+            "kills": 0,
+            "killPct": 0,
+            "eff": 0
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Vitelli Marco",
+          "set": 2,
+          "points": 2,
+          "serve": {
+            "tot": 4,
+            "ace": 0,
+            "err": 1
+          },
+          "rec": {
+            "tot": 0,
+            "err": 0,
+            "neg": 0,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": 0
+          },
+          "att": {
+            "tot": 2,
+            "err": 0,
+            "blocked": 0,
+            "kills": 2,
+            "killPct": 100,
+            "eff": 1
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Zingel Aidan",
+          "set": 2,
+          "points": 1,
+          "serve": {
+            "tot": 3,
+            "ace": 0,
+            "err": 0
+          },
+          "rec": {
+            "tot": 0,
+            "err": 0,
+            "neg": 0,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": 0
+          },
+          "att": {
+            "tot": 2,
+            "err": 0,
+            "blocked": 0,
+            "kills": 1,
+            "killPct": 50,
+            "eff": 0.5
+          },
+          "block": {
+            "pts": 0
+          }
+        }
+      ],
+      "totals": {
+        "name": "Totali di Squadra",
+        "set": 3,
+        "points": 41,
+        "serve": {
+          "tot": 66,
+          "ace": 2,
+          "err": 22
+        },
+        "rec": {
+          "tot": 59,
+          "err": 10,
+          "neg": 34,
+          "perf": 9,
+          "perfPct": 15.3,
+          "eff": -0.02
+        },
+        "att": {
+          "tot": 67,
+          "err": 4,
+          "blocked": 7,
+          "kills": 37,
+          "killPct": 55.2,
+          "eff": 0.49
+        },
+        "block": {
+          "pts": 2
+        }
+      }
+    },
+    "6865": {
+      "team": "Sir Susa Scai Perugia",
+      "players": [
+        {
+          "name": "Gaggini Marco",
+          "set": 2,
+          "points": 0,
+          "serve": {
+            "tot": 1,
+            "ace": 0,
+            "err": 1
+          },
+          "rec": {
+            "tot": 0,
+            "err": 0,
+            "neg": 0,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": 0
+          },
+          "att": {
+            "tot": 0,
+            "err": 0,
+            "blocked": 0,
+            "kills": 0,
+            "killPct": 0,
+            "eff": 0
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Giannelli Simone",
+          "set": 5,
+          "points": 4,
+          "serve": {
+            "tot": 12,
+            "ace": 0,
+            "err": 4
+          },
+          "rec": {
+            "tot": 0,
+            "err": 0,
+            "neg": 0,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": 0
+          },
+          "att": {
+            "tot": 5,
+            "err": 0,
+            "blocked": 0,
+            "kills": 4,
+            "killPct": 80,
+            "eff": 0.8
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Henno Mathis",
+          "set": 2,
+          "points": 1,
+          "serve": {
+            "tot": 1,
+            "ace": 0,
+            "err": 1
+          },
+          "rec": {
+            "tot": 4,
+            "err": 0,
+            "neg": 1,
+            "perf": 3,
+            "perfPct": 75,
+            "eff": 0.75
+          },
+          "att": {
+            "tot": 1,
+            "err": 0,
+            "blocked": 0,
+            "kills": 0,
+            "killPct": 0,
+            "eff": 0
+          },
+          "block": {
+            "pts": 1
+          }
+        },
+        {
+          "name": "Hosseini Seyed Matin",
+          "set": 1,
+          "points": 0,
+          "serve": {
+            "tot": 1,
+            "ace": 0,
+            "err": 0
+          },
+          "rec": {
+            "tot": 0,
+            "err": 0,
+            "neg": 0,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": 0
+          },
+          "att": {
+            "tot": 0,
+            "err": 0,
+            "blocked": 0,
+            "kills": 0,
+            "killPct": 0,
+            "eff": 0
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Kollator David",
+          "set": 2,
+          "points": 1,
+          "serve": {
+            "tot": 3,
+            "ace": 1,
+            "err": 0
+          },
+          "rec": {
+            "tot": 0,
+            "err": 0,
+            "neg": 0,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": 0
+          },
+          "att": {
+            "tot": 0,
+            "err": 0,
+            "blocked": 0,
+            "kills": 0,
+            "killPct": 0,
+            "eff": 0
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Loreti Luca",
+          "set": 5,
+          "points": 0,
+          "serve": {
+            "tot": 0,
+            "ace": 0,
+            "err": 0
+          },
+          "rec": {
+            "tot": 23,
+            "err": 3,
+            "neg": 9,
+            "perf": 4,
+            "perfPct": 17.4,
+            "eff": 0.04
+          },
+          "att": {
+            "tot": 0,
+            "err": 0,
+            "blocked": 0,
+            "kills": 0,
+            "killPct": 0,
+            "eff": 0
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Loser Agustin",
+          "set": 2,
+          "points": 3,
+          "serve": {
+            "tot": 5,
+            "ace": 0,
+            "err": 0
+          },
+          "rec": {
+            "tot": 0,
+            "err": 0,
+            "neg": 0,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": 0
+          },
+          "att": {
+            "tot": 4,
+            "err": 0,
+            "blocked": 0,
+            "kills": 2,
+            "killPct": 50,
+            "eff": 0.5
+          },
+          "block": {
+            "pts": 1
+          }
+        },
+        {
+          "name": "Plotnytskyi Oleh",
+          "set": 5,
+          "points": 9,
+          "serve": {
+            "tot": 22,
+            "ace": 2,
+            "err": 7
+          },
+          "rec": {
+            "tot": 22,
+            "err": 2,
+            "neg": 6,
+            "perf": 7,
+            "perfPct": 31.8,
+            "eff": 0.23
+          },
+          "att": {
+            "tot": 19,
+            "err": 0,
+            "blocked": 2,
+            "kills": 7,
+            "killPct": 36.8,
+            "eff": 0.37
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Reggers Ferre",
+          "set": 5,
+          "points": 18,
+          "serve": {
+            "tot": 22,
+            "ace": 3,
+            "err": 6
+          },
+          "rec": {
+            "tot": 3,
+            "err": 0,
+            "neg": 0,
+            "perf": 3,
+            "perfPct": 100,
+            "eff": 1
+          },
+          "att": {
+            "tot": 31,
+            "err": 3,
+            "blocked": 4,
+            "kills": 14,
+            "killPct": 45.2,
+            "eff": 0.35
+          },
+          "block": {
+            "pts": 1
+          }
+        },
+        {
+          "name": "Sanguinetti Giovanni",
+          "set": 5,
+          "points": 11,
+          "serve": {
+            "tot": 13,
+            "ace": 3,
+            "err": 3
+          },
+          "rec": {
+            "tot": 0,
+            "err": 0,
+            "neg": 0,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": 0
+          },
+          "att": {
+            "tot": 13,
+            "err": 1,
+            "blocked": 1,
+            "kills": 8,
+            "killPct": 61.5,
+            "eff": 0.54
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Semeniuk Kamil",
+          "set": 5,
+          "points": 13,
+          "serve": {
+            "tot": 19,
+            "ace": 3,
+            "err": 4
+          },
+          "rec": {
+            "tot": 16,
+            "err": 1,
+            "neg": 4,
+            "perf": 7,
+            "perfPct": 43.7,
+            "eff": 0.37
+          },
+          "att": {
+            "tot": 24,
+            "err": 4,
+            "blocked": 1,
+            "kills": 9,
+            "killPct": 37.5,
+            "eff": 0.21
+          },
+          "block": {
+            "pts": 1
+          }
+        },
+        {
+          "name": "Solé Sebastian",
+          "set": 5,
+          "points": 10,
+          "serve": {
+            "tot": 14,
+            "ace": 0,
+            "err": 0
+          },
+          "rec": {
+            "tot": 1,
+            "err": 0,
+            "neg": 1,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": 0
+          },
+          "att": {
+            "tot": 10,
+            "err": 0,
+            "blocked": 0,
+            "kills": 7,
+            "killPct": 70,
+            "eff": 0.7
+          },
+          "block": {
+            "pts": 3
+          }
+        }
+      ],
+      "totals": {
+        "name": "Totali di Squadra",
+        "set": 5,
+        "points": 70,
+        "serve": {
+          "tot": 113,
+          "ace": 12,
+          "err": 26
+        },
+        "rec": {
+          "tot": 69,
+          "err": 6,
+          "neg": 21,
+          "perf": 24,
+          "perfPct": 34.8,
+          "eff": 0.26
+        },
+        "att": {
+          "tot": 107,
+          "err": 8,
+          "blocked": 8,
+          "kills": 51,
+          "killPct": 47.7,
+          "eff": 0.4
+        },
+        "block": {
+          "pts": 7
+        }
+      }
+    },
+    "6866": {
+      "team": "Pallavolo Padova",
+      "players": [
+        {
+          "name": "Behnezhad Arshia",
+          "set": 3,
+          "points": 0,
+          "serve": {
+            "tot": 8,
+            "ace": 0,
+            "err": 1
+          },
+          "rec": {
+            "tot": 0,
+            "err": 0,
+            "neg": 0,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": 0
+          },
+          "att": {
+            "tot": 0,
+            "err": 0,
+            "blocked": 0,
+            "kills": 0,
+            "killPct": 0,
+            "eff": 0
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Bergamasco Francesco",
+          "set": 1,
+          "points": 0,
+          "serve": {
+            "tot": 0,
+            "ace": 0,
+            "err": 0
+          },
+          "rec": {
+            "tot": 2,
+            "err": 1,
+            "neg": 1,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": -0.5
+          },
+          "att": {
+            "tot": 0,
+            "err": 0,
+            "blocked": 0,
+            "kills": 0,
+            "killPct": 0,
+            "eff": 0
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Bristot Alessandro",
+          "set": 3,
+          "points": 3,
+          "serve": {
+            "tot": 7,
+            "ace": 1,
+            "err": 1
+          },
+          "rec": {
+            "tot": 6,
+            "err": 0,
+            "neg": 4,
+            "perf": 1,
+            "perfPct": 16.7,
+            "eff": 0.17
+          },
+          "att": {
+            "tot": 7,
+            "err": 0,
+            "blocked": 1,
+            "kills": 2,
+            "killPct": 28.6,
+            "eff": 0.29
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "D'Amico Francesco",
+          "set": 3,
+          "points": 0,
+          "serve": {
+            "tot": 0,
+            "ace": 0,
+            "err": 0
+          },
+          "rec": {
+            "tot": 15,
+            "err": 3,
+            "neg": 5,
+            "perf": 4,
+            "perfPct": 26.7,
+            "eff": 0.07
+          },
+          "att": {
+            "tot": 0,
+            "err": 0,
+            "blocked": 0,
+            "kills": 0,
+            "killPct": 0,
+            "eff": 0
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Golzadeh Amir Mohammad",
+          "set": 3,
+          "points": 14,
+          "serve": {
+            "tot": 11,
+            "ace": 3,
+            "err": 1
+          },
+          "rec": {
+            "tot": 1,
+            "err": 0,
+            "neg": 0,
+            "perf": 1,
+            "perfPct": 100,
+            "eff": 1
+          },
+          "att": {
+            "tot": 21,
+            "err": 1,
+            "blocked": 4,
+            "kills": 10,
+            "killPct": 47.6,
+            "eff": 0.43
+          },
+          "block": {
+            "pts": 1
+          }
+        },
+        {
+          "name": "Kunstmann Joscha",
+          "set": 3,
+          "points": 2,
+          "serve": {
+            "tot": 4,
+            "ace": 0,
+            "err": 0
+          },
+          "rec": {
+            "tot": 3,
+            "err": 1,
+            "neg": 0,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": -0.33
+          },
+          "att": {
+            "tot": 5,
+            "err": 1,
+            "blocked": 1,
+            "kills": 2,
+            "killPct": 40,
+            "eff": 0.2
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Leodolter Leonardo Lukas",
+          "set": 3,
+          "points": 7,
+          "serve": {
+            "tot": 10,
+            "ace": 0,
+            "err": 4
+          },
+          "rec": {
+            "tot": 24,
+            "err": 2,
+            "neg": 6,
+            "perf": 6,
+            "perfPct": 25,
+            "eff": 0.17
+          },
+          "att": {
+            "tot": 17,
+            "err": 2,
+            "blocked": 1,
+            "kills": 7,
+            "killPct": 41.2,
+            "eff": 0.29
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Orioli Mattia",
+          "set": 3,
+          "points": 3,
+          "serve": {
+            "tot": 7,
+            "ace": 0,
+            "err": 1
+          },
+          "rec": {
+            "tot": 7,
+            "err": 1,
+            "neg": 2,
+            "perf": 2,
+            "perfPct": 28.6,
+            "eff": 0.14
+          },
+          "att": {
+            "tot": 10,
+            "err": 0,
+            "blocked": 2,
+            "kills": 3,
+            "killPct": 30,
+            "eff": 0.3
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Pellacani Marco",
+          "set": 2,
+          "points": 2,
+          "serve": {
+            "tot": 3,
+            "ace": 0,
+            "err": 1
+          },
+          "rec": {
+            "tot": 0,
+            "err": 0,
+            "neg": 0,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": 0
+          },
+          "att": {
+            "tot": 3,
+            "err": 1,
+            "blocked": 0,
+            "kills": 0,
+            "killPct": 0,
+            "eff": -0.33
+          },
+          "block": {
+            "pts": 2
+          }
+        },
+        {
+          "name": "Truocchio Andrea",
+          "set": 3,
+          "points": 4,
+          "serve": {
+            "tot": 7,
+            "ace": 1,
+            "err": 2
+          },
+          "rec": {
+            "tot": 1,
+            "err": 0,
+            "neg": 1,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": 0
+          },
+          "att": {
+            "tot": 5,
+            "err": 0,
+            "blocked": 0,
+            "kills": 2,
+            "killPct": 40,
+            "eff": 0.4
+          },
+          "block": {
+            "pts": 1
+          }
+        }
+      ],
+      "totals": {
+        "name": "Totali di Squadra",
+        "set": 3,
+        "points": 35,
+        "serve": {
+          "tot": 57,
+          "ace": 5,
+          "err": 11
+        },
+        "rec": {
+          "tot": 59,
+          "err": 8,
+          "neg": 19,
+          "perf": 14,
+          "perfPct": 23.7,
+          "eff": 0.1
+        },
+        "att": {
+          "tot": 68,
+          "err": 5,
+          "blocked": 9,
+          "kills": 26,
+          "killPct": 38.2,
+          "eff": 0.31
+        },
+        "block": {
+          "pts": 4
+        }
+      }
+    },
+    "6867": {
+      "team": "Valsa Group Modena",
+      "players": [
+        {
+          "name": "Barbanti Leonardo",
+          "set": 1,
+          "points": 0,
+          "serve": {
+            "tot": 0,
+            "ace": 0,
+            "err": 0
+          },
+          "rec": {
+            "tot": 0,
+            "err": 0,
+            "neg": 0,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": 0
+          },
+          "att": {
+            "tot": 0,
+            "err": 0,
+            "blocked": 0,
+            "kills": 0,
+            "killPct": 0,
+            "eff": 0
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Bento Arthur",
+          "set": 2,
+          "points": 7,
+          "serve": {
+            "tot": 7,
+            "ace": 0,
+            "err": 0
+          },
+          "rec": {
+            "tot": 12,
+            "err": 3,
+            "neg": 5,
+            "perf": 3,
+            "perfPct": 25,
+            "eff": 0
+          },
+          "att": {
+            "tot": 10,
+            "err": 0,
+            "blocked": 1,
+            "kills": 7,
+            "killPct": 70,
+            "eff": 0.7
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Jaeschke Thomas",
+          "set": 3,
+          "points": 3,
+          "serve": {
+            "tot": 5,
+            "ace": 1,
+            "err": 0
+          },
+          "rec": {
+            "tot": 7,
+            "err": 2,
+            "neg": 1,
+            "perf": 1,
+            "perfPct": 14.3,
+            "eff": -0.14
+          },
+          "att": {
+            "tot": 7,
+            "err": 1,
+            "blocked": 3,
+            "kills": 2,
+            "killPct": 28.6,
+            "eff": 0.14
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Mati Pardo",
+          "set": 3,
+          "points": 6,
+          "serve": {
+            "tot": 13,
+            "ace": 0,
+            "err": 5
+          },
+          "rec": {
+            "tot": 0,
+            "err": 0,
+            "neg": 0,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": 0
+          },
+          "att": {
+            "tot": 6,
+            "err": 1,
+            "blocked": 1,
+            "kills": 3,
+            "killPct": 50,
+            "eff": 0.33
+          },
+          "block": {
+            "pts": 3
+          }
+        },
+        {
+          "name": "Meijs Sil",
+          "set": 1,
+          "points": 1,
+          "serve": {
+            "tot": 1,
+            "ace": 0,
+            "err": 0
+          },
+          "rec": {
+            "tot": 0,
+            "err": 0,
+            "neg": 0,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": 0
+          },
+          "att": {
+            "tot": 0,
+            "err": 0,
+            "blocked": 0,
+            "kills": 0,
+            "killPct": 0,
+            "eff": 0
+          },
+          "block": {
+            "pts": 1
+          }
+        },
+        {
+          "name": "Menchetti Federico",
+          "set": 1,
+          "points": 0,
+          "serve": {
+            "tot": 0,
+            "ace": 0,
+            "err": 0
+          },
+          "rec": {
+            "tot": 0,
+            "err": 0,
+            "neg": 0,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": 0
+          },
+          "att": {
+            "tot": 0,
+            "err": 0,
+            "blocked": 0,
+            "kills": 0,
+            "killPct": 0,
+            "eff": 0
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Mujanovic Nik",
+          "set": 3,
+          "points": 11,
+          "serve": {
+            "tot": 10,
+            "ace": 0,
+            "err": 2
+          },
+          "rec": {
+            "tot": 4,
+            "err": 1,
+            "neg": 2,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": -0.25
+          },
+          "att": {
+            "tot": 24,
+            "err": 0,
+            "blocked": 3,
+            "kills": 11,
+            "killPct": 45.8,
+            "eff": 0.46
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Perry Luke",
+          "set": 3,
+          "points": 0,
+          "serve": {
+            "tot": 0,
+            "ace": 0,
+            "err": 0
+          },
+          "rec": {
+            "tot": 17,
+            "err": 1,
+            "neg": 10,
+            "perf": 3,
+            "perfPct": 17.6,
+            "eff": 0.12
+          },
+          "att": {
+            "tot": 0,
+            "err": 0,
+            "blocked": 0,
+            "kills": 0,
+            "killPct": 0,
+            "eff": 0
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Porro Luca",
+          "set": 3,
+          "points": 11,
+          "serve": {
+            "tot": 10,
+            "ace": 2,
+            "err": 3
+          },
+          "rec": {
+            "tot": 23,
+            "err": 1,
+            "neg": 11,
+            "perf": 4,
+            "perfPct": 17.4,
+            "eff": 0.13
+          },
+          "att": {
+            "tot": 16,
+            "err": 0,
+            "blocked": 0,
+            "kills": 8,
+            "killPct": 50,
+            "eff": 0.5
+          },
+          "block": {
+            "pts": 1
+          }
+        },
+        {
+          "name": "Russo Roberto",
+          "set": 3,
+          "points": 4,
+          "serve": {
+            "tot": 9,
+            "ace": 0,
+            "err": 0
+          },
+          "rec": {
+            "tot": 0,
+            "err": 0,
+            "neg": 0,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": 0
+          },
+          "att": {
+            "tot": 6,
+            "err": 0,
+            "blocked": 1,
+            "kills": 4,
+            "killPct": 66.7,
+            "eff": 0.67
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Tizi-Oualou Amir",
+          "set": 3,
+          "points": 3,
+          "serve": {
+            "tot": 8,
+            "ace": 0,
+            "err": 0
+          },
+          "rec": {
+            "tot": 0,
+            "err": 0,
+            "neg": 0,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": 0
+          },
+          "att": {
+            "tot": 3,
+            "err": 0,
+            "blocked": 0,
+            "kills": 2,
+            "killPct": 66.7,
+            "eff": 0.67
+          },
+          "block": {
+            "pts": 1
+          }
+        }
+      ],
+      "totals": {
+        "name": "Totali di Squadra",
+        "set": 3,
+        "points": 46,
+        "serve": {
+          "tot": 63,
+          "ace": 3,
+          "err": 10
+        },
+        "rec": {
+          "tot": 63,
+          "err": 8,
+          "neg": 29,
+          "perf": 11,
+          "perfPct": 17.5,
+          "eff": 0.05
+        },
+        "att": {
+          "tot": 72,
+          "err": 2,
+          "blocked": 9,
+          "kills": 37,
+          "killPct": 51.4,
+          "eff": 0.49
+        },
+        "block": {
+          "pts": 6
+        }
+      }
+    },
+    "6868": {
+      "team": "Vero Volley Monza",
+      "players": [
+        {
+          "name": "Beretta Thomas",
+          "set": 4,
+          "points": 3,
+          "serve": {
+            "tot": 9,
+            "ace": 0,
+            "err": 2
+          },
+          "rec": {
+            "tot": 0,
+            "err": 0,
+            "neg": 0,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": 0
+          },
+          "att": {
+            "tot": 3,
+            "err": 1,
+            "blocked": 0,
+            "kills": 2,
+            "killPct": 66.7,
+            "eff": 0.33
+          },
+          "block": {
+            "pts": 1
+          }
+        },
+        {
+          "name": "Bonacchi Leonardo",
+          "set": 4,
+          "points": 0,
+          "serve": {
+            "tot": 16,
+            "ace": 0,
+            "err": 0
+          },
+          "rec": {
+            "tot": 1,
+            "err": 0,
+            "neg": 0,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": 0
+          },
+          "att": {
+            "tot": 0,
+            "err": 0,
+            "blocked": 0,
+            "kills": 0,
+            "killPct": 0,
+            "eff": 0
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Frascio Diego",
+          "set": 4,
+          "points": 15,
+          "serve": {
+            "tot": 13,
+            "ace": 0,
+            "err": 5
+          },
+          "rec": {
+            "tot": 1,
+            "err": 0,
+            "neg": 1,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": 0
+          },
+          "att": {
+            "tot": 37,
+            "err": 1,
+            "blocked": 4,
+            "kills": 15,
+            "killPct": 40.5,
+            "eff": 0.38
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Khotsevitch Hryhorii",
+          "set": 4,
+          "points": 8,
+          "serve": {
+            "tot": 5,
+            "ace": 0,
+            "err": 1
+          },
+          "rec": {
+            "tot": 16,
+            "err": 1,
+            "neg": 7,
+            "perf": 2,
+            "perfPct": 12.5,
+            "eff": 0.06
+          },
+          "att": {
+            "tot": 18,
+            "err": 1,
+            "blocked": 4,
+            "kills": 8,
+            "killPct": 44.4,
+            "eff": 0.39
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Mapelli Nicolò",
+          "set": 1,
+          "points": 0,
+          "serve": {
+            "tot": 0,
+            "ace": 0,
+            "err": 0
+          },
+          "rec": {
+            "tot": 0,
+            "err": 0,
+            "neg": 0,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": 0
+          },
+          "att": {
+            "tot": 0,
+            "err": 0,
+            "blocked": 0,
+            "kills": 0,
+            "killPct": 0,
+            "eff": 0
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Massari Jacopo",
+          "set": 1,
+          "points": 1,
+          "serve": {
+            "tot": 4,
+            "ace": 0,
+            "err": 1
+          },
+          "rec": {
+            "tot": 4,
+            "err": 0,
+            "neg": 3,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": 0
+          },
+          "att": {
+            "tot": 3,
+            "err": 1,
+            "blocked": 1,
+            "kills": 1,
+            "killPct": 33.3,
+            "eff": 0
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Morazzini Flavio",
+          "set": 4,
+          "points": 0,
+          "serve": {
+            "tot": 0,
+            "ace": 0,
+            "err": 0
+          },
+          "rec": {
+            "tot": 10,
+            "err": 2,
+            "neg": 2,
+            "perf": 4,
+            "perfPct": 40,
+            "eff": 0.2
+          },
+          "att": {
+            "tot": 0,
+            "err": 0,
+            "blocked": 0,
+            "kills": 0,
+            "killPct": 0,
+            "eff": 0
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Perin Pierre",
+          "set": 4,
+          "points": 2,
+          "serve": {
+            "tot": 10,
+            "ace": 1,
+            "err": 3
+          },
+          "rec": {
+            "tot": 6,
+            "err": 0,
+            "neg": 2,
+            "perf": 1,
+            "perfPct": 16.7,
+            "eff": 0.17
+          },
+          "att": {
+            "tot": 5,
+            "err": 1,
+            "blocked": 1,
+            "kills": 1,
+            "killPct": 20,
+            "eff": 0
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Pesaresi Nicola",
+          "set": 1,
+          "points": 0,
+          "serve": {
+            "tot": 0,
+            "ace": 0,
+            "err": 0
+          },
+          "rec": {
+            "tot": 0,
+            "err": 0,
+            "neg": 0,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": 0
+          },
+          "att": {
+            "tot": 0,
+            "err": 0,
+            "blocked": 0,
+            "kills": 0,
+            "killPct": 0,
+            "eff": 0
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Petkov Iliya",
+          "set": 4,
+          "points": 11,
+          "serve": {
+            "tot": 18,
+            "ace": 2,
+            "err": 6
+          },
+          "rec": {
+            "tot": 2,
+            "err": 0,
+            "neg": 1,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": 0
+          },
+          "att": {
+            "tot": 15,
+            "err": 1,
+            "blocked": 2,
+            "kills": 9,
+            "killPct": 60,
+            "eff": 0.53
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Velichkov Zhasmin",
+          "set": 4,
+          "points": 13,
+          "serve": {
+            "tot": 17,
+            "ace": 1,
+            "err": 7
+          },
+          "rec": {
+            "tot": 29,
+            "err": 2,
+            "neg": 12,
+            "perf": 4,
+            "perfPct": 13.8,
+            "eff": 0.07
+          },
+          "att": {
+            "tot": 21,
+            "err": 0,
+            "blocked": 1,
+            "kills": 11,
+            "killPct": 52.4,
+            "eff": 0.52
+          },
+          "block": {
+            "pts": 1
+          }
+        }
+      ],
+      "totals": {
+        "name": "Totali di Squadra",
+        "set": 4,
+        "points": 53,
+        "serve": {
+          "tot": 92,
+          "ace": 4,
+          "err": 25
+        },
+        "rec": {
+          "tot": 69,
+          "err": 5,
+          "neg": 28,
+          "perf": 11,
+          "perfPct": 15.9,
+          "eff": 0.09
+        },
+        "att": {
+          "tot": 102,
+          "err": 6,
+          "blocked": 13,
+          "kills": 47,
+          "killPct": 46.1,
+          "eff": 0.4
+        },
+        "block": {
+          "pts": 2
+        }
+      }
+    },
+    "6897": {
+      "team": "Tinet Prata di Pordenone",
+      "players": [
+        {
+          "name": "Alberini Alessio",
+          "set": 4,
+          "points": 1,
+          "serve": {
+            "tot": 17,
+            "ace": 1,
+            "err": 5
+          },
+          "rec": {
+            "tot": 0,
+            "err": 0,
+            "neg": 0,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": 0
+          },
+          "att": {
+            "tot": 2,
+            "err": 0,
+            "blocked": 0,
+            "kills": 0,
+            "killPct": 0,
+            "eff": 0
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Bergmann Lukas Felipe",
+          "set": 4,
+          "points": 12,
+          "serve": {
+            "tot": 15,
+            "ace": 0,
+            "err": 5
+          },
+          "rec": {
+            "tot": 26,
+            "err": 2,
+            "neg": 10,
+            "perf": 5,
+            "perfPct": 19.2,
+            "eff": 0.12
+          },
+          "att": {
+            "tot": 26,
+            "err": 5,
+            "blocked": 0,
+            "kills": 12,
+            "killPct": 46.2,
+            "eff": 0.27
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "D'Heer Wout",
+          "set": 4,
+          "points": 19,
+          "serve": {
+            "tot": 19,
+            "ace": 4,
+            "err": 3
+          },
+          "rec": {
+            "tot": 3,
+            "err": 0,
+            "neg": 0,
+            "perf": 1,
+            "perfPct": 33.3,
+            "eff": 0.33
+          },
+          "att": {
+            "tot": 13,
+            "err": 3,
+            "blocked": 0,
+            "kills": 9,
+            "killPct": 69.2,
+            "eff": 0.46
+          },
+          "block": {
+            "pts": 6
+          }
+        },
+        {
+          "name": "Klets Kirill",
+          "set": 4,
+          "points": 17,
+          "serve": {
+            "tot": 8,
+            "ace": 0,
+            "err": 4
+          },
+          "rec": {
+            "tot": 0,
+            "err": 0,
+            "neg": 0,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": 0
+          },
+          "att": {
+            "tot": 29,
+            "err": 6,
+            "blocked": 1,
+            "kills": 15,
+            "killPct": 51.7,
+            "eff": 0.31
+          },
+          "block": {
+            "pts": 2
+          }
+        },
+        {
+          "name": "Larizza Jacopo",
+          "set": 4,
+          "points": 8,
+          "serve": {
+            "tot": 20,
+            "ace": 0,
+            "err": 2
+          },
+          "rec": {
+            "tot": 1,
+            "err": 1,
+            "neg": 0,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": -1
+          },
+          "att": {
+            "tot": 8,
+            "err": 0,
+            "blocked": 0,
+            "kills": 5,
+            "killPct": 62.5,
+            "eff": 0.62
+          },
+          "block": {
+            "pts": 3
+          }
+        },
+        {
+          "name": "Marsili Sebastiano",
+          "set": 1,
+          "points": 0,
+          "serve": {
+            "tot": 2,
+            "ace": 0,
+            "err": 0
+          },
+          "rec": {
+            "tot": 0,
+            "err": 0,
+            "neg": 0,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": 0
+          },
+          "att": {
+            "tot": 0,
+            "err": 0,
+            "blocked": 0,
+            "kills": 0,
+            "killPct": 0,
+            "eff": 0
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Marttila Nooa",
+          "set": 4,
+          "points": 6,
+          "serve": {
+            "tot": 12,
+            "ace": 0,
+            "err": 5
+          },
+          "rec": {
+            "tot": 24,
+            "err": 2,
+            "neg": 11,
+            "perf": 4,
+            "perfPct": 16.7,
+            "eff": 0.08
+          },
+          "att": {
+            "tot": 13,
+            "err": 0,
+            "blocked": 1,
+            "kills": 4,
+            "killPct": 30.8,
+            "eff": 0.31
+          },
+          "block": {
+            "pts": 2
+          }
+        },
+        {
+          "name": "Pol Alberto",
+          "set": 1,
+          "points": 0,
+          "serve": {
+            "tot": 0,
+            "ace": 0,
+            "err": 0
+          },
+          "rec": {
+            "tot": 0,
+            "err": 0,
+            "neg": 0,
+            "perf": 0,
+            "perfPct": 0,
+            "eff": 0
+          },
+          "att": {
+            "tot": 0,
+            "err": 0,
+            "blocked": 0,
+            "kills": 0,
+            "killPct": 0,
+            "eff": 0
+          },
+          "block": {
+            "pts": 0
+          }
+        },
+        {
+          "name": "Toscani Alessandro",
+          "set": 4,
+          "points": 0,
+          "serve": {
+            "tot": 0,
+            "ace": 0,
+            "err": 0
+          },
+          "rec": {
+            "tot": 13,
+            "err": 2,
+            "neg": 4,
+            "perf": 2,
+            "perfPct": 15.4,
+            "eff": 0
+          },
+          "att": {
+            "tot": 0,
+            "err": 0,
+            "blocked": 0,
+            "kills": 0,
+            "killPct": 0,
+            "eff": 0
+          },
+          "block": {
+            "pts": 0
+          }
+        }
+      ],
+      "totals": {
+        "name": "Totali di Squadra",
+        "set": 4,
+        "points": 63,
+        "serve": {
+          "tot": 93,
+          "ace": 5,
+          "err": 24
+        },
+        "rec": {
+          "tot": 67,
+          "err": 7,
+          "neg": 25,
+          "perf": 12,
+          "perfPct": 17.9,
+          "eff": 0.07
+        },
+        "att": {
+          "tot": 91,
+          "err": 14,
+          "blocked": 2,
+          "kills": 45,
+          "killPct": 49.5,
+          "eff": 0.34
+        },
+        "block": {
+          "pts": 13
+        }
+      }
+    }
+  }
+}
