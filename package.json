@@ -4,7 +4,9 @@
   "description": "Strumenti di sviluppo: test delle regole Firestore e della logica del pannello Admin",
   "scripts": {
     "test:rules": "firebase emulators:exec --only firestore --project demo-fantasuperlega \"node --test tests/*.test.mjs\"",
-    "test:unit": "node --test tests/unit/*.test.js"
+    "test:unit": "node --test tests/unit/*.test.js",
+    "emulatori": "firebase emulators:start --only firestore,auth --project demo-fantasuperlega",
+    "seed:emulatori": "node tests/seed-emulatori.mjs"
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^6.0.0",
