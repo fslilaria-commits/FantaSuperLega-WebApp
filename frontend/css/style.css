@@ -236,6 +236,43 @@ details.admin-card > summary { cursor: pointer; font-family: var(--font-title); 
 #transfersList ul { margin: 0.6rem 0 0 1.2rem; color: var(--text-sub); font-size: 0.9rem; display: flex; flex-direction: column; gap: 0.3rem; }
 #marketForm { gap: 0.6rem; }
 
+/* LA MIA GIORNATA */
+.nav-btn { position: relative; }
+.nav-dot { position: absolute; top: 6px; right: 2px; width: 9px; height: 9px; border-radius: 50%; background: var(--error); box-shadow: 0 0 0 2px var(--navy); }
+.home-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; margin-top: 1rem; }
+.home-card { background: var(--card); border-radius: 8px; padding: 1.1rem 1.2rem; box-shadow: var(--shadow); border-top: 3px solid var(--blue-dark); display: flex; flex-direction: column; gap: 0.6rem; }
+.home-card h3 i { color: var(--orange); }
+.home-body { display: flex; flex-direction: column; gap: 0.3rem; flex: 1; }
+.home-big { font-family: var(--font-title); font-size: 1.6rem; font-weight: 800; color: var(--navy); line-height: 1.1; }
+.ok-text { color: var(--ok); font-weight: 500; }
+.todo-list { margin-left: 1.1rem; display: flex; flex-direction: column; gap: 0.35rem; font-size: 0.92rem; }
+
+/* SCHEDA GIOCATORE */
+.link-player { background: none; border: none; padding: 0; font: inherit; font-weight: 700; color: var(--navy); cursor: pointer; text-align: left; }
+.link-player:hover { color: var(--blue); text-decoration: underline; }
+.market-table td.num { font-variant-numeric: tabular-nums; text-align: right; }
+.player-card { width: min(520px, 100%); }
+.player-head { display: flex; gap: 1rem; align-items: center; }
+.player-head h3 { margin: 0; font-size: 1.3rem; }
+.player-photo { width: 84px; height: 84px; border-radius: 50%; object-fit: cover; background: var(--blue-soft); border: 3px solid var(--orange); flex-shrink: 0; }
+.player-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.6rem; }
+.player-stats div { background: var(--card-2); border: 1px solid var(--line); border-radius: 8px; padding: 0.5rem; text-align: center; display: flex; flex-direction: column; }
+.player-stats strong { font-family: var(--font-title); font-size: 1.3rem; color: var(--navy); }
+.player-stats span { font-size: 0.78rem; color: var(--text-sub); text-transform: uppercase; }
+.fp-chart { display: flex; align-items: flex-end; gap: 6px; height: 150px; padding: 0.4rem; background: var(--card-2); border-radius: 8px; overflow-x: auto; }
+.fp-col { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; min-width: 30px; height: 100%; gap: 2px; }
+.fp-bar { width: 22px; background: var(--blue); border-radius: 3px 3px 0 0; }
+.fp-bar.neg { background: var(--error); }
+.fp-val { font-size: 0.68rem; color: var(--text-sub); font-variant-numeric: tabular-nums; }
+.fp-n { font-size: 0.7rem; font-weight: 700; color: var(--navy); }
+
+/* ROUTINE ADMIN */
+.routine-card { border-top-color: var(--orange); }
+.routine-list { list-style: none; display: flex; flex-direction: column; gap: 0.35rem; }
+.routine-ok { color: var(--ok); }
+.routine-da { color: var(--warn); }
+.routine-errore { color: var(--error); }
+
 /* TELEFONO */
 @media (max-width: 700px) {
     .navbar { padding: 0.6rem 1rem; }
