@@ -89,3 +89,12 @@ test('la nuova giornata riparte dalla formazione precedente ancora valida', () =
     assert.equal(s.starters.O, undefined);
     assert.equal(s.captain, null);
 });
+
+test('squadre al massimo in una lega: decide il ruolo con meno giocatori per rosa', () => {
+    const { maxSquadre } = require('../../frontend/js/rose-check.js');
+    const giocatori = (ruolo, n) => Array.from({ length: n }, () => ({ role: ruolo }));
+    const listone = [...giocatori('P', 24), ...giocatori('S', 52), ...giocatori('C', 48), ...giocatori('O', 22), ...giocatori('L', 24)];
+    assert.equal(maxSquadre(listone), 11, '22 opposti, 2 per rosa');
+    assert.equal(maxSquadre([...listone, ...giocatori('O', 4)]), 12, 'con più opposti decidono i palleggiatori');
+    assert.equal(maxSquadre([]), 0, 'listone vuoto');
+});
