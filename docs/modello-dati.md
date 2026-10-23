@@ -112,5 +112,16 @@ Scrive solo il Presidente. Durante l'asta la rosa si può salvare anche incomple
 
 Ognuno scrive solo la propria, e solo prima di `lockAt`. I giocatori devono essere della propria rosa (completa), nel ruolo giusto, senza doppioni; la panchina sono gli altri 5. Le formazioni degli altri si vedono solo dopo la scadenza. Per una nuova giornata l'app riparte dalla formazione precedente.
 
+### `leagues/{leagueId}/schedule/main` — calendario degli scontri diretti
+| Campo | Tipo | Note |
+|---|---|---|
+| `teams` | list | Uid delle squadre al momento della generazione |
+| `rounds` | map | `giornata → [{ a, b }]` (Firestore non accetta liste dentro liste); `MEDIA` è la Squadra media |
+| `createdAt`, `createdBy` | | |
+
+Solo per le leghe `scontri`. Lo genera il Presidente prima della giornata di inizio, oppure un admin al primo calcolo se manca. Girone all'italiana ripetuto a ciclo fino all'ultima giornata; con squadre dispari entra la Squadra media, che prende la media dei punti della giornata. Una volta generato, nella lega non entra più nessuno (come nel FantaLVF).
+
 ### `leagues/{leagueId}/scores/{matchday}_{uid}` e `leagues/{leagueId}/standings/{uid}`
 Punteggi di giornata e classifica. Lettura per i membri e gli admin, scrittura solo admin (calcolati dai tabellini ufficiali).
+
+`standings` contiene `total` (fanta-punti), `giornate`, `ultima`; nelle leghe a scontri diretti anche `points`, `won`, `lost`, `tbWon`, `tbLost`, `for`, `against`. Regole come nel FantaLVF: vittoria 3 punti; a parità di fanta-punti tie-break (più fanta-punti in classifica generale, poi iscrizione più vecchia) con 2 punti al vincitore e 1 al perdente. Ordine: scontri diretti per punti, poi fanta-punti, poi iscrizione; classifica generale per fanta-punti, poi iscrizione. La logica è in `frontend/js/scontri.js`.
