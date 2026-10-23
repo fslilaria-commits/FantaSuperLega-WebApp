@@ -1,6 +1,8 @@
 // Scheda Campo: formazione della prossima giornata, capitano e blocco alla scadenza
 const lineupEdit = { key: null, starters: {}, captain: null, saved: false };
 let pickerSlot = null;
+// Trattino morbido: sui telefoni stretti il ruolo va a capo nel punto giusto anche se il browser non sillaba l'italiano
+const SEGNAPOSTO = { S: 'Schiac­ciatore', P: 'Palleg­giatore' };
 
 document.getElementById('saveLineupBtn').addEventListener('click', saveLineup);
 document.getElementById('captainSelect').addEventListener('change', e => {
@@ -78,13 +80,24 @@ async function loadLineupForEdit(roster) {
     }
 }
 
+// Fanta-punti del giocatore, per scegliere chi schierare senza passare dal Mercato
+function rigaStatistiche(id, completa) {
+    const s = state.statistiche[id];
+    if (!s) return completa ? el('small', { class: 'stat-line' }, 'Ancora nessuna giornata giocata') : null;
+    return el('small', { class: 'stat-line' }, completa
+        ? `media ${s.media.toFixed(2)} · ultima ${s.ultima.fp.toFixed(2)} (G${s.ultima.matchday}) · ${s.presenze} ${s.presenze === 1 ? 'presenza' : 'presenze'}`
+        : `media ${s.media.toFixed(2)}`);
+}
+
 function playerCard(id, extra = {}) {
     const p = state.playersById[id];
     if (!p) return el('div', { class: 'player-slot-content empty' }, extra.placeholder || 'Scegli');
     return el('div', { class: 'player-slot-content' },
         fotoGiocatore(p),
-        el('strong', {}, p.name),
-        el('small', {}, p.team));
+        el('div', { class: 'player-slot-text' },
+            el('strong', {}, p.name),
+            el('small', {}, p.team),
+            rigaStatistiche(id, extra.completa)));
 }
 
 function drawField() {
@@ -93,15 +106,16 @@ function drawField() {
 
     riempi(document.getElementById('starterGrid'), FormazioneCheck.SLOTS.map(({ slot, role }) => {
         const id = lineupEdit.starters[slot];
+        // A giornata bloccata il titolare non si cambia più, ma la sua scheda resta consultabile
         return el('button', {
             class: `slot-card slot-${slot.toLowerCase()}${id ? ' filled' : ''}${id && id === lineupEdit.captain ? ' captain' : ''}`,
-            disabled: locked,
-            title: locked ? 'Giornata bloccata' : `Scegli ${ROLE_NAMES[role].toLowerCase()}`,
-            onclick: () => openPicker(slot, role),
+            disabled: locked && !id,
+            title: locked ? (id ? 'Giornata bloccata: apri la scheda del giocatore' : 'Giornata bloccata') : `Scegli ${ROLE_NAMES[role].toLowerCase()}`,
+            onclick: () => (locked ? apriGiocatore(id) : openPicker(slot, role)),
         },
         el('span', { class: 'role-tag' }, slot),
         id && id === lineupEdit.captain ? el('span', { class: 'captain-tag', title: 'Capitano' }, 'C') : null,
-        playerCard(id, { placeholder: ROLE_NAMES[role] }));
+        playerCard(id, { placeholder: SEGNAPOSTO[role] || ROLE_NAMES[role] }));
     }));
 
     const titolari = Object.values(lineupEdit.starters).filter(Boolean);
@@ -112,7 +126,7 @@ function drawField() {
 
     riempi(document.getElementById('benchGrid'), roster.all
         .filter(id => !titolari.includes(id))
-        .map(id => el('div', { class: 'bench-card' },
+        .map(id => el('button', { class: 'bench-card', title: 'Apri la scheda del giocatore', onclick: () => apriGiocatore(id) },
             el('span', { class: 'role-tag' }, state.playersById[id]?.role || '?'),
             playerCard(id))));
 
@@ -133,7 +147,9 @@ function openPicker(slot, role) {
     document.getElementById('pickerTitle').textContent = `${slot}: scegli ${ROLE_NAMES[role].toLowerCase()}`;
     riempi(document.getElementById('pickerList'), (roster[role] || [])
         .filter(id => !usati.includes(id))
-        .map(id => el('button', { class: 'picker-item', onclick: () => choose(id) }, playerCard(id))));
+        .map(id => el('div', { class: 'picker-row' },
+            el('button', { class: 'picker-item', onclick: () => choose(id) }, playerCard(id, { completa: true })),
+            el('button', { class: 'btn btn-secondary btn-small', title: 'Fanta-punti di ogni giornata, come nel Mercato', onclick: () => apriGiocatore(id) }, 'Statistiche'))));
     document.getElementById('slotPicker').hidden = false;
 }
 

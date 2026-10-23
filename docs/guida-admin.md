@@ -97,7 +97,7 @@ Con **Mercato sospeso** il Presidente ferma offerte e scambi della sua lega, per
 
 ## 5. Partecipanti (per spiegarlo agli amici)
 
-- **Formazione**: scheda **Campo**. Scegli i 7 titolari (P, S1, S2, C1, C2, O, L) e il capitano, poi **Salva formazione**. Si blocca 1 minuto prima della prima partita della giornata. **Se non la salvi vale l'ultima salvata.** Titolari al 100%, capitano ×2, panchina al 50%.
+- **Formazione**: scheda **Campo**. Scegli i 7 titolari (P, S1, S2, C1, C2, O, L) e il capitano, poi **Salva formazione**. Si blocca 1 minuto prima della prima partita della giornata. **Se non la salvi vale l'ultima salvata.** Titolari al 100%, capitano ×2, panchina al 50%. Per decidere chi schierare, nella lista del ruolo c'è **Statistiche** (la stessa scheda del Mercato, con i punti di ogni giornata); in panchina basta toccare il giocatore.
 - **Gare spostate**: se una partita viene giocata lontano dalla sua giornata, i giocatori di quelle squadre prendono la loro media stagionale.
 - **Mercato**: scheda **Mercato**. Accanto agli svincolati c'è "Fai un'offerta", accanto ai giocatori delle altre squadre "Proponi scambio".
 - **Installare l'app**: su Android menu ⋮ → "Installa app"; su iPhone, in Safari, Condividi → "Aggiungi alla schermata Home".
