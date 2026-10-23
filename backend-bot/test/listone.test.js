@@ -1,6 +1,16 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { SQUADRE_SUPERLEGA, mapRole, normalizeName, parseRoster, checkProposal } = require('../lib/listone');
+const Stagione = require('../../frontend/js/stagione');
+
+test('la lista delle squadre è completa per la stagione, senza doppioni', () => {
+    assert.equal(SQUADRE_SUPERLEGA.length, Stagione.SQUADRE, 'numero di squadre diverso da quello di frontend/js/stagione.js');
+    for (const campo of ['teamId', 'team', 'codiceStatistiche']) {
+        const valori = SQUADRE_SUPERLEGA.map(s => s[campo]);
+        assert.ok(valori.every(Boolean), `manca ${campo} per qualche squadra`);
+        assert.equal(new Set(valori).size, valori.length, `${campo} ripetuto`);
+    }
+});
 
 test('i ruoli della Lega diventano le sigle del gioco', () => {
     assert.equal(mapRole(' Palleggiatore '), 'P');

@@ -1,24 +1,13 @@
 const cheerio = require('cheerio');
 const { romeToUtc } = require('./calendario');
+const { SQUADRE_SUPERLEGA } = require('./listone');
+const { ANNO } = require('../../frontend/js/stagione');
 
 // Codici delle squadre nella pagina statistiche della Lega (parametro Squadra), per id squadra
-const CODICI_STATISTICHE = {
-    6859: 'CIS-VOLLEY',
-    6863: 'CUNEOSPORT',
-    6860: 'MC',
-    6858: 'MI-POWER',
-    6867: 'MO',
-    6868: 'MIVER',
-    6866: 'PD',
-    6865: 'BASTIA',
-    6861: 'PIACENZAYOU',
-    6897: 'PRATA',
-    6862: 'TN-ITAS',
-    6864: 'VRI',
-};
+const CODICI_STATISTICHE = Object.fromEntries(SQUADRE_SUPERLEGA.map(s => [s.teamId, s.codiceStatistiche]));
 
 const urlStatistiche = (legaId, teamId) =>
-    `https://www.legavolley.it/statistiche/?TipoStat=1.1&Serie=1&AnnoInizio=2026&Fase=1&Giornata=${legaId}&Squadra=${CODICI_STATISTICHE[teamId]}`;
+    `https://www.legavolley.it/statistiche/?TipoStat=1.1&Serie=1&AnnoInizio=${ANNO}&Fase=1&Giornata=${legaId}&Squadra=${CODICI_STATISTICHE[teamId]}`;
 
 // "45,2" -> 45.2, "" -> 0
 function num(text) {

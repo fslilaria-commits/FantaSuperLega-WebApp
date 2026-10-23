@@ -1,7 +1,8 @@
 const cheerio = require('cheerio');
+const { ANNO, SQUADRE } = require('../../frontend/js/stagione');
 
-const GIORNATE_PER_FASE = 11;
-const GARE_PER_GIORNATA = 6;
+const GIORNATE_PER_FASE = SQUADRE - 1;
+const GARE_PER_GIORNATA = SQUADRE / 2;
 const MESI = ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'];
 
 // Ora italiana (Europe/Rome, con ora legale) -> Date in UTC
@@ -117,7 +118,7 @@ function checkCalendario(giornate) {
     return errors;
 }
 
-const URL_CALENDARIO = fase => `https://www.legavolley.it/calendario/?Anno=2026&IdCampionato=999&IdFase=${fase}&IdSquadra=0`;
+const URL_CALENDARIO = fase => `https://www.legavolley.it/calendario/?Anno=${ANNO}&IdCampionato=999&IdFase=${fase}&IdSquadra=0`;
 
 // Andata e ritorno dal sito della Lega, con i risultati delle gare giocate (campo score)
 async function scaricaCalendario() {

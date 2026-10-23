@@ -1,4 +1,4 @@
-# Fanta SuperLega 2026/27
+# Fanta SuperLega
 
 Fantavolley sulla SuperLega maschile, per leghe private tra amici. Le regole seguono la Modalità Leghe del [FantaLVF](https://fantaking.gitbook.io/fantalvf): asta offline, rose esclusive inserite dal Presidente della lega, punteggio calcolato dai tabellini ufficiali.
 
