@@ -92,8 +92,9 @@ async function applyPunteggi() {
 
         status.textContent = 'Calcolo le squadre di tutte le leghe…';
         const leghe = await db.collection('leagues').get();
+        const scadenza = (await ref.get()).data().lockAt.toMillis();
         let squadre = 0;
-        for (const lega of leghe.docs) squadre += await calcolaLega(lega, numero, punti);
+        for (const lega of leghe.docs) squadre += await calcolaLega(lega, numero, punti, scadenza);
 
         await db.doc('meta/punteggi').set({ appliedAt: firebase.firestore.FieldValue.serverTimestamp(), appliedBy: auth.currentUser.uid, matchday: numero });
         status.textContent = `Fatto: giornata ${numero} calcolata per ${squadre} squadre in ${leghe.size} leghe.`;
@@ -108,17 +109,24 @@ async function applyPunteggi() {
 }
 
 // Punteggi di giornata e classifica di una lega; restituisce quante squadre ha calcolato
-async function calcolaLega(lega, numero, punti) {
+async function calcolaLega(lega, numero, punti, scadenza) {
     const inizio = lega.data().settings?.startMatchday ?? 1;
     if (numero < inizio) return 0;
-    const [membri, formazioni] = await Promise.all([lega.ref.collection('members').get(), lega.ref.collection('lineups').get()]);
+    const [membri, formazioni, trasferimenti] = await Promise.all([
+        lega.ref.collection('members').get(),
+        lega.ref.collection('lineups').get(),
+        lega.ref.collection('transfers').get(),
+    ]);
     const perUtente = {};
     for (const f of formazioni.docs) (perUtente[f.data().uid] = perUtente[f.data().uid] || []).push(f.data());
+    const movimenti = {};
+    for (const t of trasferimenti.docs) (movimenti[t.data().uid] = movimenti[t.data().uid] || []).push({ ...t.data(), at: t.data().at?.toMillis?.() ?? 0 });
 
     const batch = db.batch();
     for (const m of membri.docs) {
         // Chi non ha salvato la formazione per questa giornata gioca con la sua ultima formazione
-        const formazione = Punteggi.formazionePer(numero, perUtente[m.id] || []);
+        // Chi è arrivato col mercato prima della scadenza prende il posto di chi è partito
+        const formazione = Mercato.applicaSostituzioni(Punteggi.formazionePer(numero, perUtente[m.id] || []), movimenti[m.id] || [], scadenza);
         const risultato = formazione ? Punteggi.punteggioSquadra(formazione, punti) : { totale: 0, dettaglio: [] };
         batch.set(lega.ref.collection('scores').doc(`${numero}_${m.id}`), {
             uid: m.id, matchday: numero, total: risultato.totale, dettaglio: risultato.dettaglio,

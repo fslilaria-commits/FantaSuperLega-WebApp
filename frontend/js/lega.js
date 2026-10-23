@@ -36,16 +36,21 @@ async function selectLeague(id) {
     state.standings = {};
     state.scores = [];
     state.schedule = null;
+    state.transfers = [];
     if (state.league) {
         saveSelectedLeague(id);
-        const [members, rosters, standings, scores, schedule] = await Promise.all([
+        const [members, rosters, standings, scores, schedule, transfers] = await Promise.all([
             db.collection(`leagues/${id}/members`).get(),
             db.collection(`leagues/${id}/rosters`).get(),
             db.collection(`leagues/${id}/standings`).get(),
             db.collection(`leagues/${id}/scores`).get(),
             db.doc(`leagues/${id}/schedule/main`).get(),
+            db.collection(`leagues/${id}/transfers`).get(),
         ]);
         state.schedule = schedule.exists ? schedule.data() : null;
+        state.transfers = transfers.docs
+            .map(d => ({ id: d.id, ...d.data(), at: d.data().at?.toMillis?.() ?? 0 }))
+            .sort((a, b) => b.at - a.at);
         state.members = members.docs
             .map(d => ({ uid: d.id, ...d.data() }))
             .sort((a, b) => a.teamName.localeCompare(b.teamName, 'it'));
