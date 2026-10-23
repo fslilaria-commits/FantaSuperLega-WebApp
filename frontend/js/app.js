@@ -73,6 +73,7 @@ function initAuth() {
         try {
             await Promise.all([loadPlayers(), loadNextMatchday(), loadStatistiche()]);
             await loadMyLeagues();
+            await gestisciInvito();
         } catch (e) {
             console.error(e);
             status.textContent = 'Errore nel caricamento dei dati, ricarica la pagina';

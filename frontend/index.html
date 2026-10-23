@@ -50,6 +50,7 @@
                 <i class="fas fa-volleyball welcome-icon"></i>
                 <h2>Il fantavolley della SuperLega 2026/27</h2>
                 <p>Crea una lega con i tuoi amici, fate l'asta e schierate ogni giornata la vostra formazione: i punti arrivano dai tabellini ufficiali della Lega.</p>
+                <p class="invito-avviso" id="welcomeInvite" hidden><i class="fas fa-envelope-open-text"></i> Ti hanno invitato in una lega: accedi con Google per entrare.</p>
                 <button class="btn btn-primary" id="welcomeLoginBtn"><i class="fab fa-google"></i> Accedi con Google</button>
             </div>
         </section>
@@ -173,7 +174,15 @@
                         <h2 id="leagueTitle">Lega</h2>
                         <p class="admin-sub" id="leagueMeta"></p>
                     </div>
-                    <div class="code-box">Codice invito: <strong id="leagueCodeDisplay">------</strong></div>
+                    <div class="invito">
+                        <div class="code-box">Codice invito: <strong id="leagueCodeDisplay">------</strong></div>
+                        <div class="admin-actions" id="inviteActions">
+                            <a class="btn btn-whatsapp btn-small" id="inviteWhatsApp" href="https://wa.me/" target="_blank" rel="noopener"><i class="fab fa-whatsapp"></i> Invita su WhatsApp</a>
+                            <button class="btn btn-secondary btn-small" id="inviteCopy" type="button"><i class="fas fa-link"></i> Copia link</button>
+                            <button class="btn btn-secondary btn-small" id="inviteShare" type="button" hidden><i class="fas fa-share-nodes"></i> Condividi</button>
+                        </div>
+                        <p class="admin-sub" id="inviteNote"></p>
+                    </div>
                 </div>
 
                 <div class="market-table-wrapper">

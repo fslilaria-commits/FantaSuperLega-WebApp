@@ -200,6 +200,12 @@ details.admin-card > summary { cursor: pointer; font-family: var(--font-title); 
 /* LEGA */
 .league-select { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1rem; }
 .league-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap; }
+.invito { display: flex; flex-direction: column; align-items: flex-end; gap: 0.45rem; max-width: 100%; }
+.invito .admin-actions { gap: 0.4rem; justify-content: flex-end; }
+.invito .admin-sub { margin: 0; text-align: right; overflow-wrap: anywhere; }
+.btn-whatsapp { background: #1f9d55; color: #fff; text-decoration: none; }
+.btn-whatsapp:hover { background: #17834a; }
+.invito-avviso { background: rgba(240, 124, 36, 0.18); border: 1px solid var(--orange); color: #fff !important; border-radius: 8px; padding: 0.5rem 0.8rem; }
 .code-box { background: var(--navy); color: #c9d4ee; padding: 0.55rem 1rem; border-radius: 6px; font-size: 0.85rem; text-transform: uppercase; }
 .code-box strong { color: #fff; letter-spacing: 3px; font-size: 1.15rem; font-family: var(--font-title); }
 
@@ -280,6 +286,9 @@ details.admin-card > summary { cursor: pointer; font-family: var(--font-title); 
 
 /* TELEFONO */
 @media (max-width: 700px) {
+    .invito { align-items: flex-start; }
+    .invito .admin-actions { justify-content: flex-start; }
+    .invito .admin-sub { text-align: left; }
     .navbar { padding: 0.6rem 1rem; }
     .logo-text { font-size: 1.3rem; }
     .nav-links { width: 100%; overflow-x: auto; flex-wrap: nowrap; order: 3; }
