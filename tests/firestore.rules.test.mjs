@@ -325,6 +325,20 @@ describe('ruolo Admin', () => {
         await assertSucceeds(getDoc(doc(as('boss'), `leagues/${LEAGUE}`)));
     });
 
+    test('l\'admin legge partecipanti, rose e formazioni per calcolare i punteggi', async () => {
+        const db = as('boss');
+        await assertSucceeds(getDocs(collection(db, `leagues/${LEAGUE}/members`)));
+        await assertSucceeds(getDocs(collection(db, `leagues/${LEAGUE}/rosters`)));
+        await assertSucceeds(getDocs(collection(db, `leagues/${LEAGUE}/lineups`)));
+        await assertSucceeds(getDocs(collection(db, 'leagues')));
+    });
+
+    test('chi non è admin né membro non legge formazioni e rose', async () => {
+        await assertFails(getDocs(collection(as('marco'), `leagues/${LEAGUE}/lineups`)));
+        await assertFails(getDocs(collection(as('marco'), `leagues/${LEAGUE}/rosters`)));
+        await assertFails(getDocs(collection(as('marco'), 'leagues')));
+    });
+
     test('l\'admin non fa il Presidente né schiera formazioni altrui', async () => {
         await assertFails(setDoc(doc(as('boss'), `leagues/${LEAGUE}/rosters/anna`), roster));
         await assertFails(updateDoc(doc(as('boss'), `leagues/${LEAGUE}`), { 'settings.budget': 1 }));

@@ -58,10 +58,10 @@ I ruoli (Admin, Presidente, Partecipante, Visitatore) sono descritti in [`docs/m
 3. Firebase Console → **Firestore Database → Dati → Avvia raccolta** (la prima volta) `admins`, ID documento = l'UID copiato, un campo qualsiasi (per esempio `nome` = `Andrea`).
 4. Ricaricando il sito compare la scheda **Admin**.
 
-## Aggiornamento di listone e calendario
+## Aggiornamento di listone, calendario e tabellini
 
 Il workflow **Aggiorna dati SuperLega** (`.github/workflows/aggiorna-dati.yaml`) gira ogni martedì mattina, o a mano da **Actions → Aggiorna dati SuperLega → Run workflow**:
-1. legge le rose delle 12 squadre (`backend-bot/genera-listone.js`) e il calendario di andata e ritorno (`backend-bot/genera-calendario.js`) dal sito della Lega;
+1. legge dal sito della Lega le rose delle 12 squadre (`backend-bot/genera-listone.js`), il calendario di andata e ritorno (`backend-bot/genera-calendario.js`) e i tabellini delle giornate concluse (`backend-bot/genera-tabellini.js`);
 2. si ferma senza scrivere niente se i dati sembrano sbagliati (squadre con meno di 10 giocatori, più di un quarto dei giocatori spariti, doppioni, giornate o gare mancanti);
 3. se ci sono novità, salva le proposte in `data/` con un commit.
 
@@ -74,5 +74,10 @@ cd backend-bot
 npm install
 npm run genera-listone
 npm run genera-calendario
+npm run genera-tabellini
 npm test
 ```
+
+## Punteggi
+
+Le formule (regole FantaLVF) e le scelte di interpretazione sono in [`docs/punteggio.md`](docs/punteggio.md). Un admin applica una giornata dal **pannello Admin → Tabellini e punteggi → Controlla tabellino → Calcola e applica**: vengono salvati i punti dei giocatori e aggiornati punteggi e classifiche di tutte le leghe. Il calcolo si può rifare, per esempio dopo una correzione della Lega: sovrascrive quello precedente.
