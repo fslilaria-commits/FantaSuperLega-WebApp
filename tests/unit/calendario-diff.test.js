@@ -21,6 +21,18 @@ test('nessuna scrittura se non cambia niente', () => {
     assert.deepEqual(diff.scritture, []);
 });
 
+test('nessuna scrittura se Firestore restituisce i campi in un altro ordine', () => {
+    const g = giornata(5, '2026-11-08T14:59:00.000Z');
+    // Come li restituisce Firestore: chiavi delle mappe in ordine alfabetico
+    const daFirestore = {
+        id: '5', status: 'open', provisional: false, number: 5, matches: g.matches.map(m => Object.fromEntries(Object.entries(m).sort())),
+        lockAt: g.lockAt, legaId: g.legaId, label: g.label,
+    };
+    const diff = confrontaCalendario([g], [daFirestore], now);
+    assert.deepEqual(diff.gareCambiate, []);
+    assert.deepEqual(diff.scritture, []);
+});
+
 test('la scadenza di una giornata futura si sposta', () => {
     const vecchia = giornata(5, '2026-11-08T14:59:00.000Z');
     const nuova = giornata(5, '2026-11-07T16:59:00.000Z');
