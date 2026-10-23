@@ -103,13 +103,20 @@ function nomeGiocatore(id) {
     return p ? `${p.name} (${p.role}, ${p.team})` : id;
 }
 
+// Senza rosa completa non si fanno offerte né scambi (i pulsanti nel listone non compaiono): lo si dice chiaro
+function avvisoRosaIncompleta(cosa) {
+    const rosa = myRoster();
+    if (FormazioneCheck.isRosterComplete(rosa)) return null;
+    return `Per ${cosa} la tua rosa deve essere completa (${rosa?.all?.length || 0}/12): la inserisce il Presidente in Lega → Rose della lega.`;
+}
+
 function renderMieOfferte(f) {
     const box = document.getElementById('myOffers');
     const rosa = myRoster();
     const visibili = mercatoDati.offerte.filter(o => o.status !== 'withdrawn' || f.offerteAperte);
     if (!visibili.length) {
         riempi(box, el('p', { class: 'admin-sub' }, f.offerteAperte
-            ? 'Nessuna offerta. Nel listone, accanto agli svincolati, trovi "Fai un\'offerta".'
+            ? avvisoRosaIncompleta('fare offerte') || 'Nessuna offerta. Nel listone, accanto agli svincolati, trovi "Fai un\'offerta".'
             : 'Nessuna offerta in questa finestra.'));
         return;
     }
@@ -155,7 +162,7 @@ function renderScambi(f) {
         ...mercatoDati.scambiInviati.slice(0, 10).map(t => riga(t, false)),
     ];
     riempi(box, righe.length ? righe : el('p', { class: 'admin-sub' }, f.aperto
-        ? 'Nessuno scambio. Nel listone, accanto ai giocatori delle altre squadre, trovi "Proponi scambio".'
+        ? avvisoRosaIncompleta('proporre scambi') || 'Nessuno scambio. Nel listone, accanto ai giocatori delle altre squadre, trovi "Proponi scambio".'
         : 'Nessuno scambio.'));
 }
 
