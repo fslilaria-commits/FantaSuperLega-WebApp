@@ -117,12 +117,19 @@
             .replace(/[^a-z]+/g, ' ').trim().split(' ').filter(Boolean).sort().join(' ');
     }
 
-    // statsPlayers: [{ name }]; listone: [{ id, name, teamId }]. Prima cerca nella squadra, poi in tutto il listone
-    function abbinaGiocatori(statsPlayers, teamId, listone) {
+    // statsPlayers: [{ name }]; listone: [{ id, name, teamId }]. Prima cerca nella squadra, poi in tutto il listone.
+    // forzati: { nome: playerId | null } scelti a mano da un admin (null = la riga non conta)
+    function abbinaGiocatori(statsPlayers, teamId, listone, forzati = {}) {
         const abbinati = {};
         const nonTrovati = [];
         const daSquadra = listone.filter(p => p.teamId === teamId);
         for (const s of statsPlayers) {
+            if (Object.prototype.hasOwnProperty.call(forzati, s.name)) {
+                const scelto = forzati[s.name] && listone.find(p => p.id === forzati[s.name]);
+                if (scelto) abbinati[s.name] = { id: scelto.id, altraSquadra: scelto.teamId !== teamId, manuale: true };
+                else if (forzati[s.name] !== null) nonTrovati.push(s.name);
+                continue;
+            }
             const k = chiaveNome(s.name);
             const cerca = elenco => {
                 const esatti = elenco.filter(p => chiaveNome(p.name) === k);
@@ -144,8 +151,9 @@
 
     // --- Punteggi di tutti i giocatori di una giornata ---
 
-    // tabellino: data/tabellini/<n>.json; listone: [{ id, name, teamId, role }]; medie: { playerId: media } per le gare spostate
-    function punteggiGiornata(tabellino, listone, medie = {}) {
+    // tabellino: data/tabellini/<n>.json; listone: [{ id, name, teamId, role }]; medie: { playerId: media } per le gare spostate;
+    // forzati: { teamId: { nome: playerId | null } } abbinamenti scelti a mano (vedi correzioni.js)
+    function punteggiGiornata(tabellino, listone, medie = {}, forzati = {}) {
         const perId = Object.fromEntries(listone.map(p => [p.id, p]));
         const punti = {};
         const nonTrovati = [];
@@ -157,14 +165,14 @@
                 const avversari = tabellino.teams[avvId];
                 if (!squadra || !avversari || !m.result) continue;
                 const esito = { vinta: m.result[propri] > m.result[altri], tiebreak: m.result.home + m.result.away === 5 };
-                const { abbinati, nonTrovati: nt } = abbinaGiocatori(squadra.players, teamId, listone);
+                const { abbinati, nonTrovati: nt } = abbinaGiocatori(squadra.players, teamId, listone, forzati[teamId]);
                 nonTrovati.push(...nt.map(n => `${n} (${squadra.team})`));
                 for (const s of squadra.players) {
                     const a = abbinati[s.name];
                     if (!a) continue;
                     const ruolo = perId[a.id].role;
                     const r = calcolaPunteggio(ruolo, s, { squadra: squadra.totals, avversari: avversari.totals, esito });
-                    punti[a.id] = { ...r, ruolo, team: squadra.team, set: s.set, nomeTabellino: s.name, altraSquadra: a.altraSquadra };
+                    punti[a.id] = { ...r, ruolo, team: squadra.team, set: s.set, nomeTabellino: s.name, altraSquadra: a.altraSquadra, corretto: !!(s.corretto || a.manuale) };
                 }
             }
         }
@@ -181,17 +189,21 @@
 
     // --- Punteggio di una fanta-squadra: titolari al 100% (capitano x2), panchina al 50% ---
 
-    function punteggioSquadra(lineup, punti) {
+    // rosa (facoltativa): i giocatori in rosa alla scadenza. Chi nel frattempo è passato a un'altra squadra
+    // (per esempio con una correzione della rosa) resta in formazione ma prende 0, così non conta per due squadre
+    function punteggioSquadra(lineup, punti, rosa = null) {
         const dettaglio = [];
+        const fuori = id => !!rosa && !rosa.has(id);
+        const voce = id => (fuori(id) ? { fp: 0 } : punti[id] || { fp: 0 });
         for (const [slot, id] of Object.entries(lineup.starters)) {
-            const p = punti[id] || { fp: 0 };
+            const p = voce(id);
             // Il capitano non raddoppia se prende il punteggio medio (gara spostata), come per le squadre a riposo
             const fattore = id === lineup.captain && !p.media ? 2 : 1;
-            dettaglio.push({ id, slot, fp: p.fp, fattore, punti: r2(p.fp * fattore), media: !!p.media });
+            dettaglio.push({ id, slot, fp: p.fp, fattore, punti: r2(p.fp * fattore), media: !!p.media, fuoriRosa: fuori(id) });
         }
         for (const id of lineup.bench) {
-            const p = punti[id] || { fp: 0 };
-            dettaglio.push({ id, slot: 'panchina', fp: p.fp, fattore: 0.5, punti: r2(p.fp * 0.5), media: !!p.media });
+            const p = voce(id);
+            dettaglio.push({ id, slot: 'panchina', fp: p.fp, fattore: 0.5, punti: r2(p.fp * 0.5), media: !!p.media, fuoriRosa: fuori(id) });
         }
         // Il totale è la somma delle righe già arrotondate, così torna al centesimo con quello che si vede
         return { totale: r2(dettaglio.reduce((a, d) => a + d.punti, 0)), dettaglio };
