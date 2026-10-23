@@ -46,7 +46,9 @@ async function loadDynamicPlayers() {
     try {
         const snapshot = await db.collection('players').get();
         if (!snapshot.empty) {
-            marketPlayers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            marketPlayers = snapshot.docs
+                .map(doc => ({ id: doc.id, ...doc.data() }))
+                .filter(p => p.active !== false);
         } else {
             marketPlayers = window.DEFAULT_PLAYERS;
         }
@@ -82,7 +84,7 @@ function renderMarket() {
             </td>
             <td>${escapeHtml(p.team)}</td>
             <td><span class="role-tag">${escapeHtml(p.role)}</span></td>
-            <td><strong>${escapeHtml(p.price)} G</strong></td>
+            <td><strong>${p.price != null ? `${escapeHtml(p.price)} G` : '—'}</strong></td>
             <td>
                 <button class="btn btn-primary" data-player-id="${escapeHtml(p.id)}">Acquista</button>
             </td>
