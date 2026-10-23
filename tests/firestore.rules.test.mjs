@@ -9,6 +9,7 @@ import {
 import {
     Timestamp,
     collection,
+    deleteDoc,
     doc,
     getDoc,
     getDocs,
@@ -60,6 +61,7 @@ beforeEach(async () => {
     await env.clearFirestore();
     await env.withSecurityRulesDisabled(async ctx => {
         const db = ctx.firestore();
+        await setDoc(doc(db, 'admins/boss'), { name: 'Admin' });
         await setDoc(doc(db, 'players/p1'), { name: 'Simone Giannelli', team: 'Perugia', role: 'P', active: true });
         await setDoc(doc(db, 'matchdays/1'), { number: 1, lockAt: future, status: 'open' });
         await setDoc(doc(db, 'matchdays/2'), { number: 2, lockAt: past, status: 'locked' });
@@ -236,6 +238,58 @@ describe('formazioni', () => {
     test('le formazioni altrui si vedono solo dopo la scadenza', async () => {
         await assertFails(getDoc(ref(as('anna'), '1_pres')));
         await assertSucceeds(getDoc(ref(as('anna'), '2_pres')));
+    });
+});
+
+describe('ruolo Admin', () => {
+    const giocatore = {
+        name: 'Simone Giannelli', team: 'Sir Susa Scai Perugia', teamId: 6865, role: 'P',
+        number: 6, birthYear: 1996, nationality: 'ITA', photo: 'https://example.org/f.jpg', active: true,
+    };
+
+    test('nessuno si nomina admin dall\'app', async () => {
+        await assertFails(setDoc(doc(as('anna'), 'admins/anna'), { name: 'Anna' }));
+        await assertFails(setDoc(doc(as('boss'), 'admins/anna'), { name: 'Anna' }));
+    });
+
+    test('ognuno verifica solo se è admin lui stesso', async () => {
+        await assertSucceeds(getDoc(doc(as('boss'), 'admins/boss')));
+        await assertSucceeds(getDoc(doc(as('anna'), 'admins/anna')));
+        await assertFails(getDoc(doc(as('anna'), 'admins/boss')));
+        await assertFails(getDocs(collection(as('boss'), 'admins')));
+    });
+
+    test('l\'admin aggiorna il listone', async () => {
+        await assertSucceeds(setDoc(doc(as('boss'), 'players/GIA-SIM-96'), giocatore));
+        await assertSucceeds(updateDoc(doc(as('boss'), 'players/p1'), { active: false }));
+    });
+
+    test('anche l\'admin rispetta il formato dei giocatori', async () => {
+        await assertFails(setDoc(doc(as('boss'), 'players/X'), { ...giocatore, role: 'Z' }));
+        await assertFails(setDoc(doc(as('boss'), 'players/X'), { ...giocatore, price: 100 }));
+    });
+
+    test('i giocatori non si cancellano, si segnano come non attivi', async () => {
+        await assertFails(deleteDoc(doc(as('boss'), 'players/p1')));
+    });
+
+    test('l\'admin gestisce giornate, statistiche e informazioni di aggiornamento', async () => {
+        await assertSucceeds(updateDoc(doc(as('boss'), 'matchdays/1'), { lockAt: future }));
+        await assertSucceeds(setDoc(doc(as('boss'), 'matchdays/1/stats/p1'), { set: 5 }));
+        await assertSucceeds(setDoc(doc(as('boss'), 'meta/listone'), { appliedAt: Timestamp.now() }));
+        await assertFails(setDoc(doc(as('anna'), 'meta/listone'), { appliedAt: Timestamp.now() }));
+    });
+
+    test('l\'admin scrive punteggi e classifica e vede le leghe', async () => {
+        await assertSucceeds(setDoc(doc(as('boss'), `leagues/${LEAGUE}/scores/1_anna`), { total: 250 }));
+        await assertSucceeds(setDoc(doc(as('boss'), `leagues/${LEAGUE}/standings/anna`), { total: 250 }));
+        await assertSucceeds(getDoc(doc(as('boss'), `leagues/${LEAGUE}`)));
+    });
+
+    test('l\'admin non fa il Presidente né schiera formazioni altrui', async () => {
+        await assertFails(setDoc(doc(as('boss'), `leagues/${LEAGUE}/rosters/anna`), roster));
+        await assertFails(updateDoc(doc(as('boss'), `leagues/${LEAGUE}`), { 'settings.budget': 1 }));
+        await assertFails(setDoc(doc(as('boss'), `leagues/${LEAGUE}/lineups/1_anna`), lineup(1, 'anna')));
     });
 });
 
