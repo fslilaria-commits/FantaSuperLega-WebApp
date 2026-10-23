@@ -316,8 +316,10 @@ describe('ruolo Admin', () => {
         await assertFails(setDoc(doc(as('boss'), 'players/X'), { ...giocatore, price: 100 }));
     });
 
-    test('i giocatori non si cancellano, si segnano come non attivi', async () => {
-        await assertFails(deleteDoc(doc(as('boss'), 'players/p1')));
+    test('i giocatori li cancella solo l\'admin (nuova stagione); in stagione si segnano come non attivi', async () => {
+        await assertFails(deleteDoc(doc(as('anna'), 'players/p1')));
+        await assertFails(deleteDoc(doc(as('pres'), 'players/p1')));
+        await assertSucceeds(deleteDoc(doc(as('boss'), 'players/p1')));
     });
 
     test('l\'admin gestisce giornate, statistiche e informazioni di aggiornamento', async () => {
@@ -499,6 +501,81 @@ describe('mercato', () => {
         await assertFails(setDoc(doc(as('anna'), `leagues/${LEAGUE}/transfers/m2`), mov));
         await assertSucceeds(getDocs(collection(as('anna'), `leagues/${LEAGUE}/transfers`)));
         await assertFails(getDocs(collection(as('marco'), `leagues/${LEAGUE}/transfers`)));
+    });
+});
+
+describe('nuova stagione: cancellazioni e archivio', () => {
+    const offRef = db => doc(db, `leagues/${LEAGUE}/markets/2/offers/anna_sx`);
+    const archivio = (overrides = {}) => ({
+        anno: 2026, stagione: '2026/27', lega: 'Lega del bar', modalita: 'classifica', uids: ['pres', 'anna'],
+        classifica: [{ pos: 1, squadra: 'Anna Team', total: 300 }, { pos: 2, squadra: 'Presidenti', total: 250, presidente: true }],
+        archiviatoAt: serverTimestamp(), archiviatoBy: 'boss', ...overrides,
+    });
+
+    beforeEach(async () => {
+        await env.withSecurityRulesDisabled(async ctx => {
+            const db = ctx.firestore();
+            await setDoc(offRef(db), { uid: 'anna', playerIn: 'sx', playerOut: 's1', role: 'S', extra: 0, status: 'won' });
+            await setDoc(doc(db, `leagues/${LEAGUE}/trades/t1`), { from: 'pres', to: 'anna', status: 'executed' });
+            await setDoc(doc(db, `leagues/${LEAGUE}/transfers/m1`), { tipo: 'scambio', uid: 'anna' });
+            await setDoc(doc(db, `leagues/${LEAGUE}/schedule/main`), { teams: ['pres', 'anna'], rounds: {} });
+            await setDoc(doc(db, 'users/anna/leagues/' + LEAGUE), { joinedAt: Timestamp.now() });
+            await setDoc(doc(db, 'archivio/2025_vecchia'), { ...archivio({ anno: 2025, stagione: '2025/26' }), archiviatoAt: Timestamp.now() });
+        });
+    });
+
+    // Tutto quello che il pulsante "Inizia la stagione" cancella
+    const daCancellare = [
+        `leagues/${LEAGUE}/markets/2/offers/anna_sx`, `leagues/${LEAGUE}/trades/t1`, `leagues/${LEAGUE}/transfers/m1`,
+        `leagues/${LEAGUE}/schedule/main`, `leagues/${LEAGUE}/lineups/2_pres`, `leagues/${LEAGUE}/rosters/anna`,
+        `leagues/${LEAGUE}/members/anna`, 'users/anna/leagues/' + LEAGUE, `leagueCodes/${CODE}`, `leagues/${LEAGUE}`,
+        'matchdays/2', 'players/p1', 'meta/statistiche',
+    ];
+
+    test("l'admin cancella tutti i dati della stagione", async () => {
+        const db = as('boss');
+        const batch = writeBatch(db);
+        for (const percorso of daCancellare) batch.delete(doc(db, percorso));
+        await assertSucceeds(batch.commit());
+    });
+
+    test("per raccogliere cosa cancellare l'admin legge offerte chiuse, scambi, movimenti e calendario delle sfide", async () => {
+        const db = as('boss');
+        await assertSucceeds(getDocs(collection(db, `leagues/${LEAGUE}/markets/2/offers`)));
+        await assertSucceeds(getDocs(collection(db, `leagues/${LEAGUE}/trades`)));
+        await assertSucceeds(getDocs(collection(db, `leagues/${LEAGUE}/transfers`)));
+        await assertSucceeds(getDocs(collection(db, `leagues/${LEAGUE}/schedule`)));
+        await assertSucceeds(getDocs(collection(db, 'matchdays/2/stats')));
+    });
+
+    test('nessun altro cancella i dati della stagione, nemmeno il Presidente', async () => {
+        const vietati = daCancellare.filter(p => ![`leagues/${LEAGUE}/rosters/anna`, `leagues/${LEAGUE}/members/anna`].includes(p));
+        for (const percorso of vietati) {
+            await assertFails(deleteDoc(doc(as('pres'), percorso)), `Presidente: ${percorso}`);
+        }
+        await assertFails(deleteDoc(doc(as('marco'), 'users/anna/leagues/' + LEAGUE)), 'le leghe di un altro');
+        await assertSucceeds(deleteDoc(doc(as('anna'), 'users/anna/leagues/' + LEAGUE)), 'le proprie sì, come prima');
+    });
+
+    test("gli admin non si cancellano dall'app", async () => {
+        await assertFails(deleteDoc(doc(as('boss'), 'admins/boss')));
+    });
+
+    test("l'admin archivia la classifica finale", async () => {
+        await assertSucceeds(setDoc(doc(as('boss'), 'archivio/2026_lega1'), archivio()));
+        await assertFails(setDoc(doc(as('boss'), 'archivio/2026_lega2'), archivio({ archiviatoBy: 'anna' })), 'a nome di un altro');
+        await assertFails(setDoc(doc(as('boss'), 'archivio/2026_lega3'), archivio({ extra: 1 })), 'campi in più');
+        await assertFails(setDoc(doc(as('boss'), 'archivio/2026_lega4'), archivio({ modalita: 'coppa' })));
+        await assertFails(setDoc(doc(as('pres'), 'archivio/2026_lega5'), archivio({ archiviatoBy: 'pres' })), 'il Presidente no');
+    });
+
+    test("l'archivio lo vede solo chi era nella lega, e nessuno lo cancella", async () => {
+        await assertSucceeds(getDoc(doc(as('anna'), 'archivio/2025_vecchia')));
+        await assertSucceeds(getDocs(query(collection(as('anna'), 'archivio'), where('uids', 'array-contains', 'anna'))));
+        await assertFails(getDoc(doc(as('marco'), 'archivio/2025_vecchia')));
+        await assertFails(getDocs(collection(as('anna'), 'archivio')), 'niente elenco completo');
+        await assertFails(getDocs(query(collection(as('marco'), 'archivio'), where('uids', 'array-contains', 'anna'))), 'non quelli degli altri');
+        await assertFails(deleteDoc(doc(as('boss'), 'archivio/2025_vecchia')));
     });
 });
 

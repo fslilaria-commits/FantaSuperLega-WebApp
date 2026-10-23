@@ -6,12 +6,14 @@
     const SQUADRE = 12; // squadre di SuperLega: andata e ritorno, tutte contro tutte
 
     const dueCifre = n => String(n).slice(-2);
+    const nomeDi = anno => `${anno}/${dueCifre(anno + 1)}`; // 2026 -> "2026/27", anche per le stagioni archiviate
     const api = {
         ANNO,
         SQUADRE,
         GIORNATE: 2 * (SQUADRE - 1),                      // regular season: 22 con 12 squadre
         breve: `${dueCifre(ANNO)}/${dueCifre(ANNO + 1)}`, // "26/27"
-        nome: `${ANNO}/${dueCifre(ANNO + 1)}`,            // "2026/27"
+        nome: nomeDi(ANNO),                               // "2026/27"
+        nomeDi,
     };
     if (typeof module !== 'undefined' && module.exports) module.exports = api;
     else root.Stagione = api;

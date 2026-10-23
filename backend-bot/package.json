@@ -4,6 +4,7 @@
   "private": true,
   "description": "Script dei dati SuperLega: scarica dal sito della Lega listone, calendario e tabellini come proposte da applicare",
   "scripts": {
+    "prepara-stagione": "node prepara-stagione.js",
     "genera-listone": "node genera-listone.js",
     "test": "node --test test/*.test.js",
     "genera-calendario": "node genera-calendario.js",

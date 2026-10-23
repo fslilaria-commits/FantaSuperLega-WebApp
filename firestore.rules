@@ -9,7 +9,9 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // Gli admin si nominano solo dalla console Firebase (collezione admins, documento = uid)
+    // Gli admin si nominano solo dalla console Firebase (collezione admins, documento = uid).
+    // Possono cancellare tutti i dati di gioco (non gli admin né l'archivio): serve al pulsante "Inizia la stagione"
+    // del pannello, che a ogni estate archivia le classifiche e riparte da zero (frontend/js/admin-stagione.js)
     function isAdmin() {
       return signedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
     }
@@ -50,7 +52,7 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly(['joinedAt'])
         && request.resource.data.joinedAt == request.time
         && existsAfter(/databases/$(database)/documents/leagues/$(leagueId)/members/$(uid));
-      allow delete: if signedIn() && uid == request.auth.uid;
+      allow delete: if isAdmin() || (signedIn() && uid == request.auth.uid);
       allow update: if false;
     }
 
@@ -67,7 +69,7 @@ service cloud.firestore {
 
       allow read: if signedIn();
       allow create, update: if isAdmin() && validPlayer(request.resource.data);
-      allow delete: if false;
+      allow delete: if isAdmin();
     }
 
     // Informazioni sugli aggiornamenti (ultimo listone applicato, ecc.)
@@ -112,7 +114,8 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly(['leagueId'])
         && getAfter(/databases/$(database)/documents/leagues/$(request.resource.data.leagueId)).data.presidentUid == request.auth.uid
         && getAfter(/databases/$(database)/documents/leagues/$(request.resource.data.leagueId)).data.code == code;
-      allow update, delete: if false;
+      allow update: if false;
+      allow delete: if isAdmin();
     }
 
     match /leagues/{leagueId} {
@@ -147,7 +150,7 @@ service cloud.firestore {
              && request.resource.data.settings.mode == resource.data.settings.mode)
             || (request.time < scadenzaGiornata(resource.data.settings.startMatchday)
                 && !exists(/databases/$(database)/documents/leagues/$(leagueId)/schedule/main)));
-      allow delete: if false;
+      allow delete: if isAdmin();
 
       match /members/{uid} {
         function validMember(d) {
@@ -169,7 +172,7 @@ service cloud.firestore {
           && uid == request.auth.uid
           && validMember(request.resource.data)
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['teamName']);
-        allow delete: if isPresident(leagueId) || (signedIn() && uid == request.auth.uid);
+        allow delete: if isAdmin() || isPresident(leagueId) || (signedIn() && uid == request.auth.uid);
       }
 
       match /rosters/{uid} {
@@ -192,7 +195,7 @@ service cloud.firestore {
         allow create, update: if isPresident(leagueId)
           && exists(/databases/$(database)/documents/leagues/$(leagueId)/members/$(uid))
           && validRoster(request.resource.data);
-        allow delete: if isPresident(leagueId);
+        allow delete: if isAdmin() || isPresident(leagueId);
       }
 
       match /lineups/{lineupId} {
@@ -230,7 +233,7 @@ service cloud.firestore {
         allow create, update: if isMember(leagueId)
           && validLineup(request.resource.data)
           && request.time < scadenzaGiornata(request.resource.data.matchday);
-        allow delete: if false;
+        allow delete: if isAdmin();
       }
 
       // Calendario degli scontri diretti: lo genera il Presidente prima della giornata di inizio,
@@ -248,7 +251,7 @@ service cloud.firestore {
           && ((isPresident(leagueId) && request.time < scadenzaGiornata(league(leagueId).settings.startMatchday))
               || isAdmin());
         allow update: if isAdmin() && validSchedule(request.resource.data);
-        allow delete: if false;
+        allow delete: if isAdmin();
       }
 
       // --- Mercato (Modalità Leghe FantaLVF). Le assegnazioni le applica il Presidente con un clic ---
@@ -308,7 +311,7 @@ service cloud.firestore {
             && request.resource.data.status in ['won', 'lost']
             && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt', 'motivo'])
           );
-        allow delete: if false;
+        allow delete: if isAdmin();
       }
 
       // Scambi tra squadre: li vedono solo le due squadre (e Presidente e admin)
@@ -349,7 +352,7 @@ service cloud.firestore {
             && request.resource.data.status in ['executed', 'void']
             && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt', 'motivo'])
           ));
-        allow delete: if false;
+        allow delete: if isAdmin();
       }
 
       // Registro dei movimenti: visibile a tutta la lega, lo scrive il Presidente quando applica il mercato
@@ -363,7 +366,8 @@ service cloud.firestore {
           && request.resource.data.playerOut is string
           && request.resource.data.playerIn != request.resource.data.playerOut
           && request.resource.data.at == request.time;
-        allow update, delete: if false;
+        allow update: if false;
+        allow delete: if isAdmin();
       }
 
       // Punteggi e classifica: li calcolano gli admin a partire dai tabellini ufficiali
@@ -376,6 +380,26 @@ service cloud.firestore {
         allow read: if isMember(leagueId) || isAdmin();
         allow write: if isAdmin();
       }
+    }
+
+    // Archivio delle stagioni finite: la classifica finale di ogni lega, salvata dal pulsante "Inizia la stagione".
+    // La vede solo chi era nella lega; resta anche quando i dati della stagione vengono cancellati
+    match /archivio/{docId} {
+      function validArchivio(d) {
+        return d.keys().hasOnly(['anno', 'stagione', 'lega', 'modalita', 'uids', 'classifica', 'archiviatoAt', 'archiviatoBy'])
+          && d.anno is int
+          && isString(d.stagione, 10)
+          && isString(d.lega, 60)
+          && d.modalita in ['classifica', 'scontri']
+          && d.uids is list && d.uids.size() <= 60
+          && d.classifica is list && d.classifica.size() <= 60
+          && d.archiviatoAt == request.time
+          && d.archiviatoBy == request.auth.uid;
+      }
+
+      allow read: if isAdmin() || (signedIn() && request.auth.uid in resource.data.uids);
+      allow create, update: if isAdmin() && validArchivio(request.resource.data);
+      allow delete: if false;
     }
   }
 }
