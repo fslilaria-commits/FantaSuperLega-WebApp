@@ -21,6 +21,7 @@ function renderRisultati() {
     tabella.hidden = !!avviso;
     dettaglio.hidden = true;
     select.hidden = !!avviso;
+    document.getElementById('risultatiSfide').hidden = true;
     if (avviso) return;
 
     if (!giornate.includes(risultatiScelta.matchday)) risultatiScelta = { matchday: giornate[0], uid: null };
@@ -28,6 +29,19 @@ function renderRisultati() {
 
     const nomi = Object.fromEntries(state.members.map(m => [m.uid, m.teamName]));
     const righe = state.scores.filter(s => s.matchday === risultatiScelta.matchday).sort((a, b) => b.total - a.total);
+
+    // Negli scontri diretti, le sfide della giornata con il risultato
+    const sfideBox = document.getElementById('risultatiSfide');
+    const partite = state.league.settings?.mode === 'scontri' && state.schedule
+        ? Scontri.risultatiScontri({ rounds: state.schedule.rounds, scores: state.scores, members: iscrittiConData() })
+            .partite.filter(p => p.matchday === risultatiScelta.matchday)
+        : [];
+    sfideBox.hidden = !partite.length;
+    sfideBox.replaceChildren(...partite.map(p => el('div', { class: 'sfida' },
+        el('span', { class: p.vincitore === p.a ? 'vincente' : null }, nomeSquadra(p.a)),
+        el('strong', {}, `${p.pa.toFixed(2)} – ${p.pb.toFixed(2)}`),
+        el('span', { class: p.vincitore === p.b ? 'vincente' : null }, nomeSquadra(p.b)),
+        p.tiebreak ? el('small', { class: 'admin-sub' }, 'tie-break') : null)));
     if (!risultatiScelta.uid) risultatiScelta.uid = righe.find(r => r.uid === state.user.uid)?.uid || righe[0]?.uid;
 
     document.getElementById('risultatiBody').replaceChildren(...righe.map((r, i) => el('tr', {

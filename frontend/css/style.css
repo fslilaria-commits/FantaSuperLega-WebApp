@@ -148,6 +148,13 @@ input:focus, select:focus, button:focus-visible { outline: 2px solid var(--accen
 #risultatiBody tr:hover, #risultatiBody tr.selected { background: var(--accent-soft); }
 .bench-row td { color: var(--text-sub); }
 
+.sfide-giornata { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 0.6rem; margin: 1rem 0; }
+.sfida { background: var(--card-bg); border-radius: 10px; padding: 0.7rem 1rem; display: grid; grid-template-columns: 1fr auto 1fr; gap: 0.6rem; align-items: center; text-align: center; }
+.sfida small { grid-column: 1 / -1; }
+.vincente { color: var(--ok); font-weight: 700; }
+.prossima-sfida { color: var(--text-sub); }
+.prossima-sfida strong { color: var(--accent-gold); }
+
 /* LEGA */
 .league-select { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1rem; }
 .league-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap; }

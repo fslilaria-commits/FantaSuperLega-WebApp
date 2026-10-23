@@ -136,19 +136,16 @@
 
                 <div class="market-table-wrapper">
                     <table class="market-table">
-                        <thead>
-                            <tr>
-                                <th>Pos</th>
-                                <th>Squadra</th>
-                                <th>Rosa</th>
-                                <th>Ultima giornata</th>
-                                <th>Punti</th>
-                            </tr>
-                        </thead>
+                        <thead id="leaderboardHead"></thead>
                         <tbody id="leaderboardBody"></tbody>
                     </table>
                 </div>
                 <p class="admin-sub" id="leaderboardNote"></p>
+
+                <div class="admin-card" id="scontriBox" hidden>
+                    <h3><i class="fas fa-people-arrows"></i> Scontri diretti</h3>
+                    <div id="scontriBody"></div>
+                </div>
 
                 <div class="admin-card" id="presidentBox" hidden>
                     <div class="admin-card-head">
@@ -203,6 +200,7 @@
                 <select id="risultatiGiornata" aria-label="Giornata"></select>
             </div>
             <p class="notice" id="risultatiNotice" hidden></p>
+            <div class="sfide-giornata" id="risultatiSfide" hidden></div>
             <div class="market-table-wrapper" id="risultatiTabella" hidden>
                 <table class="market-table">
                     <thead>
@@ -298,9 +296,11 @@
     <script src="js/rose-check.js"></script>
     <script src="js/formazione-check.js"></script>
     <script src="js/punteggi.js"></script>
+    <script src="js/scontri.js"></script>
     <script src="js/app.js"></script>
     <script src="js/listone.js"></script>
     <script src="js/lega.js"></script>
+    <script src="js/sfide.js"></script>
     <script src="js/rose.js"></script>
     <script src="js/formazione.js"></script>
     <script src="js/risultati.js"></script>
