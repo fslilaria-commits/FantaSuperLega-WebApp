@@ -9,6 +9,7 @@ const state = {
     rosters: {},        // uid -> rosa
     standings: {},      // uid -> { total, giornate, ultima: { matchday, total } }
     scores: [],         // punteggi di giornata della lega: [{ uid, matchday, total, dettaglio }]
+    schedule: null,     // calendario degli scontri diretti: { teams, rounds: { giornata: [{ a, b }] } }
     matchday: null,     // prossima giornata da schierare: { id, number, label, lockAt: Date, provisional }
 };
 
@@ -46,7 +47,7 @@ function initAuth() {
         document.getElementById('mainNav').hidden = !user;
 
         if (!user) {
-            Object.assign(state, { players: [], playersById: {}, leagues: [], league: null, members: [], rosters: {}, standings: {}, scores: [], matchday: null });
+            Object.assign(state, { players: [], playersById: {}, leagues: [], league: null, members: [], rosters: {}, standings: {}, scores: [], schedule: null, matchday: null });
             switchTab('welcome');
             return;
         }

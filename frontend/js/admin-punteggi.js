@@ -127,20 +127,40 @@ async function calcolaLega(lega, numero, punti) {
     }
     await batch.commit();
 
-    // Classifica: somma di tutte le giornate calcolate, così un ricalcolo resta coerente
-    const punteggi = await lega.ref.collection('scores').get();
+    // Classifica: ricalcolata da tutte le giornate, così un ricalcolo resta coerente
+    const punteggi = (await lega.ref.collection('scores').get()).docs.map(d => d.data());
     const classifica = {};
-    for (const s of punteggi.docs) {
-        const d = s.data();
+    for (const d of punteggi) {
         const c = classifica[d.uid] = classifica[d.uid] || { total: 0, giornate: 0, ultima: null };
         c.total += d.total;
         c.giornate += 1;
         if (!c.ultima || d.matchday > c.ultima.matchday) c.ultima = { matchday: d.matchday, total: d.total };
     }
+
+    if (lega.data().settings?.mode === 'scontri') {
+        const iscritti = membri.docs.map(m => ({ uid: m.id, joinedAt: m.data().joinedAt?.toMillis() ?? 0 }));
+        const calendario = await calendarioScontri(lega, iscritti, inizio);
+        const { classifica: scontri } = Scontri.risultatiScontri({ rounds: calendario.rounds, scores: punteggi, members: iscritti });
+        for (const [uid, s] of Object.entries(scontri)) {
+            const c = classifica[uid] = classifica[uid] || { total: 0, giornate: 0, ultima: null };
+            Object.assign(c, { points: s.points, won: s.won, lost: s.lost, tbWon: s.tbWon, tbLost: s.tbLost, for: s.for, against: s.against });
+        }
+    }
+
     const batchClassifica = db.batch();
     for (const [uid, c] of Object.entries(classifica)) {
         batchClassifica.set(lega.ref.collection('standings').doc(uid), { ...c, total: Math.round(c.total * 100) / 100 });
     }
     await batchClassifica.commit();
     return membri.size;
+}
+
+// Il calendario delle sfide; se il Presidente non l'ha generato prima dell'inizio lo genera l'admin adesso
+async function calendarioScontri(lega, iscritti, inizio) {
+    const ref = lega.ref.collection('schedule').doc('main');
+    const snap = await ref.get();
+    if (snap.exists) return snap.data();
+    const calendario = Scontri.generaCalendario(iscritti.map(m => m.uid), { start: inizio });
+    await ref.set({ ...calendario, createdAt: firebase.firestore.FieldValue.serverTimestamp(), createdBy: auth.currentUser.uid });
+    return calendario;
 }
