@@ -17,9 +17,22 @@ const state = {
     matchday: null,     // prossima giornata da schierare: { id, number, label, lockAt: Date, provisional }
 };
 
-const ROLE_NAMES = { P: 'Palleggiatore', S: 'Schiacciatore', C: 'Centrale', O: 'Opposto', L: 'Libero' };
+const STATO_VUOTO = {
+    players: [], playersById: {}, leagues: [], league: null, members: [], rosters: {}, standings: {}, scores: [],
+    schedule: null, transfers: [], matchdays: [], matchday: null, statistiche: {}, lineupSalvata: null,
+};
 
-document.addEventListener('DOMContentLoaded', initAuth);
+const ROLE_NAMES = { P: 'Palleggiatore', S: 'Schiacciatore', C: 'Centrale', O: 'Opposto', L: 'Libero' };
+const TABELLINI_INDICE = '../data/tabellini/index.json';
+const AVATAR = 'img/avatar.svg';
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.nav-btn[data-tab]').forEach(b => b.addEventListener('click', () => switchTab(b.dataset.tab)));
+    initAuth();
+});
+
+// App installabile: il service worker serve solo sul sito pubblicato (https), non in locale
+if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js');
 
 // Accesso con Google: chi non ha fatto l'accesso vede solo la schermata di benvenuto
 function initAuth() {
@@ -28,7 +41,7 @@ function initAuth() {
     const logoutBtn = document.getElementById('logoutBtn');
 
     if (!auth) {
-        status.innerText = "Configurazione Firebase mancante";
+        status.textContent = 'Configurazione Firebase mancante';
         return;
     }
 
@@ -36,7 +49,7 @@ function initAuth() {
         try {
             await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
         } catch (e) {
-            if (e.code !== 'auth/popup-closed-by-user') status.innerText = "Accesso non riuscito, riprova";
+            if (e.code !== 'auth/popup-closed-by-user') status.textContent = 'Accesso non riuscito, riprova';
         }
     };
     loginBtn.addEventListener('click', login);
@@ -45,13 +58,13 @@ function initAuth() {
 
     auth.onAuthStateChanged(async user => {
         state.user = user;
-        status.innerText = user ? (user.displayName || user.email || "Connesso") : "";
+        status.textContent = user ? (user.displayName || user.email || 'Connesso') : '';
         loginBtn.hidden = !!user;
         logoutBtn.hidden = !user;
         document.getElementById('mainNav').hidden = !user;
 
         if (!user) {
-            Object.assign(state, { players: [], playersById: {}, leagues: [], league: null, members: [], rosters: {}, standings: {}, scores: [], schedule: null, transfers: [], matchdays: [], matchday: null, statistiche: {}, lineupSalvata: null });
+            Object.assign(state, structuredClone(STATO_VUOTO));
             switchTab('welcome');
             return;
         }
@@ -61,7 +74,7 @@ function initAuth() {
             await loadMyLeagues();
         } catch (e) {
             console.error(e);
-            status.innerText = "Errore nel caricamento dei dati, ricarica la pagina";
+            status.textContent = 'Errore nel caricamento dei dati, ricarica la pagina';
         }
     });
 }
@@ -80,26 +93,30 @@ async function loadStatistiche() {
     state.statistiche = snap.exists ? snap.data().players || {} : {};
 }
 
-// Tutte le giornate (servono anche per la finestra di mercato) e la prossima non ancora bloccata
+// Tutte le giornate (servono anche per la finestra di mercato) e la prossima non ancora bloccata.
+// Una giornata senza scadenza (dato incompleto) viene ignorata invece di bloccare l'app.
 async function loadNextMatchday() {
     const snap = await db.collection('matchdays').get();
     state.matchdays = snap.docs
+        .filter(d => d.data().lockAt?.toDate)
         .map(d => ({ id: d.id, ...d.data(), lockAt: d.data().lockAt.toDate() }))
         .sort((a, b) => a.number - b.number);
     const now = new Date();
     state.matchday = state.matchdays.find(g => g.lockAt > now) || null;
 }
 
-// Ridisegna tutte le schede dopo un cambio di dati (lega, rose, listone)
+// Ridisegna tutte le schede dopo un cambio di dati (lega, rose, listone).
+// Se una scheda va in errore le altre si aggiornano comunque.
 function refreshAll() {
-    renderMarket();
-    renderLeague();
-    renderRosterEditor();
-    renderField();
-    renderRisultati();
-    renderMercato();
-    renderPresidenteMercato();
-    renderHome();
+    const viste = [renderMarket, renderLeague, renderRosterEditor, renderField, renderRisultati, renderMercato, renderPresidenteMercato, renderHome];
+    for (const vista of viste) {
+        try {
+            const r = vista();
+            if (r && r.catch) r.catch(e => console.error(`Errore in ${vista.name}`, e));
+        } catch (e) {
+            console.error(`Errore in ${vista.name}`, e);
+        }
+    }
 }
 
 function currentTab() {
@@ -123,11 +140,41 @@ function el(tag, props = {}, ...children) {
         else if (key in node) node[key] = value;
         else node.setAttribute(key, value);
     }
-    for (const child of children.flat()) {
-        if (child === null || child === undefined || child === false) continue;
-        node.append(child instanceof Node ? child : document.createTextNode(String(child)));
-    }
+    node.append(...figli(children));
     return node;
+}
+
+// Nodi da inserire: i valori vuoti (null, undefined, false) non diventano la scritta "null"
+function figli(lista) {
+    return lista.flat(Infinity)
+        .filter(c => c !== null && c !== undefined && c !== false)
+        .map(c => (c instanceof Node ? c : document.createTextNode(String(c))));
+}
+
+// Sostituisce il contenuto di un elemento ignorando i valori vuoti
+function riempi(node, ...children) {
+    node.replaceChildren(...figli(children));
+}
+
+// Foto del giocatore; se manca o non si carica, l'avatar (una sola volta, senza ricaricare all'infinito)
+function fotoGiocatore(p, cls = 'player-avatar', altezza) {
+    const src = p?.photo ? (altezza ? p.photo.replace(/heightImg=\d+/, `heightImg=${altezza}`) : p.photo) : AVATAR;
+    return el('img', { src, class: cls, alt: '', loading: 'lazy', onerror: e => { if (!e.target.src.endsWith(AVATAR)) e.target.src = AVATAR; } });
+}
+
+// Elenchi a tendina: [titolo, elenco, riga(item)]; le sezioni vuote non compaiono
+function listaDettagli(sezioni, apriFinoA = 10) {
+    return sezioni.filter(([, elenco]) => elenco.length).map(([titolo, elenco, riga]) =>
+        el('details', { class: 'admin-diff', open: elenco.length <= apriFinoA },
+            el('summary', {}, `${titolo} (${elenco.length})`),
+            el('ul', {}, elenco.map(item => el('li', {}, riga(item))))));
+}
+
+// JSON con le chiavi in ordine: due documenti uguali danno lo stesso testo qualunque sia l'ordine delle chiavi
+function jsonStabile(valore) {
+    return JSON.stringify(valore, (k, v) => (v && typeof v === 'object' && !Array.isArray(v)
+        ? Object.fromEntries(Object.keys(v).sort().map(c => [c, v[c]]))
+        : v));
 }
 
 function formatDateTime(date) {
@@ -136,4 +183,23 @@ function formatDateTime(date) {
 
 function myTeamName() {
     return state.members.find(m => m.uid === state.user?.uid)?.teamName || '';
+}
+
+function myRoster() {
+    return state.rosters[state.user?.uid];
+}
+
+// Partecipanti con la data di iscrizione in millisecondi (criterio di parità in classifica)
+function iscrittiConData() {
+    return state.members.map(m => ({ ...m, joinedAt: m.joinedAt?.toMillis?.() ?? 0 }));
+}
+
+// Giornate con il tabellino scaricato e giornate già calcolate
+async function giornateConTabellino() {
+    const res = await fetch(`${TABELLINI_INDICE}?t=${Date.now()}`, { cache: 'no-store' });
+    return res.ok ? (await res.json()).giornate || [] : [];
+}
+
+function giornateCalcolate() {
+    return new Set(state.matchdays.filter(g => g.status === 'scored').map(g => g.number));
 }

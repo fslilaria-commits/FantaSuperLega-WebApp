@@ -88,7 +88,6 @@ test('gara spostata: i giocatori di quelle squadre prendono la media', () => {
     assert.equal(punti.A.fp, 18.46);
     assert.equal(punti.A.media, true);
     assert.equal(punti.B, undefined);
-    assert.equal(P.media([{ fp: 10, inCampo: true }, { fp: 0, inCampo: false }, { fp: 20, inCampo: true }]), 15);
 });
 
 test('fanta-squadra: titolari al 100%, capitano x2, panchina al 50%', () => {

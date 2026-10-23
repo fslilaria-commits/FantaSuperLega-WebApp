@@ -179,12 +179,6 @@
         return { punti, nonTrovati };
     }
 
-    // Media dei punteggi delle giornate in cui il giocatore è sceso in campo
-    function media(storico) {
-        const giocate = storico.filter(x => x.inCampo);
-        return giocate.length ? r2(giocate.reduce((a, x) => a + x.fp, 0) / giocate.length) : 0;
-    }
-
     // --- Punteggio di una fanta-squadra: titolari al 100% (capitano x2), panchina al 50% ---
 
     function punteggioSquadra(lineup, punti) {
@@ -210,7 +204,7 @@
             .sort((a, b) => b.matchday - a.matchday)[0] || null;
     }
 
-    const api = { calcolaPunteggio, positivitaRicezione, chiaveNome, abbinaGiocatori, punteggiGiornata, media, punteggioSquadra, formazionePer };
+    const api = { calcolaPunteggio, abbinaGiocatori, punteggiGiornata, punteggioSquadra, formazionePer };
     if (typeof module !== 'undefined' && module.exports) module.exports = api;
     else root.Punteggi = api;
 })(this);

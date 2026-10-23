@@ -85,9 +85,11 @@
         return { classifica, partite };
     }
 
+    // La Squadra media e le squadre uscite dalla lega (presenti nel calendario ma non più in classifica)
+    // perdono sempre il tie-break contro una squadra in classifica
     function vinceTiebreak(a, b, classifica, iscrizione) {
-        if (a === MEDIA) return b;
-        if (b === MEDIA) return a;
+        if (!classifica[a]) return classifica[b] ? b : a;
+        if (!classifica[b]) return a;
         if (classifica[a].total !== classifica[b].total) return classifica[a].total > classifica[b].total ? a : b;
         return (iscrizione[a] ?? 0) <= (iscrizione[b] ?? 0) ? a : b;
     }

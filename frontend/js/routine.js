@@ -1,6 +1,7 @@
 // Routine settimanale dell'admin: controlla listone, calendario e tabellini insieme e applica tutto con un clic.
 // Usa le funzioni dei singoli riquadri del pannello (admin.js, admin-punteggi.js), nell'ordine giusto:
 // prima il listone (i nuovi giocatori servono per abbinare i tabellini), poi il calendario, poi le giornate.
+// Si ferma al primo errore, e non applica una giornata con nomi non trovati nel listone: va controllata a mano.
 let routine = null; // { listone, calendario, giornate: [n] }
 
 if (auth) {
@@ -14,10 +15,9 @@ function rigaRoutine(stato, testo) {
 }
 
 async function giornateDaCalcolare() {
-    const res = await fetch(`../data/tabellini/index.json?t=${Date.now()}`, { cache: 'no-store' });
-    const { giornate } = res.ok ? await res.json() : { giornate: [] };
+    const giornate = await giornateConTabellino();
     await loadNextMatchday();
-    const calcolate = new Set(state.matchdays.filter(g => g.status === 'scored').map(g => g.number));
+    const calcolate = giornateCalcolate();
     return giornate.filter(n => !calcolate.has(n)).sort((a, b) => a - b);
 }
 
@@ -26,14 +26,15 @@ async function controllaRoutine() {
     const applyBtn = document.getElementById('routineApplyBtn');
     const status = document.getElementById('routineStatus');
     applyBtn.hidden = true;
+    routine = null;
     status.textContent = 'Controllo in corso…';
     const righe = [];
     try {
-        await checkListone();
+        if (!await checkListone()) throw new Error('controllo del listone non riuscito (vedi il riquadro Listone)');
         const modificheListone = listoneDiff ? ListoneDiff.totaleModifiche(listoneDiff) : 0;
         righe.push(rigaRoutine(modificheListone ? 'da' : 'ok', modificheListone ? `Listone: ${modificheListone} modifiche da applicare` : 'Listone aggiornato'));
 
-        await checkCalendario();
+        if (!await checkCalendario()) throw new Error('controllo del calendario non riuscito (vedi il riquadro Calendario)');
         const modificheCalendario = calendarioDiff ? calendarioDiff.scritture.length : 0;
         const bloccate = calendarioDiff ? calendarioDiff.scadenzeBloccate.length : 0;
         righe.push(rigaRoutine(modificheCalendario ? 'da' : 'ok', modificheCalendario ? `Calendario: ${modificheCalendario} giornate da aggiornare` : 'Calendario aggiornato'));
@@ -43,12 +44,12 @@ async function controllaRoutine() {
         righe.push(rigaRoutine(giornate.length ? 'da' : 'ok', giornate.length ? `Punteggi: giornate da calcolare ${giornate.join(', ')}` : 'Punteggi: tutte le giornate scaricate sono già calcolate'));
 
         routine = { listone: modificheListone > 0, calendario: modificheCalendario > 0, giornate };
-        lista.replaceChildren(...righe);
+        riempi(lista, righe);
         const daFare = routine.listone || routine.calendario || giornate.length > 0;
         applyBtn.hidden = !daFare;
         status.textContent = daFare ? 'Controlla le voci e applica.' : 'Tutto aggiornato: niente da fare questa settimana.';
     } catch (e) {
-        lista.replaceChildren(...righe, rigaRoutine('errore', 'Controllo non riuscito: ' + e.message));
+        riempi(lista, righe, rigaRoutine('errore', e.message));
         status.textContent = '';
     }
 }
@@ -58,23 +59,25 @@ async function applicaRoutine() {
     const status = document.getElementById('routineStatus');
     const applyBtn = document.getElementById('routineApplyBtn');
     applyBtn.disabled = true;
+    const ferma = motivo => { throw new Error(motivo); };
     try {
         if (routine.listone) {
             status.textContent = 'Applico il listone…';
-            await applyListone();
+            if (!await applyListone()) ferma('listone non applicato (vedi il riquadro Listone)');
         }
         if (routine.calendario) {
             status.textContent = 'Applico il calendario…';
-            await applyCalendario();
+            if (!await applyCalendario()) ferma('calendario non applicato (vedi il riquadro Calendario)');
         }
         if (routine.giornate.length) await loadGiornateTabellini(); // la tendina delle giornate deve contenerle tutte
         for (const n of routine.giornate) {
             status.textContent = `Calcolo la giornata ${n}…`;
             document.getElementById('punteggiGiornata').value = String(n);
-            await checkPunteggi();
-            await applyPunteggi();
+            const controllo = await checkPunteggi();
+            if (!controllo.ok) ferma(`giornata ${n}: calcolo non riuscito (vedi il riquadro Tabellini e punteggi)`);
+            if (controllo.nonTrovati) ferma(`giornata ${n}: ${controllo.nonTrovati} nomi non trovati nel listone, controlla e applica a mano dal riquadro Tabellini e punteggi`);
+            if (!await applyPunteggi()) ferma(`giornata ${n}: non applicata (vedi il riquadro Tabellini e punteggi)`);
         }
-        routine = null;
         await controllaRoutine();
         status.textContent = 'Fatto: routine completata. ' + document.getElementById('routineStatus').textContent;
     } catch (e) {

@@ -13,10 +13,6 @@ document.getElementById('slotPicker').addEventListener('click', e => {
     if (e.target.id === 'slotPicker') closePicker();
 });
 
-function myRoster() {
-    return state.rosters[state.user?.uid];
-}
-
 function isLocked() {
     return !state.matchday || new Date() >= state.matchday.lockAt;
 }
@@ -47,9 +43,17 @@ async function renderField() {
     const key = `${state.league.id}_${state.matchday.number}_${state.user.uid}`;
     if (lineupEdit.key !== key) {
         lineupEdit.key = key;
-        Object.assign(lineupEdit, await loadLineupForEdit(roster));
+        const caricata = await loadLineupForEdit(roster);
+        if (lineupEdit.key !== key) return; // nel frattempo è cambiata lega o giornata
+        Object.assign(lineupEdit, caricata);
     }
     drawField();
+}
+
+// Uguali titolare per titolare (Firestore restituisce le chiavi in ordine alfabetico: niente confronti tra JSON)
+function stessaFormazione(a, b) {
+    return FormazioneCheck.SLOTS.every(({ slot }) => (a.starters[slot] || null) === (b.starters?.[slot] || null))
+        && a.captain === b.captain;
 }
 
 // La formazione salvata per questa giornata, oppure la precedente ancora valida come punto di partenza
@@ -57,14 +61,13 @@ async function loadLineupForEdit(roster) {
     const base = `leagues/${state.league.id}/lineups`;
     // Dopo un trasferimento chi arriva prende il posto di chi parte (come nel FantaLVF)
     const mieiMovimenti = state.transfers.filter(m => m.uid === state.user.uid);
-    const aggiornata = l => Mercato.applicaSostituzioni(l, mieiMovimenti, Date.now());
+    const aggiornata = l => l && Mercato.applicaSostituzioni({ ...l, savedAt: l.savedAt?.toMillis?.() ?? 0 }, mieiMovimenti, Date.now());
     try {
         const current = await db.doc(`${base}/${state.matchday.number}_${state.user.uid}`).get();
         if (current.exists) {
             const salvata = current.data();
             const valida = FormazioneCheck.suggestFrom(roster, aggiornata(salvata));
-            const uguale = JSON.stringify(valida.starters) === JSON.stringify(salvata.starters) && valida.captain === salvata.captain;
-            return { ...valida, saved: uguale };
+            return { ...valida, saved: stessaFormazione(valida, salvata) };
         }
         const mine = await db.collection(base).where('uid', '==', state.user.uid).get();
         const previous = mine.docs.map(d => d.data()).sort((a, b) => b.matchday - a.matchday)[0];
@@ -79,7 +82,7 @@ function playerCard(id, extra = {}) {
     const p = state.playersById[id];
     if (!p) return el('div', { class: 'player-slot-content empty' }, extra.placeholder || 'Scegli');
     return el('div', { class: 'player-slot-content' },
-        el('img', { src: p.photo || 'img/avatar.svg', class: 'player-avatar', alt: '', onerror: e => { e.target.onerror = null; e.target.src = 'img/avatar.svg'; } }),
+        fotoGiocatore(p),
         el('strong', {}, p.name),
         el('small', {}, p.team));
 }
@@ -88,7 +91,7 @@ function drawField() {
     const roster = myRoster();
     const locked = isLocked();
 
-    document.getElementById('starterGrid').replaceChildren(...FormazioneCheck.SLOTS.map(({ slot, role }) => {
+    riempi(document.getElementById('starterGrid'), FormazioneCheck.SLOTS.map(({ slot, role }) => {
         const id = lineupEdit.starters[slot];
         return el('button', {
             class: `slot-card slot-${slot.toLowerCase()}${id ? ' filled' : ''}${id && id === lineupEdit.captain ? ' captain' : ''}`,
@@ -103,11 +106,11 @@ function drawField() {
 
     const titolari = Object.values(lineupEdit.starters).filter(Boolean);
     const captainSelect = document.getElementById('captainSelect');
-    captainSelect.replaceChildren(el('option', { value: '' }, 'Scegli il capitano…'),
-        ...titolari.map(id => el('option', { value: id, selected: id === lineupEdit.captain }, state.playersById[id]?.name || id)));
+    riempi(captainSelect, el('option', { value: '' }, 'Scegli il capitano…'),
+        titolari.map(id => el('option', { value: id, selected: id === lineupEdit.captain }, state.playersById[id]?.name || id)));
     captainSelect.disabled = locked;
 
-    document.getElementById('benchGrid').replaceChildren(...roster.all
+    riempi(document.getElementById('benchGrid'), roster.all
         .filter(id => !titolari.includes(id))
         .map(id => el('div', { class: 'bench-card' },
             el('span', { class: 'role-tag' }, state.playersById[id]?.role || '?'),
@@ -128,7 +131,7 @@ function openPicker(slot, role) {
     const roster = myRoster();
     const usati = Object.entries(lineupEdit.starters).filter(([s]) => s !== slot).map(([, id]) => id);
     document.getElementById('pickerTitle').textContent = `${slot}: scegli ${ROLE_NAMES[role].toLowerCase()}`;
-    document.getElementById('pickerList').replaceChildren(...(roster[role] || [])
+    riempi(document.getElementById('pickerList'), (roster[role] || [])
         .filter(id => !usati.includes(id))
         .map(id => el('button', { class: 'picker-item', onclick: () => choose(id) }, playerCard(id))));
     document.getElementById('slotPicker').hidden = false;
@@ -159,7 +162,9 @@ async function saveLineup() {
         matchday: state.matchday.number, uid: state.user.uid,
     });
     try {
-        await db.doc(`leagues/${state.league.id}/lineups/${state.matchday.number}_${state.user.uid}`).set(lineup);
+        // savedAt dal server: i trasferimenti successivi sostituiscono i giocatori partiti
+        await db.doc(`leagues/${state.league.id}/lineups/${state.matchday.number}_${state.user.uid}`)
+            .set({ ...lineup, savedAt: firebase.firestore.FieldValue.serverTimestamp() });
         lineupEdit.saved = true;
         state.lineupSalvata = true;
         aggiornaPallinoCampo();

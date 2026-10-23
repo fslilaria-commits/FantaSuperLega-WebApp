@@ -5,10 +5,11 @@
 // - scambi tra squadre: stesse regole, eseguiti quando l'altra squadra accetta
 // Senza server le assegnazioni le applica il Presidente con un clic: questo modulo calcola cosa succede.
 (function (root) {
+    // Il limite per club è lo stesso delle rose: un'unica fonte in rose-check.js
+    const RoseCheck = typeof module !== 'undefined' && module.exports ? require('./rose-check.js') : root.RoseCheck;
     const ORA = 3600 * 1000;
     const DURATA_PARTITA = 3 * ORA; // la giornata finisce 3 ore dopo l'inizio dell'ultima partita
-    const ANTICIPO_OFFERTE = 3 * ORA; // le offerte chiudono 3 ore prima della scadenza
-    const MAX_PER_CLUB = 4;
+    const ANTICIPO_OFFERTE = 3 * ORA; // le offerte chiudono 3 ore prima della scadenza (come nelle regole Firestore)
 
     // matchdays: [{ number, label, lockAt: Date, matches: [{ start, moved }] }]
     function finestraMercato(matchdays, now) {
@@ -49,12 +50,7 @@
     }
 
     function troppiDelClub(roster, playersById) {
-        const perClub = {};
-        for (const id of roster.all) {
-            const club = playersById[id]?.team;
-            if (club) perClub[club] = (perClub[club] || 0) + 1;
-        }
-        return Object.values(perClub).some(n => n > MAX_PER_CLUB);
+        return RoseCheck.clubOltreIlLimite(roster.all, playersById).length > 0;
     }
 
     function valoreOfferta(offerta, rosters) {
@@ -136,11 +132,13 @@
         };
     }
 
-    // Una formazione dopo i trasferimenti avvenuti prima di un certo momento: chi arriva prende il posto di chi parte
+    // Una formazione dopo i trasferimenti avvenuti tra il suo salvataggio (savedAt, ms) e un certo momento:
+    // chi arriva prende il posto di chi parte. I trasferimenti precedenti al salvataggio li ha già visti chi l'ha salvata.
     function applicaSostituzioni(lineup, movimenti, primaDi) {
         if (!lineup) return lineup;
         const l = { ...lineup, starters: { ...lineup.starters }, bench: lineup.bench.slice() };
-        const validi = movimenti.filter(m => m.at < primaDi).sort((a, b) => a.at - b.at);
+        const salvataIl = lineup.savedAt ?? 0;
+        const validi = movimenti.filter(m => m.at > salvataIl && m.at < primaDi).sort((a, b) => a.at - b.at);
         for (const m of validi) {
             for (const slot of Object.keys(l.starters)) if (l.starters[slot] === m.playerOut) l.starters[slot] = m.playerIn;
             l.bench = l.bench.map(id => (id === m.playerOut ? m.playerIn : id));
@@ -156,7 +154,7 @@
             .reduce((tot, o) => tot + (o.extra || 0), 0);
     }
 
-    const api = { finestraMercato, valoreOfferta, risolviOfferte, eseguiScambio, applicaSostituzioni, creditiImpegnati };
+    const api = { ANTICIPO_OFFERTE, finestraMercato, risolviOfferte, eseguiScambio, applicaSostituzioni, creditiImpegnati };
     if (typeof module !== 'undefined' && module.exports) module.exports = api;
     else root.Mercato = api;
 })(this);

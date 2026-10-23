@@ -4,10 +4,6 @@ function nomeSquadra(uid) {
     return state.members.find(m => m.uid === uid)?.teamName || 'Squadra uscita';
 }
 
-function iscrittiConData() {
-    return state.members.map(m => ({ uid: m.uid, joinedAt: m.joinedAt?.toMillis?.() ?? 0 }));
-}
-
 function renderSfide() {
     const box = document.getElementById('scontriBox');
     const body = document.getElementById('scontriBody');
@@ -23,7 +19,7 @@ function renderSfide() {
                 el('button', { class: 'btn btn-primary', id: 'generaSfideBtn', onclick: generaSfide }, el('i', { class: 'fas fa-shuffle' }), ' Genera il calendario delle sfide'),
                 el('span', { class: 'admin-sub', id: 'sfideStatus' }, `${state.members.length} squadre iscritte`)));
         }
-        body.replaceChildren(...parti);
+        riempi(body, parti);
         return;
     }
 
@@ -46,7 +42,7 @@ function renderSfide() {
             el('ul', {}, sfide));
     });
 
-    body.replaceChildren(
+    riempi(body,
         mia ? el('p', { class: 'prossima-sfida' }, `Prossima sfida (giornata ${prossima}): `,
             el('strong', {}, `${nomeSquadra(mia.a)} – ${nomeSquadra(mia.b)}`)) : null,
         el('details', { class: 'admin-diff' }, el('summary', {}, 'Calendario delle sfide'), el('div', {}, righe)));
