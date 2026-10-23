@@ -25,7 +25,12 @@ function leggiInvito() {
         try { sessionStorage.setItem(INVITO_KEY, codice); } catch { /* resta per questa pagina */ }
         return codice;
     }
-    try { return sessionStorage.getItem(INVITO_KEY); } catch { return null; }
+    try {
+        const salvato = sessionStorage.getItem(INVITO_KEY);
+        return /^\d{6}$/.test(salvato || '') ? salvato : null;
+    } catch {
+        return null;
+    }
 }
 
 function linkInvito(codice) {
@@ -57,9 +62,19 @@ async function condividiInvito() {
     } catch { /* condivisione annullata */ }
 }
 
-// Squadre che ci stanno in una lega con il listone di oggi (0 = listone non ancora caricato: nessun limite)
+// Squadre che ci stanno in una lega con il listone di oggi. 0 = il listone non basta per una rosa intera
+// (vuoto, non ancora caricato o senza giocatori di un ruolo): in quel caso nessun limite
 function postiMassimi() {
     return RoseCheck.maxSquadre(state.players);
+}
+
+// Il modulo "Unisciti" torna normale: niente più apertura forzata, codice e messaggio dell'invito
+function chiudiInvito({ svuota = false } = {}) {
+    delete document.getElementById('joinCreateBox').dataset.invito;
+    if (svuota) {
+        document.getElementById('joinCode').value = '';
+        document.getElementById('leagueFormStatus').textContent = '';
+    }
 }
 
 // Dopo l'accesso: chi arriva da un link di invito trova il modulo "Unisciti" già compilato
@@ -72,19 +87,20 @@ async function gestisciInvito() {
     switchTab('league');
     const box = document.getElementById('joinCreateBox');
     const status = document.getElementById('leagueFormStatus');
+    let leagueId;
     try {
         const codeDoc = await db.doc(`leagueCodes/${codice}`).get();
-        const leagueId = codeDoc.exists ? codeDoc.data().leagueId : null;
-        if (leagueId && state.leagues.some(l => l.id === leagueId)) {
-            await selectLeague(leagueId); // ci sei già: si apre la lega
-            return;
-        }
-        if (!leagueId) {
-            box.open = true;
-            status.textContent = 'Il link di invito non corrisponde a nessuna lega: chiedi di nuovo il codice a chi ti ha invitato.';
-            return;
-        }
-    } catch { /* si prova comunque con il modulo */ }
+        leagueId = codeDoc.exists ? codeDoc.data().leagueId : null;
+    } catch { /* ricerca non riuscita: si prova comunque con il modulo */ }
+    if (leagueId === null) {
+        box.open = true;
+        status.textContent = 'Il link di invito non corrisponde a nessuna lega: chiedi di nuovo il codice a chi ti ha invitato.';
+        return;
+    }
+    if (leagueId && state.leagues.some(l => l.id === leagueId)) {
+        await selectLeague(leagueId).catch(e => console.error(e)); // ci sei già: si apre la lega
+        return;
+    }
     box.dataset.invito = '1';
     box.open = true;
     document.getElementById('joinCode').value = codice;
@@ -221,8 +237,11 @@ async function oltreIPosti(leagueId, uid) {
     const max = postiMassimi();
     if (!max) return false;
     const membri = (await db.collection(`leagues/${leagueId}/members`).get()).docs
-        .map(d => ({ uid: d.id, quando: d.data().joinedAt?.toMillis?.() ?? Infinity }))
-        .sort((a, b) => a.quando - b.quando || a.uid.localeCompare(b.uid));
+        .map(d => {
+            const t = d.data().joinedAt;
+            return { uid: d.id, s: t?.seconds ?? Infinity, n: t?.nanoseconds ?? 0 };
+        })
+        .sort((a, b) => a.s - b.s || a.n - b.n || (a.uid < b.uid ? -1 : a.uid > b.uid ? 1 : 0));
     return membri.findIndex(m => m.uid === uid) >= max;
 }
 
@@ -274,6 +293,7 @@ async function createLeague(e) {
             await batch.commit();
             status.textContent = `Lega creata! Codice da condividere con gli amici: ${code}`;
             e.target.reset();
+            chiudiInvito();
             await loadMyLeagues(leagueRef.id);
             return;
         } catch (err) {
@@ -314,19 +334,33 @@ async function joinLeague(e) {
         batch.set(db.doc(`leagues/${leagueId}/members/${uid}`), { teamName, code, joinedAt: now });
         batch.set(db.doc(`users/${uid}/leagues/${leagueId}`), { joinedAt: now });
         await batch.commit();
-        // Le regole non sanno contare i partecipanti: se la lega era già al completo si esce subito
-        if (await oltreIPosti(leagueId, uid)) {
-            const esci = db.batch();
-            esci.delete(db.doc(`leagues/${leagueId}/members/${uid}`));
-            esci.delete(db.doc(`users/${uid}/leagues/${leagueId}`));
-            await esci.commit();
-            status.textContent = `La lega è al completo: con il listone di oggi ci stanno al massimo ${postiMassimi()} squadre (le rose sono esclusive). Chiedi al Presidente.`;
-            return;
+        // Da qui si è dentro. Le regole non sanno contare i partecipanti: se la lega era già al completo si esce
+        // subito. Se la verifica non riesce (per esempio senza connessione) l'ingresso resta: il limite è un aiuto
+        let messaggio = 'Sei entrato nella lega!';
+        let fuori = false;
+        try {
+            fuori = await oltreIPosti(leagueId, uid);
+        } catch (err) {
+            console.error(err);
         }
-        delete document.getElementById('joinCreateBox').dataset.invito;
-        status.textContent = 'Sei entrato nella lega!';
+        if (fuori) {
+            try {
+                const esci = db.batch();
+                esci.delete(db.doc(`leagues/${leagueId}/members/${uid}`));
+                esci.delete(db.doc(`users/${uid}/leagues/${leagueId}`));
+                await esci.commit();
+                chiudiInvito();
+                status.textContent = `La lega è al completo: con il listone di oggi ci stanno al massimo ${postiMassimi()} squadre (le rose sono esclusive). Chiedi al Presidente.`;
+                return;
+            } catch (err) {
+                console.error(err);
+                messaggio = 'La lega era già al completo ma non sono riuscito a farti uscire: avvisa il Presidente.';
+            }
+        }
+        chiudiInvito();
         e.target.reset();
         await loadMyLeagues(leagueId);
+        status.textContent = messaggio;
     } catch (err) {
         console.error(err);
         status.textContent = err.code === 'permission-denied'
