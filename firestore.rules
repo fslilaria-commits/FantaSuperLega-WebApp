@@ -126,7 +126,7 @@ service cloud.firestore {
             && d.joinedAt is timestamp;
         }
 
-        allow read: if isMember(leagueId);
+        allow read: if isMember(leagueId) || isAdmin();
         // Si entra solo con il codice giusto, e solo per sé stessi
         allow create: if signedIn()
           && uid == request.auth.uid
@@ -155,7 +155,7 @@ service cloud.firestore {
             && d.creditsLeft is number && d.creditsLeft >= 0;
         }
 
-        allow read: if isMember(leagueId);
+        allow read: if isMember(leagueId) || isAdmin();
         allow create, update: if isPresident(leagueId)
           && exists(/databases/$(database)/documents/leagues/$(leagueId)/members/$(uid))
           && validRoster(request.resource.data);
@@ -192,9 +192,9 @@ service cloud.firestore {
             && d.captain in starters;
         }
 
-        // La propria formazione sempre; quelle degli altri solo dopo la scadenza
-        allow read: if isMember(leagueId)
-          && (resource.data.uid == request.auth.uid || request.time >= lockAt(resource.data.matchday));
+        // La propria formazione sempre; quelle degli altri solo dopo la scadenza; gli admin per calcolare i punteggi
+        allow read: if isAdmin() || (isMember(leagueId)
+          && (resource.data.uid == request.auth.uid || request.time >= lockAt(resource.data.matchday)));
         allow create, update: if isMember(leagueId)
           && validLineup(request.resource.data)
           && request.time < lockAt(request.resource.data.matchday);
