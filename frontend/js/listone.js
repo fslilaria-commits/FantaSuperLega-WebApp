@@ -17,12 +17,12 @@ document.getElementById('freeOnly').addEventListener('change', e => {
     renderMarket();
 });
 
-// playerId -> nome della fanta-squadra che lo ha in rosa
+// playerId -> { uid, nome } della fanta-squadra che lo ha in rosa
 function ownersInLeague() {
     const teamNames = Object.fromEntries(state.members.map(m => [m.uid, m.teamName]));
     const owners = {};
     for (const [uid, roster] of Object.entries(state.rosters)) {
-        for (const id of roster.all || []) owners[id] = teamNames[uid] || 'Squadra';
+        for (const id of roster.all || []) owners[id] = { uid, nome: teamNames[uid] || 'Squadra' };
     }
     return owners;
 }
@@ -40,7 +40,8 @@ function renderMarket() {
             el('strong', {}, p.name))),
         el('td', {}, p.team),
         el('td', {}, el('span', { class: 'role-tag', title: ROLE_NAMES[p.role] }, p.role)),
-        el('td', {}, state.league ? (owners[p.id] ? el('span', { class: 'owner' }, owners[p.id]) : el('span', { class: 'free' }, 'Svincolato')) : '—'),
+        el('td', {}, state.league ? (owners[p.id] ? el('span', { class: 'owner' }, owners[p.id].nome) : el('span', { class: 'free' }, 'Svincolato')) : '—'),
+        el('td', {}, azioneMercato(p, owners[p.id]?.uid)),
     )));
 
     document.getElementById('marketCount').textContent = `${visibili.length} giocatori su ${state.players.length}`;
