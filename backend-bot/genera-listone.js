@@ -4,6 +4,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { SQUADRE_SUPERLEGA, parseRoster, checkProposal } = require('./lib/listone');
+const { scaricaPagina } = require('./lib/rete');
 
 const OUTPUT = path.join(__dirname, '..', 'data', 'players.json');
 
@@ -18,12 +19,10 @@ function readPrevious() {
 async function main() {
     const all = [];
     for (const squadra of SQUADRE_SUPERLEGA) {
-        const res = await fetch(`https://www.legavolley.it/team/${squadra.teamId}`, {
-            headers: { 'User-Agent': 'Mozilla/5.0 (FantaSuperLega listone)' },
-        });
-        if (!res.ok) throw new Error(`${squadra.team}: HTTP ${res.status}`);
+        const pagina = await scaricaPagina(`https://www.legavolley.it/team/${squadra.teamId}`)
+            .catch(e => { throw new Error(`${squadra.team}: ${e.message}`); });
         // La tabella delle rose è in UTF-8; i caratteri non validi nel resto della pagina (testi storici) non la toccano
-        const players = parseRoster(await res.text(), squadra);
+        const players = parseRoster(pagina, squadra);
         console.log(`${squadra.team.padEnd(30)} ${players.length} giocatori`);
         all.push(...players);
     }

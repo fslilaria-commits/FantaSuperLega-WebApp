@@ -25,10 +25,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Codice
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Configura Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: '22'
           cache: npm
@@ -40,18 +40,24 @@ jobs:
 
       # Stagione nuova: toglie le proposte di quella finita prima di scaricare le nuove
       - name: Prepara la stagione
+        id: prepara
         working-directory: backend-bot
         run: npm run prepara-stagione
 
+      # I tre scaricamenti sono indipendenti: se uno si ferma (per esempio il listone), gli altri provano lo stesso.
+      # Il job resta comunque rosso, così si vede che qualcosa non è andato
       - name: Scarica la proposta di listone
+        if: ${{ !cancelled() && steps.prepara.outcome == 'success' }}
         working-directory: backend-bot
         run: npm run genera-listone
 
       - name: Scarica la proposta di calendario
+        if: ${{ !cancelled() && steps.prepara.outcome == 'success' }}
         working-directory: backend-bot
         run: npm run genera-calendario
 
       - name: Scarica i tabellini delle giornate concluse
+        if: ${{ !cancelled() && steps.prepara.outcome == 'success' }}
         working-directory: backend-bot
         run: npm run genera-tabellini
 

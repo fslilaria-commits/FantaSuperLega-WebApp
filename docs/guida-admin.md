@@ -117,6 +117,7 @@ Si fanno da https://console.firebase.google.com/project/fanta-superlega-734b1 co
 |---|---|
 | La routine dice "Tutto aggiornato" ma l'ultima giornata manca | Lo scaricamento non è ancora passato, o la Lega non ha ancora verificato i dati. Su GitHub → Actions controlla l'ultima esecuzione di "Aggiorna dati SuperLega", o lanciala a mano (**Run workflow**) |
 | Su GitHub l'aggiornamento è rosso | Il programma si ferma apposta se i dati della Lega sembrano sbagliati (squadre quasi vuote, giocatori spariti, gare mancanti). Riprova il giorno dopo con **Run workflow**; se resta rosso, avvisa chi sviluppa il progetto |
+| Su GitHub l'errore dice «Cloudflare ha rifiutato la richiesta» | Il sito della Lega sta bloccando i server di GitHub: non dipende dai dati. Avvisa chi sviluppa il progetto, che può scaricare i dati dal proprio computer |
 | Nomi non trovati nel tabellino | Prima applica il listone; se restano, abbinali a mano (punto 2) |
 | Un punteggio è sbagliato | Correggi il numero (punto 2), poi **Calcola e applica**. Il ricalcolo sovrascrive il precedente e aggiorna tutte le classifiche |
 | "Permessi da admin mancanti" | Pubblica le regole (punto 6) e ricarica il sito |
