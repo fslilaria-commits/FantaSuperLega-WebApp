@@ -3,12 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#1a2c5c">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" href="img/icon-192.png" type="image/png">
+    <link rel="apple-touch-icon" href="img/icon-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="FantaSuperLega">
     <title>Fanta Superlega Maschile 2026/2027</title>
     <link rel="stylesheet" href="css/style.css">
     <!-- Font & Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Teko:wght@500;700&family=Work+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@600;700;800&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -19,10 +25,11 @@
     <header class="navbar">
         <div class="logo">
             <i class="fas fa-volleyball logo-icon"></i>
-            <span>FANTA<b>SUPERLEGA</b> <small>26/27</small></span>
+            <span class="logo-text">FANTA<b>SUPERLEGA</b></span><span class="logo-season">26/27</span>
         </div>
         <nav class="nav-links" id="mainNav" hidden>
-            <button class="nav-btn active" data-tab="field" onclick="switchTab('field')"><i class="fas fa-person-running"></i> Campo</button>
+            <button class="nav-btn active" data-tab="home" onclick="switchTab('home')"><i class="fas fa-house"></i> La mia giornata</button>
+            <button class="nav-btn" data-tab="field" onclick="switchTab('field')"><i class="fas fa-person-running"></i> Campo<span class="nav-dot" id="fieldDot" hidden title="Formazione non salvata"></span></button>
             <button class="nav-btn" data-tab="market" onclick="switchTab('market')"><i class="fas fa-store"></i> Mercato</button>
             <button class="nav-btn" data-tab="league" onclick="switchTab('league')"><i class="fas fa-trophy"></i> Lega</button>
             <button class="nav-btn" data-tab="calculator" onclick="switchTab('calculator')"><i class="fas fa-calculator"></i> Tabellini</button>
@@ -44,6 +51,13 @@
                 <p>Crea una lega con i tuoi amici, fate l'asta e schierate ogni giornata la vostra formazione: i punti arrivano dai tabellini ufficiali della Lega.</p>
                 <button class="btn btn-primary" id="welcomeLoginBtn"><i class="fab fa-google"></i> Accedi con Google</button>
             </div>
+        </section>
+
+        <!-- LA MIA GIORNATA: il riepilogo dopo l'accesso -->
+        <section id="tab-home" class="tab-content">
+            <h2 id="homeTitle">La mia giornata</h2>
+            <p class="admin-sub" id="homeSub"></p>
+            <div class="home-grid" id="homeCards"></div>
         </section>
 
         <!-- FORMAZIONE DI GIORNATA -->
@@ -114,6 +128,11 @@
                     <button class="filter-chip" data-role="L">L</button>
                 </div>
                 <label class="check-inline"><input type="checkbox" id="freeOnly"> Solo svincolati</label>
+                <select id="marketSort" aria-label="Ordina il listone">
+                    <option value="nome">Ordina per nome</option>
+                    <option value="media">Ordina per media</option>
+                    <option value="ultima">Ordina per ultima giornata</option>
+                </select>
             </div>
             <div class="market-table-wrapper">
                 <table class="market-table">
@@ -122,6 +141,8 @@
                             <th>Atleta</th>
                             <th>Squadra</th>
                             <th>Ruolo</th>
+                            <th title="Media dei fanta-punti nelle giornate giocate">Media</th>
+                            <th title="Fanta-punti dell'ultima giornata calcolata">Ultima</th>
                             <th>Fanta-squadra</th>
                             <th></th>
                         </tr>
@@ -136,22 +157,6 @@
                 <div id="transfersList"></div>
             </details>
 
-            <div class="picker" id="marketDialog" hidden>
-                <form class="picker-box" id="marketForm">
-                    <h3 id="marketDialogTitle"></h3>
-                    <p class="admin-sub" id="marketDialogInfo"></p>
-                    <label class="admin-sub" for="marketGive">Giocatore che lasci (stesso ruolo)</label>
-                    <select id="marketGive" required></select>
-                    <label class="admin-sub" for="marketExtra">Crediti in aggiunta</label>
-                    <input type="number" id="marketExtra" min="0" step="1" value="0" required>
-                    <p class="admin-sub" id="marketDialogValue"></p>
-                    <p class="msg-error" id="marketDialogError"></p>
-                    <div class="admin-actions">
-                        <button class="btn btn-primary" type="submit" id="marketSubmit">Invia</button>
-                        <button class="btn btn-secondary" type="button" id="marketCancel">Annulla</button>
-                    </div>
-                </form>
-            </div>
         </section>
 
         <!-- LEGA -->
@@ -285,6 +290,21 @@
         <section id="tab-admin" class="tab-content">
             <h2><i class="fas fa-user-shield"></i> Pannello Admin</h2>
 
+            <div class="admin-card routine-card">
+                <div class="admin-card-head">
+                    <div>
+                        <h3><i class="fas fa-list-check"></i> Routine settimanale</h3>
+                        <p class="admin-sub">Controlla in un colpo listone, calendario e tabellini scaricati dal sito della Lega, poi applica tutto con un clic. Il dettaglio di ogni voce resta nei riquadri qui sotto.</p>
+                    </div>
+                    <button class="btn btn-primary" id="routineCheckBtn"><i class="fas fa-magnifying-glass"></i> Controlla tutto</button>
+                </div>
+                <ul class="routine-list" id="routineList"></ul>
+                <div class="admin-actions">
+                    <button class="btn btn-primary" id="routineApplyBtn" hidden><i class="fas fa-check-double"></i> Applica tutto</button>
+                    <span class="admin-sub" id="routineStatus"></span>
+                </div>
+            </div>
+
             <div class="admin-card">
                 <div class="admin-card-head">
                     <div>
@@ -336,6 +356,27 @@
                 </div>
             </div>
         </section>
+        <!-- Finestre di dialogo, fuori dalle sezioni per poterle aprire da qualsiasi scheda -->
+        <div class="picker" id="playerDialog" hidden>
+            <div class="picker-box player-card" id="playerCard"></div>
+        </div>
+
+        <div class="picker" id="marketDialog" hidden>
+            <form class="picker-box" id="marketForm">
+                <h3 id="marketDialogTitle"></h3>
+                <p class="admin-sub" id="marketDialogInfo"></p>
+                <label class="admin-sub" for="marketGive">Giocatore che lasci (stesso ruolo)</label>
+                <select id="marketGive" required></select>
+                <label class="admin-sub" for="marketExtra">Crediti in aggiunta</label>
+                <input type="number" id="marketExtra" min="0" step="1" value="0" required>
+                <p class="admin-sub" id="marketDialogValue"></p>
+                <p class="msg-error" id="marketDialogError"></p>
+                <div class="admin-actions">
+                    <button class="btn btn-primary" type="submit" id="marketSubmit">Invia</button>
+                    <button class="btn btn-secondary" type="button" id="marketCancel">Annulla</button>
+                </div>
+            </form>
+        </div>
     </main>
 
     <script src="js/config.js"></script>
@@ -346,6 +387,7 @@
     <script src="js/punteggi.js"></script>
     <script src="js/scontri.js"></script>
     <script src="js/mercato.js"></script>
+    <script src="js/statistiche.js"></script>
     <script src="js/app.js"></script>
     <script src="js/listone.js"></script>
     <script src="js/lega.js"></script>
@@ -357,5 +399,12 @@
     <script src="js/presidente-mercato.js"></script>
     <script src="js/admin.js"></script>
     <script src="js/admin-punteggi.js"></script>
+    <script src="js/home.js"></script>
+    <script src="js/giocatore.js"></script>
+    <script src="js/routine.js"></script>
+    <script>
+        // App installabile: il service worker serve solo sul sito pubblicato (https), non in locale
+        if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js');
+    </script>
 </body>
 </html>
