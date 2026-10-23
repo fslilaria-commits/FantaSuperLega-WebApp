@@ -27,6 +27,10 @@ const TABELLINI_INDICE = '../data/tabellini/index.json';
 const AVATAR = 'img/avatar.svg';
 const BATCH_SIZE = 400; // Firestore accetta al massimo 500 scritture per batch
 
+// La stagione nelle scritte fisse della pagina viene da stagione.js, così ogni estate si cambia in un punto solo
+document.title = `Fanta Superlega Maschile ${Stagione.nome}`;
+document.querySelectorAll('[data-stagione]').forEach(e => { e.textContent = Stagione[e.dataset.stagione]; });
+
 document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.nav-btn[data-tab]').forEach(b => b.addEventListener('click', () => switchTab(b.dataset.tab)));
     initAuth();

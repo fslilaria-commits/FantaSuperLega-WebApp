@@ -1,19 +1,20 @@
 const cheerio = require('cheerio');
 
-// Le 12 squadre di SuperLega 2026/27 con l'id della loro pagina su legavolley.it
+// Le squadre della stagione (frontend/js/stagione.js), da aggiornare ogni estate: id della loro pagina su
+// legavolley.it (teamId) e codice della squadra nella pagina statistiche della Lega (parametro Squadra)
 const SQUADRE_SUPERLEGA = [
-    { teamId: 6863, team: "Acqua Sant'Anna Cuneo" },
-    { teamId: 6858, team: 'Allianz Milano' },
-    { teamId: 6859, team: 'Cisterna Volley' },
-    { teamId: 6860, team: 'Cucine Lube Civitanova' },
-    { teamId: 6861, team: 'Gas Sales Bluenergy Piacenza' },
-    { teamId: 6862, team: 'Itas Trentino' },
-    { teamId: 6866, team: 'Pallavolo Padova' },
-    { teamId: 6864, team: 'Rana Verona' },
-    { teamId: 6865, team: 'Sir Susa Scai Perugia' },
-    { teamId: 6897, team: 'Tinet Prata di Pordenone' },
-    { teamId: 6867, team: 'Valsa Group Modena' },
-    { teamId: 6868, team: 'Vero Volley Monza' },
+    { teamId: 6863, team: "Acqua Sant'Anna Cuneo", codiceStatistiche: 'CUNEOSPORT' },
+    { teamId: 6858, team: 'Allianz Milano', codiceStatistiche: 'MI-POWER' },
+    { teamId: 6859, team: 'Cisterna Volley', codiceStatistiche: 'CIS-VOLLEY' },
+    { teamId: 6860, team: 'Cucine Lube Civitanova', codiceStatistiche: 'MC' },
+    { teamId: 6861, team: 'Gas Sales Bluenergy Piacenza', codiceStatistiche: 'PIACENZAYOU' },
+    { teamId: 6862, team: 'Itas Trentino', codiceStatistiche: 'TN-ITAS' },
+    { teamId: 6866, team: 'Pallavolo Padova', codiceStatistiche: 'PD' },
+    { teamId: 6864, team: 'Rana Verona', codiceStatistiche: 'VRI' },
+    { teamId: 6865, team: 'Sir Susa Scai Perugia', codiceStatistiche: 'BASTIA' },
+    { teamId: 6897, team: 'Tinet Prata di Pordenone', codiceStatistiche: 'PRATA' },
+    { teamId: 6867, team: 'Valsa Group Modena', codiceStatistiche: 'MO' },
+    { teamId: 6868, team: 'Vero Volley Monza', codiceStatistiche: 'MIVER' },
 ];
 
 const RUOLI = {

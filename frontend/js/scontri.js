@@ -5,8 +5,9 @@
 //   più vecchia): 2 punti a chi lo vince, 1 a chi lo perde
 // - classifica: punti, poi fanta-punti totali, poi iscrizione più vecchia
 (function (root) {
+    const Stagione = typeof module !== 'undefined' && module.exports ? require('./stagione.js') : root.Stagione;
     const MEDIA = 'MEDIA';
-    const ULTIMA_GIORNATA = 22;
+    const ULTIMA_GIORNATA = Stagione.GIORNATE;
     const r2 = x => Math.round(x * 100) / 100;
 
     function mescola(lista, random) {

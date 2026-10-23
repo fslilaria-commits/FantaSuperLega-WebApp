@@ -132,6 +132,20 @@ Si fanno da https://console.firebase.google.com/project/fanta-superlega-734b1 co
 - **App Check** controlla che le richieste arrivino davvero dal sito. Le istruzioni, compreso come attivarlo e disattivarlo, sono in [`docs/sicurezza.md`](sicurezza.md).
 - Non condividere mai chiavi segrete o password. La configurazione nel codice (`frontend/js/config.js`) è pubblica per natura: non è un problema.
 
+## 9. Nuova stagione (ogni estate)
+
+A ogni stagione il gioco riparte da zero, come nel FantaLVF: nuovo listone, nuove leghe, nuova asta. Si fa in estate, quando la Lega ha pubblicato rose e calendario (di solito tra luglio e settembre). L'ordine dei passi conta.
+
+1. **Prima di cancellare**, salva quello che vuoi ricordare, per esempio uno screenshot della classifica finale di ogni lega. Dopo il passo 3 non si recupera più: il piano gratuito non ha backup.
+2. **Nella repo** (chi sviluppa il progetto):
+   - in `frontend/js/stagione.js` cambia `ANNO` (2027 per la stagione 2027/28) e, se la SuperLega cambia numero di squadre, `SQUADRE`. Da lì si aggiornano da soli la scritta della stagione nel sito e nell'invito WhatsApp, il numero di giornate e gli indirizzi del sito della Lega usati dal bot;
+   - in `backend-bot/lib/listone.js` aggiorna l'elenco delle squadre (cambiano promosse e retrocesse): nome, `teamId` (il numero nell'indirizzo della pagina della squadra, `legavolley.it/team/…`) e `codiceStatistiche` (il valore di `Squadra` nell'indirizzo della pagina statistiche della Lega, scegliendo quella squadra). Di solito gli id cambiano a ogni stagione anche per le squadre che restano: vanno ricontrollati tutti. I test controllano che le squadre siano tante quante `SQUADRE` e senza doppioni;
+   - cancella i dati della stagione finita: `data/players.json` (altrimenti il bot si ferma perché «spariscono troppi giocatori») e la cartella `data/tabellini/` (altrimenti il pannello Admin vedrebbe i tabellini dell'anno prima, con gli stessi numeri di giornata);
+   - unisci la modifica nel `main`.
+3. **Nella console Firebase** (admin): in **Firestore Database → Dati** elimina tutte le raccolte **tranne `admins`**, cioè `leagues`, `leagueCodes`, `users`, `matchdays`, `players` e `meta` (menu ⋮ della raccolta → **Elimina raccolta**, che cancella anche quello che c'è dentro). Regole e App Check restano come sono. Vanno cancellati anche giornate e listone: le giornate vecchie risultano già bloccate e calcolate, e il nuovo calendario non le sovrascriverebbe; ripartendo da un listone vuoto ogni giocatore entra con il ruolo che gli dà la Lega quest'anno.
+4. **Su GitHub → Actions → «Aggiorna dati SuperLega» → Run workflow**: scarica listone e calendario nuovi. Se la Lega non ha ancora pubblicato tutto, l'esecuzione resta rossa: riprova più avanti.
+5. **Nel pannello Admin** applica listone e calendario come nella routine (punto 1). Da qui si torna alla settimana tipo: i Presidenti creano le nuove leghe e mandano gli inviti (punto 3).
+
 ## Per approfondire
 
 - [`README.md`](../README.md): come è fatto il progetto e come provarlo in locale

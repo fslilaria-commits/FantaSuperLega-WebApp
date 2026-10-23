@@ -9,7 +9,7 @@
     <link rel="apple-touch-icon" href="img/icon-192.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="FantaSuperLega">
-    <title>Fanta Superlega Maschile 2026/2027</title>
+    <title>Fanta Superlega Maschile</title>
     <link rel="stylesheet" href="css/style.css">
     <!-- Font & Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -26,7 +26,7 @@
     <header class="navbar">
         <div class="logo">
             <i class="fas fa-volleyball logo-icon"></i>
-            <span class="logo-text">FANTA<b>SUPERLEGA</b></span><span class="logo-season">26/27</span>
+            <span class="logo-text">FANTA<b>SUPERLEGA</b></span><span class="logo-season" data-stagione="breve"></span>
         </div>
         <nav class="nav-links" id="mainNav" hidden>
             <button class="nav-btn active" data-tab="home"><i class="fas fa-house"></i> La mia giornata</button>
@@ -48,7 +48,7 @@
         <section id="tab-welcome" class="tab-content active">
             <div class="welcome">
                 <i class="fas fa-volleyball welcome-icon"></i>
-                <h2>Il fantavolley della SuperLega 2026/27</h2>
+                <h2>Il fantavolley della SuperLega <span data-stagione="nome"></span></h2>
                 <p>Crea una lega con i tuoi amici, fate l'asta e schierate ogni giornata la vostra formazione: i punti arrivano dai tabellini ufficiali della Lega.</p>
                 <p class="invito-avviso" id="welcomeInvite" hidden><i class="fas fa-envelope-open-text"></i> Ti hanno invitato in una lega: accedi con Google per entrare.</p>
                 <button class="btn btn-primary" id="welcomeLoginBtn"><i class="fab fa-google"></i> Accedi con Google</button>
@@ -390,6 +390,7 @@
         </div>
     </main>
 
+    <script src="js/stagione.js"></script>
     <script src="js/config.js"></script>
     <script src="js/listone-diff.js"></script>
     <script src="js/calendario-diff.js"></script>
