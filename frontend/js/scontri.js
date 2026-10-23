@@ -37,6 +37,14 @@
     }
 
     // scores: [{ uid, matchday, total }]; members: [{ uid, joinedAt (ms) }]
+    // Le sfide di una giornata. Il calendario lo scrive il browser del Presidente: i dati malformati si ignorano
+    function sfideDi(rounds, giornata) {
+        const sfide = rounds?.[giornata];
+        return Array.isArray(sfide)
+            ? sfide.filter(s => s && typeof s.a === 'string' && typeof s.b === 'string' && s.a !== s.b)
+            : [];
+    }
+
     function risultatiScontri({ rounds, scores, members }) {
         const iscrizione = Object.fromEntries(members.map(m => [m.uid, m.joinedAt ?? 0]));
         const classifica = Object.fromEntries(members.map(m => [m.uid, {
@@ -53,7 +61,7 @@
             // I fanta-punti totali entrano in classifica prima del tie-break della giornata
             for (const uid of Object.keys(classifica)) classifica[uid].total = r2(classifica[uid].total + (punti[uid] ?? 0));
 
-            for (const { a, b } of rounds?.[g] || []) {
+            for (const { a, b } of sfideDi(rounds, g)) {
                 const pa = a === MEDIA ? media : (punti[a] ?? 0);
                 const pb = b === MEDIA ? media : (punti[b] ?? 0);
                 let vincitore;
@@ -103,7 +111,7 @@
             || (x.joinedAt ?? 0) - (y.joinedAt ?? 0));
     }
 
-    const api = { MEDIA, generaCalendario, risultatiScontri, ordinaClassifica };
+    const api = { MEDIA, generaCalendario, sfideDi, risultatiScontri, ordinaClassifica };
     if (typeof module !== 'undefined' && module.exports) module.exports = api;
     else root.Scontri = api;
 })(this);

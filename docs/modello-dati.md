@@ -57,7 +57,9 @@ Un documento per admin, con id uguale all'uid di Firebase Authentication. Si cre
 
 Una gara giocata più di 4 giorni prima o 3 giorni dopo la data della sua giornata è **spostata** (`moved: true`): non conta per la scadenza e, come nel FantaLVF, i suoi giocatori prenderanno il punteggio medio. La scadenza di una giornata già bloccata non viene mai spostata dagli aggiornamenti.
 
-Sottocollezione `matchdays/{n}/stats/{playerId}` con le statistiche del tabellino (Fase 5). Lettura per utenti autenticati, scrittura solo admin. Dopo il calcolo contiene i fanta-punti di ogni giocatore (`fp`, voci, moltiplicatore, `media` per le gare spostate).
+Sottocollezione `matchdays/{n}/stats/{playerId}` con le statistiche del tabellino (Fase 5). Lettura per utenti autenticati, scrittura solo admin. Dopo il calcolo contiene i fanta-punti di ogni giocatore (`fp`, voci, moltiplicatore, `media` per le gare spostate, `corretto` se viene da una correzione manuale).
+
+Documento `matchdays/{n}/correzioni/tabellino` con le correzioni manuali del tabellino: `righe` (`"<teamId>|<nome nel tabellino>" → { id?, stats? }`: `id` giocatore abbinato a mano, `null` se la riga non conta; `stats` i numeri corretti), `updatedAt` (data del server), `updatedBy`. Solo gli admin lo leggono e lo scrivono. Dettagli in `docs/punteggio.md`.
 
 ### `users/{uid}/leagues/{leagueId}` — le mie leghe
 Un documento (`joinedAt`, data del server) per ogni lega in cui l'utente è entrato, per ritrovarle all'accesso. Lo scrive l'utente stesso, solo insieme alla propria iscrizione alla lega; nessuno legge quelle degli altri.
@@ -90,7 +92,7 @@ Leggibile dai membri, modificabile solo dal Presidente (che non può cedere la p
 | `code` | string | Il codice usato per entrare: deve coincidere con quello della lega |
 | `joinedAt` | timestamp | Data del server: a parità in classifica vince chi si è iscritto prima |
 
-Ognuno crea e modifica solo il proprio documento. Le regole permettono al Presidente di togliere un partecipante e a ognuno di uscire, ma l'app non ha ancora il pulsante: per ora si fa dalla console Firebase, cancellando il documento del partecipante e la sua rosa. Chi è stato tolto può rientrare con il codice finché la lega accetta iscrizioni (vedi `docs/sicurezza.md`).
+Ognuno crea e modifica solo il proprio documento. Le regole permettono al Presidente di togliere un partecipante e a ognuno di uscire, ma l'app non ha ancora il pulsante: per ora si fa dalla console Firebase, cancellando il documento del partecipante e la sua rosa. Chi è stato tolto non può rientrare dall'app, perché il suo `users/{uid}/leagues/{leagueId}` esiste ancora: per farlo rientrare l'admin lo cancella dalla console (vedi `docs/sicurezza.md`).
 
 ### `leagues/{leagueId}/rosters/{uid}` — rose
 | Campo | Tipo | Note |
@@ -127,7 +129,7 @@ Solo per le leghe `scontri`. Lo genera il Presidente una sola volta prima della 
 
 La logica è in `frontend/js/mercato.js`. **Senza server le assegnazioni non scattano da sole: le applica il Presidente con un clic** dalla scheda Lega ("Assegna gli svincolati", "Applica gli scambi accettati").
 
-**Finestra** per la giornata *n*: apre a fine giornata *n−1* (3 ore dopo l'inizio dell'ultima partita), offerte per gli svincolati fino a 3 ore prima della scadenza di *n*, scambi fino alla scadenza. Le regole controllano che si sia dopo l'inizio della giornata *n−1* e prima delle chiusure; il Presidente può sospendere il mercato.
+**Finestra** per la giornata *n*: apre a fine giornata *n−1* (3 ore dopo l'inizio dell'ultima partita), offerte per gli svincolati fino a 3 ore prima della scadenza di *n*, scambi fino alla scadenza. Le regole controllano che si sia dopo l'inizio della giornata *n−1* e prima delle chiusure; il Presidente può sospendere il mercato. Un giocatore lasciato in un'assegnazione torna svincolato dalla finestra successiva. Una proposta di scambio vale solo nella sua finestra: dopo risulta "scaduta" e non si può più accettare.
 
 ### `leagues/{leagueId}/markets/{n}/offers/{uid}_{playerIn}` — offerte segrete
 | Campo | Tipo | Note |
@@ -145,7 +147,7 @@ L'offerta vale il valore del giocatore lasciato più i crediti. Nessuno legge le
 `from` offre `give` (più `extra` crediti) per `take` di `to`, stesso ruolo. Stati: `proposed` → `accepted` / `refused` / `countered` (rilancio con una controproposta) / `withdrawn`; il Presidente porta gli accettati a `executed` (o `void` se non più validi). Chi arriva prende il valore di chi parte, più i crediti per chi li paga. Li leggono solo le due squadre, il Presidente e gli admin.
 
 ### `leagues/{leagueId}/transfers/{id}` — registro dei movimenti
-`tipo` (`svincolato` o `scambio`), `uid`, `playerIn`, `playerOut`, `valore`, `extra`, `matchday`, `at` (ora del server). Lo scrive il Presidente quando applica il mercato, lo legge tutta la lega. Serve anche alle formazioni: chi arriva prima della scadenza di una giornata prende il posto di chi parte, nella formazione e nel calcolo dei punteggi.
+`tipo` (`svincolato` o `scambio`), `uid`, `playerIn`, `playerOut`, `valore`, `extra`, `matchday`, `at` (ora del server). Lo scrive il Presidente quando applica il mercato, lo legge tutta la lega. Serve anche alle formazioni: chi arriva prima della scadenza di una giornata prende il posto di chi parte, nella formazione e nel calcolo dei punteggi. Il calcolo parte dalla rosa di oggi e torna indietro nel tempo: usa la rosa alla scadenza della giornata e ignora i movimenti che non corrispondono a un vero cambio di rosa. Chi alla scadenza non era più in rosa resta nella formazione salvata, ma prende 0 punti.
 
 ### `leagues/{leagueId}/scores/{matchday}_{uid}` e `leagues/{leagueId}/standings/{uid}`
 Punteggi di giornata e classifica. Lettura per i membri e gli admin, scrittura solo admin (calcolati dai tabellini ufficiali).

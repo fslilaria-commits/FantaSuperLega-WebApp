@@ -119,7 +119,10 @@ async function applicaMercato() {
     const status = document.getElementById('presidentMarketStatus');
     const base = db.doc(`leagues/${state.league.id}`);
     const now = firebase.firestore.FieldValue.serverTimestamp();
-    const batch = db.batch();
+    // Scritture in ordine di importanza: rose, movimenti ed esiti positivi insieme; poi gli esiti negativi.
+    // Se una parte dopo la prima non riesce, rifacendo l'assegnazione quelle offerte o quegli scambi risultano comunque persi.
+    const prime = [];
+    const dopo = [];
     let rosteNuove;
     let movimenti;
     let matchday;
@@ -128,30 +131,36 @@ async function applicaMercato() {
         rosteNuove = a.risultato.rosters;
         movimenti = a.risultato.movimenti;
         matchday = a.matchday;
-        for (const o of a.risultato.vinte) batch.update(base.collection(`markets/${a.matchday}/offers`).doc(o.id), { status: 'won', updatedAt: now });
-        for (const o of a.risultato.perse) batch.update(base.collection(`markets/${a.matchday}/offers`).doc(o.id), { status: 'lost', motivo: o.motivo, updatedAt: now });
+        const offerta = o => base.collection(`markets/${a.matchday}/offers`).doc(o.id);
+        for (const o of a.risultato.vinte) prime.push(b => b.update(offerta(o), { status: 'won', updatedAt: now }));
+        for (const o of a.risultato.perse) dopo.push(b => b.update(offerta(o), { status: 'lost', motivo: o.motivo, updatedAt: now }));
     } else {
         rosteNuove = a.rosters;
         movimenti = a.esiti.filter(x => x.ok).flatMap(x => x.movimenti);
         matchday = state.matchday?.number ?? null;
         for (const x of a.esiti) {
-            batch.update(base.collection('trades').doc(x.trade.id), x.ok
-                ? { status: 'executed', updatedAt: now }
-                : { status: 'void', motivo: x.motivo, updatedAt: now });
+            const scambio = base.collection('trades').doc(x.trade.id);
+            if (x.ok) prime.push(b => b.update(scambio, { status: 'executed', updatedAt: now }));
+            else dopo.push(b => b.update(scambio, { status: 'void', motivo: x.motivo, updatedAt: now }));
         }
     }
 
     // Solo le rose che cambiano davvero
     for (const [uid, roster] of Object.entries(rosteNuove)) {
-        if (jsonStabile(roster) !== jsonStabile(state.rosters[uid])) batch.set(base.collection('rosters').doc(uid), roster);
+        if (!CalendarioDiff.uguali(roster, state.rosters[uid])) prime.unshift(b => b.set(base.collection('rosters').doc(uid), roster));
     }
     for (const m of movimenti) {
-        batch.set(base.collection('transfers').doc(), { tipo: m.tipo, uid: m.uid, playerIn: m.playerIn, playerOut: m.playerOut, valore: m.valore, extra: m.extra, matchday, at: now });
+        prime.push(b => b.set(base.collection('transfers').doc(), { tipo: m.tipo, uid: m.uid, playerIn: m.playerIn, playerOut: m.playerOut, valore: m.valore, extra: m.extra, matchday, at: now }));
     }
 
     try {
         status.textContent = 'Applico…';
-        await batch.commit();
+        const scritture = prime.concat(dopo);
+        for (let i = 0; i < scritture.length; i += BATCH_SIZE) {
+            const batch = db.batch();
+            for (const scrivi of scritture.slice(i, i + BATCH_SIZE)) scrivi(batch);
+            await batch.commit();
+        }
         status.textContent = `Fatto: ${movimenti.length} movimenti registrati.`;
         anteprimaMercato = null;
         mercatoDati.key = null;

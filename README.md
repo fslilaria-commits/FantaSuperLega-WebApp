@@ -50,6 +50,8 @@ Il comando avvia l'emulatore Firestore, che richiede **Java 11 o superiore**. `n
 
 ## Ruoli e pannello Admin
 
+La guida pratica per admin e Presidenti (routine settimanale, mercato, correzioni, problemi comuni) è in [`docs/guida-admin.md`](docs/guida-admin.md).
+
 I ruoli (Admin, Presidente, Partecipante, Visitatore) sono descritti in [`docs/modello-dati.md`](docs/modello-dati.md#ruoli).
 
 **Nominare un admin** (solo dalla console Firebase, mai dall'app):
@@ -80,7 +82,7 @@ npm test
 
 ## Punteggi
 
-Le formule (regole FantaLVF) e le scelte di interpretazione sono in [`docs/punteggio.md`](docs/punteggio.md). Un admin applica una giornata dal **pannello Admin → Tabellini e punteggi → Controlla tabellino → Calcola e applica**: vengono salvati i punti dei giocatori e aggiornati punteggi e classifiche di tutte le leghe. Il calcolo si può rifare, per esempio dopo una correzione della Lega: sovrascrive quello precedente.
+Le formule (regole FantaLVF) e le scelte di interpretazione sono in [`docs/punteggio.md`](docs/punteggio.md). Un admin applica una giornata dal **pannello Admin → Tabellini e punteggi → Controlla tabellino → Calcola e applica**: vengono salvati i punti dei giocatori e aggiornati punteggi e classifiche di tutte le leghe. Il calcolo si può rifare, per esempio dopo una correzione della Lega: sovrascrive quello precedente. Nomi non abbinati e numeri sbagliati si correggono a mano dallo stesso riquadro (**Correzioni manuali**): le correzioni restano salvate e valgono anche quando il tabellino viene riscaricato.
 
 **Routine settimanale**: in cima al pannello Admin, "Controlla tutto" verifica insieme listone, calendario e tabellini da calcolare, e "Applica tutto" li applica nell'ordine giusto. Il calcolo aggiorna anche il riepilogo stagionale dei giocatori (`meta/statistiche`: media, presenze, punti per giornata), usato da listone e scheda giocatore.
 
