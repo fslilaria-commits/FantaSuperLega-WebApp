@@ -95,7 +95,8 @@ service cloud.firestore {
     match /leagues/{leagueId} {
 
       function validSettings(s) {
-        return s.keys().hasOnly(['budget', 'mode', 'startMatchday'])
+        return s.keys().hasOnly(['budget', 'mode', 'startMatchday', 'marketSuspended'])
+          && (!('marketSuspended' in s) || s.marketSuspended is bool)
           && s.budget is number && s.budget >= 0 && s.budget <= 10000
           && s.mode in ['classifica', 'scontri']
           && s.startMatchday is int && s.startMatchday >= 1;
@@ -217,6 +218,115 @@ service cloud.firestore {
           && request.resource.data.rounds is map
           && ((isPresident(leagueId) && primaDellInizio()) || isAdmin());
         allow delete: if false;
+      }
+
+      // --- Mercato (Modalità Leghe FantaLVF). Le assegnazioni le applica il Presidente con un clic ---
+
+      function scadenza(numero) {
+        return get(/databases/$(database)/documents/matchdays/$(string(numero))).data.lockAt;
+      }
+
+      function rosaDi(uid) {
+        return get(/databases/$(database)/documents/leagues/$(leagueId)/rosters/$(uid)).data;
+      }
+
+      // Finestra per la giornata numero: dopo l'inizio della giornata prima, prima della sua scadenza,
+      // mercato non sospeso dal Presidente (l'app apre il mercato solo a giornata precedente finita)
+      function finestra(numero, fino) {
+        return !league(leagueId).settings.get('marketSuspended', false)
+          && request.time < fino
+          && (numero == 1 || request.time >= scadenza(numero - 1));
+      }
+
+      // Offerte segrete per gli svincolati: nessuno legge quelle degli altri prima della chiusura
+      match /markets/{n}/offers/{offerId} {
+        function chiusuraOfferte() {
+          return scadenza(int(n)) - duration.value(3, 'h');
+        }
+
+        function validOffer(d) {
+          let rosa = rosaDi(d.uid);
+          return d.keys().hasOnly(['uid', 'playerIn', 'playerOut', 'role', 'extra', 'status', 'createdAt', 'updatedAt'])
+            && d.role in ['P', 'S', 'C', 'O', 'L']
+            && d.extra is int && d.extra >= 0
+            && d.playerOut in rosa[d.role]
+            && !(d.playerIn in rosa.all);
+        }
+
+        allow read: if (signedIn() && resource.data.uid == request.auth.uid)
+          || ((isPresident(leagueId) || isAdmin()) && request.time >= chiusuraOfferte());
+        allow create: if isMember(leagueId)
+          && request.resource.data.uid == request.auth.uid
+          && offerId == request.auth.uid + '_' + request.resource.data.playerIn
+          && request.resource.data.status == 'active'
+          && validOffer(request.resource.data)
+          && finestra(int(n), chiusuraOfferte());
+        allow update: if (
+            // chi ha fatto l'offerta la modifica, la ritira o la rifà finché le offerte sono aperte
+            signedIn() && resource.data.uid == request.auth.uid && resource.data.status in ['active', 'withdrawn']
+            && finestra(int(n), chiusuraOfferte())
+            && ((request.resource.data.status == 'active'
+                 && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['playerOut', 'extra', 'status', 'updatedAt'])
+                 && validOffer(request.resource.data))
+              || (request.resource.data.status == 'withdrawn'
+                 && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt'])))
+          ) || (
+            // il Presidente segna l'esito dopo la chiusura
+            isPresident(leagueId) && request.time >= chiusuraOfferte()
+            && resource.data.status == 'active'
+            && request.resource.data.status in ['won', 'lost']
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt', 'motivo'])
+          );
+        allow delete: if false;
+      }
+
+      // Scambi tra squadre: li vedono solo le due squadre (e Presidente e admin)
+      match /trades/{tradeId} {
+        function validTrade(d) {
+          return d.keys().hasOnly(['from', 'to', 'give', 'take', 'role', 'extra', 'status', 'matchday', 'createdAt', 'updatedAt', 'counterOf'])
+            && d.from != d.to
+            && exists(/databases/$(database)/documents/leagues/$(leagueId)/members/$(d.to))
+            && d.role in ['P', 'S', 'C', 'O', 'L']
+            && d.give in rosaDi(d.from)[d.role]
+            && d.take in rosaDi(d.to)[d.role]
+            && d.extra is int && d.extra >= 0
+            && d.matchday is int;
+        }
+
+        allow read: if isPresident(leagueId) || isAdmin()
+          || (signedIn() && (resource.data.from == request.auth.uid || resource.data.to == request.auth.uid));
+        allow create: if isMember(leagueId)
+          && request.resource.data.from == request.auth.uid
+          && request.resource.data.status == 'proposed'
+          && validTrade(request.resource.data)
+          && finestra(request.resource.data.matchday, scadenza(request.resource.data.matchday));
+        allow update: if (
+            signedIn() && resource.data.from == request.auth.uid && resource.data.status == 'proposed'
+            && request.resource.data.status == 'withdrawn'
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt'])
+          ) || (
+            // chi riceve accetta (a mercato aperto), rifiuta o rilancia
+            signedIn() && resource.data.to == request.auth.uid && resource.data.status == 'proposed'
+            && request.resource.data.status in ['accepted', 'refused', 'countered']
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt'])
+            && (request.resource.data.status != 'accepted'
+                || finestra(resource.data.matchday, scadenza(resource.data.matchday)))
+          ) || (
+            isPresident(leagueId) && resource.data.status == 'accepted'
+            && request.resource.data.status in ['executed', 'void']
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt', 'motivo'])
+          );
+        allow delete: if false;
+      }
+
+      // Registro dei movimenti: visibile a tutta la lega, lo scrive il Presidente quando applica il mercato
+      match /transfers/{transferId} {
+        allow read: if isMember(leagueId) || isAdmin();
+        allow create: if isPresident(leagueId)
+          && request.resource.data.keys().hasOnly(['tipo', 'uid', 'playerIn', 'playerOut', 'valore', 'extra', 'matchday', 'at'])
+          && request.resource.data.tipo in ['svincolato', 'scambio']
+          && request.resource.data.at == request.time;
+        allow update, delete: if false;
       }
 
       // Punteggi e classifica: li calcolano gli admin a partire dai tabellini ufficiali

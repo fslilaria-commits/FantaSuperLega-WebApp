@@ -83,3 +83,7 @@ npm test
 Le formule (regole FantaLVF) e le scelte di interpretazione sono in [`docs/punteggio.md`](docs/punteggio.md). Un admin applica una giornata dal **pannello Admin → Tabellini e punteggi → Controlla tabellino → Calcola e applica**: vengono salvati i punti dei giocatori e aggiornati punteggi e classifiche di tutte le leghe. Il calcolo si può rifare, per esempio dopo una correzione della Lega: sovrascrive quello precedente.
 
 Nelle leghe **a scontri diretti** il Presidente genera il calendario delle sfide dalla scheda Lega prima della giornata di inizio (se non lo fa, lo genera l'admin al primo calcolo); dopo, nella lega non entra più nessuno. Regole di punti e classifica in [`docs/modello-dati.md`](docs/modello-dati.md).
+
+## Mercato
+
+Svincolati a offerta segreta e scambi tra squadre, come nella Modalità Leghe del FantaLVF (dettagli in [`docs/modello-dati.md`](docs/modello-dati.md#mercato-modalità-leghe-fantalvf)). **Le assegnazioni non scattano da sole**: dopo la chiusura delle offerte (3 ore prima della scadenza della giornata) il Presidente di ogni lega apre la scheda Lega → **Mercato (Presidente)** → "Assegna gli svincolati", e applica gli scambi accettati con "Applica gli scambi accettati". Se lo fa dopo la scadenza, i nuovi giocatori valgono dalla giornata successiva.
