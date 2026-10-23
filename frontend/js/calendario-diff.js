@@ -27,12 +27,25 @@
                     diff.scadenzeSpostate.push({ giornata: g, da: attuale.lockAt });
                 }
             }
-            if (JSON.stringify(attuale.matches || []) !== JSON.stringify(g.matches)) diff.gareCambiate.push(g);
+            if (!uguali(attuale.matches || [], g.matches)) diff.gareCambiate.push(g);
 
-            const cambiato = CAMPI.some(k => JSON.stringify(attuale[k] ?? null) !== JSON.stringify(data[k] ?? null));
+            const cambiato = CAMPI.some(k => !uguali(attuale[k] ?? null, data[k] ?? null));
             if (cambiato) diff.scritture.push({ id: String(g.number), nuovo: false, data });
         }
         return diff;
+    }
+
+    // Confronto che ignora l'ordine dei campi: Firestore restituisce le mappe con le chiavi in ordine alfabetico
+    function uguali(a, b) {
+        return stabile(a) === stabile(b);
+    }
+
+    function stabile(value) {
+        if (Array.isArray(value)) return `[${value.map(stabile).join(',')}]`;
+        if (value && typeof value === 'object') {
+            return `{${Object.keys(value).sort().map(k => `${JSON.stringify(k)}:${stabile(value[k])}`).join(',')}}`;
+        }
+        return JSON.stringify(value ?? null);
     }
 
     function pick(g) {
