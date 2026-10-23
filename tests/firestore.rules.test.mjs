@@ -245,6 +245,12 @@ describe('formazioni', () => {
         await assertFails(setDoc(ref(as('anna'), '2_anna'), lineup(2, 'anna')));
     });
 
+    test("la propria formazione si legge anche prima di averla salvata, quella degli altri no", async () => {
+        await assertSucceeds(getDoc(ref(as('anna'), '3_anna')));
+        await assertFails(getDoc(ref(as('anna'), '3_pres')));
+        await assertFails(getDoc(ref(as('marco'), '3_marco')), 'chi non è nella lega no');
+    });
+
     test('non si schiera la formazione di un altro', async () => {
         await assertFails(setDoc(ref(as('anna'), '1_pres'), lineup(1, 'pres')));
     });
@@ -370,6 +376,10 @@ describe('scontri diretti', () => {
         await assertSucceeds(setDoc(doc(as('pres'), `leagues/${SCONTRI}/schedule/main`), calendario));
     });
 
+    test('un calendario senza elenco delle squadre non si salva', async () => {
+        await assertFails(setDoc(doc(as('pres'), `leagues/${SCONTRI}/schedule/main`), { ...calendario, teams: 'tutti' }));
+    });
+
     test('dopo l\'inizio il Presidente non lo cambia più, l\'admin sì', async () => {
         await assertFails(setDoc(doc(as('pres'), 'leagues/lega-iniziata/schedule/main'), calendario));
         await assertSucceeds(setDoc(doc(as('boss'), 'leagues/lega-iniziata/schedule/main'), calendario));
@@ -485,6 +495,7 @@ describe('mercato', () => {
     test('il registro dei movimenti lo scrive il Presidente e lo leggono tutti i membri', async () => {
         const mov = { tipo: 'svincolato', uid: 'anna', playerIn: 'sx', playerOut: 's1', valore: 15, extra: 5, matchday: 2, at: serverTimestamp() };
         await assertSucceeds(setDoc(doc(as('pres'), `leagues/${LEAGUE}/transfers/m1`), mov));
+        await assertFails(setDoc(doc(as('pres'), `leagues/${LEAGUE}/transfers/m3`), { ...mov, playerIn: 's1' }), 'arriva e parte lo stesso giocatore');
         await assertFails(setDoc(doc(as('anna'), `leagues/${LEAGUE}/transfers/m2`), mov));
         await assertSucceeds(getDocs(collection(as('anna'), `leagues/${LEAGUE}/transfers`)));
         await assertFails(getDocs(collection(as('marco'), `leagues/${LEAGUE}/transfers`)));
@@ -512,6 +523,23 @@ describe('protezioni aggiunte con la revisione', () => {
         const g = { name: 'X', team: 'Y', role: 'P', active: true };
         await assertSucceeds(setDoc(doc(as('boss'), 'players/ok'), { ...g, photo: 'https://www.legavolley.it/Foto.aspx?Key=X' }));
         await assertFails(setDoc(doc(as('boss'), 'players/ko'), { ...g, photo: 'https://altro-sito.example/traccia.gif' }));
+    });
+});
+
+describe('correzioni manuali del tabellino', () => {
+    const ref = (uid, id = 'tabellino') => doc(as(uid), `matchdays/1/correzioni/${id}`);
+    const correzioni = uid => ({ righe: { '6858|Rossi Mario': { id: 'p1' } }, updatedAt: serverTimestamp(), updatedBy: uid });
+
+    test("le scrive e le legge solo un admin, con data del server e il proprio nome", async () => {
+        await assertSucceeds(setDoc(ref('boss'), correzioni('boss')));
+        await assertSucceeds(getDoc(ref('boss')));
+        await assertSucceeds(updateDoc(ref('boss'), { 'righe.6858|Bianchi Luca': { id: null }, updatedAt: serverTimestamp(), updatedBy: 'boss' }));
+        await assertFails(getDoc(ref('anna')), 'un partecipante non le legge');
+        await assertFails(setDoc(ref('anna'), correzioni('anna')), 'né le scrive');
+        await assertFails(setDoc(ref('boss'), { ...correzioni('boss'), updatedAt: Timestamp.now() }), 'data del browser');
+        await assertFails(setDoc(ref('boss'), { ...correzioni('boss'), updatedBy: 'anna' }), 'a nome di un altro');
+        await assertFails(setDoc(ref('boss', 'altro'), correzioni('boss')), 'un solo documento per giornata');
+        await assertFails(setDoc(ref('boss'), { ...correzioni('boss'), extra: 1 }), 'campi in più');
     });
 });
 

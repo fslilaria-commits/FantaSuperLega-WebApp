@@ -29,7 +29,7 @@ Restrizioni sulle API (elenco delle API consentite) non sono necessarie: la rest
 
 App Check fa sì che Firebase risponda solo alle richieste che arrivano davvero dall'app. Usa **Google Cloud Fraud Defense** (il vecchio reCAPTCHA Enterprise) con una chiave a punteggio, invisibile per chi gioca. Il reCAPTCHA v3 classico non si può più usare: Firebase non registra più app nuove con quel provider. Funziona con il piano gratuito Spark: 10.000 verifiche al mese senza costi, e con la durata del token a 1 giorno una lega tra amici ne usa poche centinaia.
 
-Stato al 23/10/2026: chiave `FantaSuperLega App Check` creata nel progetto fanta-superlega-734b1 (account andre.mariani90@gmail.com), registrata in App Check e inserita in `frontend/js/config.js`. Restano i passi 4 e 5.
+Stato al 23/10/2026: chiave `FantaSuperLega App Check` creata nel progetto fanta-superlega-734b1 (con l'account personale del proprietario del progetto), registrata in App Check e inserita in `frontend/js/config.js`. Restano i passi 4 e 5.
 
 La console Google Cloud va aperta con l'account personale: con un account di lavoro il progetto non compare.
 
@@ -55,7 +55,9 @@ Negli emulatori locali App Check resta spento.
 ## Rischi che restano (accettati per una lega tra amici)
 
 - **Il codice della lega è l'unico invito**: chi lo conosce può entrare finché la lega accetta iscrizioni (nelle leghe a scontri diretti fino alla generazione del calendario delle sfide). Il codice va condiviso solo nel gruppo degli amici; non si può ancora cambiare.
-- **Chi viene tolto può rientrare** con lo stesso codice, per lo stesso motivo. Nella pratica: togliere i partecipanti solo prima di generare il calendario delle sfide, o chiedere all'admin.
+- **Chi viene tolto non rientra dall'app** (l'app glielo dice), ma una richiesta costruita a mano può farlo rientrare finché la lega accetta iscrizioni. Nella pratica: togliere i partecipanti solo prima di generare il calendario delle sfide. Per far rientrare qualcuno, l'admin cancella dalla console il documento `users/<uid>/leagues/<id della lega>`.
+- **Il Presidente è una persona di fiducia**: può modificare le rose della sua lega in qualsiasi momento e scrive il registro dei movimenti. Tutto resta visibile nella scheda Mercato ("Movimenti della lega"). Il calcolo dei punteggi usa la rosa alla scadenza e ignora i movimenti che non corrispondono a un vero cambio di rosa.
+- **Il piano gratuito ha un limite giornaliero di letture e scritture**: chiunque abbia un account Google può leggere listone e calendario e creare leghe. Uno script malevolo potrebbe consumare la quota del giorno (il gioco riparte il giorno dopo). App Check, quando è applicato, blocca gli script fuori dal sito.
 - **I codici sono a 6 cifre**: in teoria si possono provare a caso, ma ogni tentativo richiede l'accesso con Google e App Check (quando attivo) blocca gli script automatici.
 
 ## Facoltativo: protezione del ramo principale su GitHub

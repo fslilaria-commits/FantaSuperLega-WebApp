@@ -89,6 +89,18 @@ service cloud.firestore {
         allow read: if signedIn();
         allow write: if isAdmin();
       }
+
+      // Correzioni manuali del tabellino: un documento per giornata, solo per gli admin
+      match /correzioni/{docId} {
+        allow read, delete: if isAdmin();
+        allow create, update: if isAdmin()
+          && docId == 'tabellino'
+          && request.resource.data.keys().hasOnly(['righe', 'updatedAt', 'updatedBy'])
+          && request.resource.data.righe is map
+          && request.resource.data.righe.size() <= 300
+          && request.resource.data.updatedAt == request.time
+          && request.resource.data.updatedBy == request.auth.uid;
+      }
     }
 
     // Codici invito: si legge un codice alla volta, nessun elenco
@@ -212,7 +224,9 @@ service cloud.firestore {
 
         // La propria formazione sempre; quelle degli altri solo dopo la scadenza; gli admin per calcolare i punteggi
         allow read: if isAdmin() || (isMember(leagueId)
-          && (resource.data.uid == request.auth.uid || request.time >= scadenzaGiornata(resource.data.matchday)));
+          && ((resource == null && lineupId.matches('^[0-9]+_' + request.auth.uid + '$'))
+              || (resource != null
+                  && (resource.data.uid == request.auth.uid || request.time >= scadenzaGiornata(resource.data.matchday)))));
         allow create, update: if isMember(leagueId)
           && validLineup(request.resource.data)
           && request.time < scadenzaGiornata(request.resource.data.matchday);
@@ -225,7 +239,8 @@ service cloud.firestore {
         function validSchedule(d) {
           return docId == 'main'
             && d.keys().hasOnly(['teams', 'rounds', 'createdAt', 'createdBy'])
-            && d.rounds is map;
+            && d.teams is list && d.teams.size() <= 60
+            && d.rounds is map && d.rounds.size() <= 40;
         }
 
         allow read: if isMember(leagueId) || isAdmin();
@@ -343,6 +358,10 @@ service cloud.firestore {
         allow create: if isPresident(leagueId)
           && request.resource.data.keys().hasOnly(['tipo', 'uid', 'playerIn', 'playerOut', 'valore', 'extra', 'matchday', 'at'])
           && request.resource.data.tipo in ['svincolato', 'scambio']
+          && request.resource.data.uid is string
+          && request.resource.data.playerIn is string
+          && request.resource.data.playerOut is string
+          && request.resource.data.playerIn != request.resource.data.playerOut
           && request.resource.data.at == request.time;
         allow update, delete: if false;
       }

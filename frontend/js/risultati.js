@@ -67,7 +67,7 @@ function renderRisultati() {
         const conta = d.slot === 'panchina' ? 'Panchina 50%' : d.fattore === 2 ? 'Capitano x2' : 'Titolare';
         return el('tr', { class: d.slot === 'panchina' ? 'bench-row' : null },
             el('td', {}, el('span', { class: 'role-tag' }, d.slot === 'panchina' ? (p?.role || '?') : d.slot)),
-            el('td', {}, el('button', { class: 'link-player', onclick: () => apriGiocatore(d.id) }, p?.name || d.id), el('small', { class: 'admin-sub' }, p ? ` · ${p.team}` : ''), d.media ? el('small', { class: 'msg-warning' }, ' · media (gara spostata)') : null),
+            el('td', {}, el('button', { class: 'link-player', onclick: () => apriGiocatore(d.id) }, p?.name || d.id), el('small', { class: 'admin-sub' }, p ? ` · ${p.team}` : ''), d.media ? el('small', { class: 'msg-warning' }, ' · media (gara spostata)') : null, d.fuoriRosa ? el('small', { class: 'msg-warning' }, ' · non più in rosa: 0 punti') : null),
             el('td', {}, d.fp.toFixed(2)),
             el('td', {}, conta),
             el('td', {}, el('strong', {}, d.punti.toFixed(2))));

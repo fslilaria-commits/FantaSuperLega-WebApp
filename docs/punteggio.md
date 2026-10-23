@@ -8,6 +8,15 @@ Pagina statistiche della Lega, vista **"Team – Player by Player"**, una richie
 
 Per ogni giocatore: set giocati, punti, battute (totali, ace, errori), ricezioni (totali, errori, negative, perfette, efficienza), attacchi (totali, errori, murati, vincenti, % vincenti, efficienza), muri punto. Per ogni squadra la riga dei totali.
 
+### Correzioni manuali
+
+Se un nome del tabellino non si abbina al listone o un numero è sbagliato, un admin lo corregge dal **pannello Admin → Tabellini e punteggi → Controlla tabellino → Correzioni manuali** (`frontend/js/correzioni.js`). Per ogni riga del tabellino (squadra + nome) si può:
+
+- abbinarla a mano a un giocatore del listone, oppure dire che **non conta**;
+- correggere i numeri (set, battute, ricezioni, attacchi, muri). Punti, percentuali ed efficienze si ricalcolano come fa la Lega (punti = attacchi vincenti + ace + muri; efficienza attacco = (vincenti − errori) / totali) e i totali di squadra si aggiornano della differenza; punti e set della squadra restano quelli della Lega.
+
+Le correzioni restano salvate in `matchdays/{n}/correzioni/tabellino` e si riapplicano a ogni calcolo, anche quando il tabellino viene riscaricato; quelle la cui riga non c'è più vengono segnalate. Dopo una correzione serve "Calcola e applica". I punti calcolati da una riga corretta hanno `corretto: true`.
+
 ## Voci per ruolo
 
 "Per set" significa diviso i set giocati dal giocatore.

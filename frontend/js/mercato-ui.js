@@ -1,5 +1,5 @@
 // Scheda Mercato: stato della finestra, offerte per gli svincolati, scambi tra squadre e movimenti della lega
-const mercatoDati = { key: null, offerte: [], scambiRicevuti: [], scambiInviati: [] };
+const mercatoDati = { key: null, caricamento: null, offerte: [], scambiRicevuti: [], scambiInviati: [] };
 let dialogo = null; // { tipo: 'offerta' | 'scambio', player, owner?, offerta?, counterOf? }
 
 document.getElementById('marketCancel').addEventListener('click', chiudiDialogo);
@@ -14,11 +14,21 @@ function finestraCorrente() {
     return { ...f, sospeso, aperto: f.aperto && !sospeso, offerteAperte: f.offerteAperte && !sospeso };
 }
 
-// Giocatori della mia rosa già impegnati in un'offerta attiva o in uno scambio proposto
+// Una proposta di scambio vale solo nella finestra in cui è stata fatta: dopo non si può più accettare
+function scaduto(t) {
+    return t.status === 'proposed' && t.matchday !== finestraCorrente().matchday;
+}
+
+// Scambi che impegnano ancora giocatori e crediti: proposti in questa finestra o accettati e da applicare
+function scambioInCorso(t) {
+    return t.status === 'accepted' || (t.status === 'proposed' && !scaduto(t));
+}
+
+// Giocatori della mia rosa già impegnati in un'offerta attiva o in uno scambio in corso
 function impegnati(tranne) {
     const ids = new Set();
     for (const o of mercatoDati.offerte) if (o.status === 'active' && o.id !== tranne) ids.add(o.playerOut);
-    for (const t of mercatoDati.scambiInviati) if (['proposed', 'accepted'].includes(t.status) && t.id !== tranne) ids.add(t.give);
+    for (const t of mercatoDati.scambiInviati) if (scambioInCorso(t) && t.id !== tranne) ids.add(t.give);
     return ids;
 }
 
@@ -26,15 +36,22 @@ function creditiDisponibili(tranne) {
     const rosa = myRoster();
     const offerte = Mercato.creditiImpegnati(mercatoDati.offerte, state.user.uid, tranne);
     const scambi = mercatoDati.scambiInviati
-        .filter(t => ['proposed', 'accepted'].includes(t.status) && t.id !== tranne)
+        .filter(t => scambioInCorso(t) && t.id !== tranne)
         .reduce((tot, t) => tot + (t.extra || 0), 0);
     return (rosa?.creditsLeft ?? 0) - offerte - scambi;
 }
 
-async function caricaMercatoPersonale(f) {
+// Offerte e scambi miei; Mercato e La mia giornata li chiedono insieme: si carica una volta sola
+function caricaMercatoPersonale(f) {
     const key = `${state.league?.id}_${f.matchday}_${state.user?.uid}`;
-    if (mercatoDati.key === key) return;
-    mercatoDati.key = key;
+    if (mercatoDati.key !== key) {
+        mercatoDati.key = key;
+        mercatoDati.caricamento = leggiMercatoPersonale(f, key);
+    }
+    return mercatoDati.caricamento;
+}
+
+async function leggiMercatoPersonale(f, key) {
     Object.assign(mercatoDati, { offerte: [], scambiRicevuti: [], scambiInviati: [] });
     if (!state.league || !f.matchday) return;
     const base = `leagues/${state.league.id}`;
@@ -113,21 +130,23 @@ function renderMieOfferte(f) {
 
 function renderScambi(f) {
     const box = document.getElementById('myTrades');
-    const stato = { proposed: 'in attesa', accepted: 'accettato: lo applica il Presidente', refused: 'rifiutato', countered: 'rilanciato', withdrawn: 'ritirato', executed: 'fatto', void: 'non più valido' };
+    const stato = { proposed: 'in attesa', accepted: 'accettato: lo applica il Presidente', refused: 'rifiutato', countered: 'rilanciato', withdrawn: 'ritirato', executed: 'fatto', void: 'non più valido', scaduto: 'scaduto' };
     const riga = (t, ricevuto) => {
         const altro = nomeSquadra(ricevuto ? t.from : t.to);
         const testo = ricevuto
             ? `${altro} ti offre ${nomeGiocatore(t.give)}${t.extra ? ` + ${t.extra} crediti` : ''} per ${nomeGiocatore(t.take)}`
             : `A ${altro}: ${nomeGiocatore(t.give)}${t.extra ? ` + ${t.extra} crediti` : ''} per ${nomeGiocatore(t.take)}`;
         const azioni = [];
-        if (t.status === 'proposed' && ricevuto && f.aperto) {
+        const etichetta = scaduto(t) ? 'scaduto' : t.status;
+        if (t.status === 'proposed' && ricevuto && f.aperto && !scaduto(t)) {
             azioni.push(el('button', { class: 'btn btn-primary btn-small', onclick: () => rispondiScambio(t, 'accepted') }, 'Accetta'));
             azioni.push(el('button', { class: 'btn btn-secondary btn-small', onclick: () => rilancia(t) }, 'Rilancia'));
             azioni.push(el('button', { class: 'btn btn-secondary btn-small', onclick: () => rispondiScambio(t, 'refused') }, 'Rifiuta'));
         }
+        if (t.status === 'proposed' && ricevuto && scaduto(t)) azioni.push(el('button', { class: 'btn btn-secondary btn-small', onclick: () => rispondiScambio(t, 'refused') }, 'Togli'));
         if (t.status === 'proposed' && !ricevuto) azioni.push(el('button', { class: 'btn btn-secondary btn-small', onclick: () => ritiraScambio(t) }, 'Ritira'));
         return el('div', { class: 'market-row' },
-            el('div', {}, el('span', {}, testo), el('span', { class: `pill ${t.status}` }, stato[t.status] || t.status),
+            el('div', {}, el('span', {}, testo), el('span', { class: `pill ${etichetta}` }, stato[etichetta] || etichetta),
                 t.motivo ? el('small', { class: 'msg-warning' }, ` ${t.motivo}`) : null),
             azioni.length ? el('div', { class: 'admin-actions' }, azioni) : null);
     };

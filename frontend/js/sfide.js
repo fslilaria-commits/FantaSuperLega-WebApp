@@ -26,9 +26,9 @@ function renderSfide() {
     const { partite } = Scontri.risultatiScontri({ rounds: state.schedule.rounds, scores: state.scores, members: iscrittiConData() });
     const giocate = new Set(partite.map(p => p.matchday));
     const prossima = state.matchday?.number;
-    const mia = prossima && (state.schedule.rounds[prossima] || []).find(s => s.a === state.user.uid || s.b === state.user.uid);
+    const mia = prossima && Scontri.sfideDi(state.schedule.rounds, prossima).find(s => s.a === state.user.uid || s.b === state.user.uid);
 
-    const giornate = Object.keys(state.schedule.rounds).map(Number).sort((a, b) => a - b);
+    const giornate = Object.keys(state.schedule.rounds || {}).map(Number).filter(Number.isInteger).sort((a, b) => a - b);
     const righe = giornate.map(g => {
         const sfide = giocate.has(g)
             ? partite.filter(p => p.matchday === g).map(p => el('li', {},
@@ -36,7 +36,7 @@ function renderSfide() {
                 ` ${p.pa.toFixed(2)} – ${p.pb.toFixed(2)} `,
                 el('span', { class: p.vincitore === p.b ? 'vincente' : null }, nomeSquadra(p.b)),
                 p.tiebreak ? el('small', { class: 'admin-sub' }, ' (tie-break)') : null))
-            : state.schedule.rounds[g].map(s => el('li', {}, `${nomeSquadra(s.a)} – ${nomeSquadra(s.b)}`));
+            : Scontri.sfideDi(state.schedule.rounds, g).map(s => el('li', {}, `${nomeSquadra(s.a)} – ${nomeSquadra(s.b)}`));
         return el('details', { class: 'admin-diff', open: g === prossima },
             el('summary', {}, `Giornata ${g}${giocate.has(g) ? ' · giocata' : g === prossima ? ' · prossima' : ''}`),
             el('ul', {}, sfide));
