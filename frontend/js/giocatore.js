@@ -23,9 +23,9 @@ function apriGiocatore(id) {
             el('span', { class: 'fp-n' }, `G${g.n}`))))
         : el('p', { class: 'admin-sub' }, 'Ancora nessuna giornata giocata.');
 
-    document.getElementById('playerCard').replaceChildren(
+    riempi(document.getElementById('playerCard'),
         el('div', { class: 'player-head' },
-            el('img', { src: p.photo || 'img/avatar.svg', class: 'player-photo', alt: '', onerror: e => { e.target.onerror = null; e.target.src = 'img/avatar.svg'; } }),
+            fotoGiocatore(p, 'player-photo', 300),
             el('div', {},
                 el('h3', {}, p.name),
                 el('p', {}, el('span', { class: 'role-tag' }, p.role), ` ${ROLE_NAMES[p.role]} · ${p.team}`),

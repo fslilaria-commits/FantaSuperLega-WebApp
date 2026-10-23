@@ -104,6 +104,14 @@ test('formazione: chi arriva prima della scadenza prende il posto di chi parte',
     assert.equal(lineup.starters.S1, 's1', 'la formazione salvata non viene toccata');
 });
 
+test('i trasferimenti precedenti al salvataggio della formazione non la toccano', () => {
+    // A esce (X entra), poi A torna e il giocatore salva una formazione con entrambi: X non deve contare due volte
+    const lineup = { starters: { S1: 'A', S2: 'X' }, bench: [], captain: 'A', savedAt: 250 };
+    const movimenti = [{ playerOut: 'A', playerIn: 'X', at: 100 }, { playerOut: 'Y', playerIn: 'A', at: 200 }];
+    const l = M.applicaSostituzioni(lineup, movimenti, 1000);
+    assert.deepEqual(l.starters, { S1: 'A', S2: 'X' });
+});
+
 test('crediti impegnati nelle offerte attive', () => {
     const offerte = [{ id: 'a', uid: 'u1', status: 'active', extra: 10 }, { id: 'b', uid: 'u1', status: 'withdrawn', extra: 50 }, { id: 'c', uid: 'u1', status: 'active', extra: 5 }];
     assert.equal(M.creditiImpegnati(offerte, 'u1'), 15);

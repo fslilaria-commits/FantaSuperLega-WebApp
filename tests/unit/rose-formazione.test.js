@@ -1,6 +1,6 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { buildRoster, rosterToPicks, checkRoster } = require('../../frontend/js/rose-check.js');
+const { buildRoster, rosterToPicks, checkRoster, riferimentoDa } = require('../../frontend/js/rose-check.js');
 const { checkLineup, buildLineup, suggestFrom } = require('../../frontend/js/formazione-check.js');
 
 const ROLES = { P: 2, S: 4, C: 3, O: 2, L: 1 };
@@ -39,6 +39,22 @@ test('massimo 4 giocatori dello stesso club', () => {
 
 test('non si spende più del budget', () => {
     assert.ok(checkRoster({ picks: fullPicks('', 30), budget: 300, playersById }).errors.some(e => e.includes('crediti')));
+});
+
+test('risalvare una rosa non cancella i crediti guadagnati al mercato', () => {
+    const salvata = buildRoster(fullPicks(), 300); // 180 crediti residui
+    salvata.creditsLeft += 25; // per esempio ricevuti in uno scambio
+    const picks = rosterToPicks(salvata);
+    picks[0].price += 5; // il Presidente corregge un prezzo
+    const r = checkRoster({ picks, budget: 300, playersById, riferimento: riferimentoDa(salvata) });
+    assert.equal(r.creditsLeft, 180 + 25 - 5);
+    assert.equal(buildRoster(picks, 300, riferimentoDa(salvata)).creditsLeft, 200);
+});
+
+test('una rosa salvata senza crediti residui riparte dal budget', () => {
+    const salvata = buildRoster(fullPicks(), 300);
+    delete salvata.creditsLeft;
+    assert.equal(checkRoster({ picks: rosterToPicks(salvata), budget: 300, playersById, riferimento: riferimentoDa(salvata) }).creditsLeft, 180);
 });
 
 test('la rosa salvata si riapre uguale nell\'editor', () => {
