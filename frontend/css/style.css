@@ -144,6 +144,10 @@ input:focus, select:focus, button:focus-visible { outline: 2px solid var(--accen
 .market-table th, .market-table td { padding: 0.8rem 1rem; border-bottom: 1px solid var(--line); }
 .market-table th { background: var(--bg-dark); color: var(--text-sub); white-space: nowrap; }
 
+#risultatiBody tr { cursor: pointer; }
+#risultatiBody tr:hover, #risultatiBody tr.selected { background: var(--accent-soft); }
+.bench-row td { color: var(--text-sub); }
+
 /* LEGA */
 .league-select { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1rem; }
 .league-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap; }

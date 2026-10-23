@@ -2,11 +2,12 @@
   "name": "fanta-superlega-bot",
   "version": "1.0.0",
   "private": true,
-  "description": "Script dei dati SuperLega: scarica dal sito della Lega le proposte di aggiornamento",
+  "description": "Script dei dati SuperLega: scarica dal sito della Lega listone, calendario e tabellini come proposte da applicare",
   "scripts": {
     "genera-listone": "node genera-listone.js",
     "test": "node --test test/*.test.js",
-    "genera-calendario": "node genera-calendario.js"
+    "genera-calendario": "node genera-calendario.js",
+    "genera-tabellini": "node genera-tabellini.js"
   },
   "dependencies": {
     "cheerio": "^1.0.0"
