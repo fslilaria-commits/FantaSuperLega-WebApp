@@ -1,27 +1,37 @@
 :root {
     --bg-dark: #0f172a;
     --card-bg: #1e293b;
+    --card-bg-2: #273449;
+    --line: #334155;
     --accent: #0284c7;
+    --accent-soft: rgba(2, 132, 199, 0.15);
     --accent-gold: #f59e0b;
     --court-green: #059669;
     --court-line: #ffffff;
     --text-main: #f8fafc;
     --text-sub: #94a3b8;
+    --ok: #22c55e;
+    --warn: #f59e0b;
+    --error: #f87171;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Work Sans', sans-serif; }
 
 body { background-color: var(--bg-dark); color: var(--text-main); min-height: 100vh; }
 
-.navbar {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 1rem 2rem; background: #020617; border-bottom: 1px solid #334155;
-}
+h2 { font-size: 1.5rem; margin-bottom: 0.4rem; }
+h3 { font-size: 1.1rem; margin-bottom: 0.4rem; }
+[hidden] { display: none !important; }
 
-.logo { font-family: 'Teko', sans-serif; font-size: 1.8rem; letter-spacing: 1px; color: var(--text-main); }
+/* BARRA IN ALTO */
+.navbar {
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.8rem;
+    padding: 1rem 2rem; background: #020617; border-bottom: 1px solid var(--line);
+}
+.logo { font-family: 'Teko', sans-serif; font-size: 1.8rem; letter-spacing: 1px; color: var(--text-main); display: flex; align-items: center; gap: 0.5rem; }
 .logo b { color: var(--accent); }
 
-.nav-links { display: flex; gap: 0.5rem; }
+.nav-links { display: flex; gap: 0.5rem; flex-wrap: wrap; }
 .nav-btn {
     background: transparent; border: none; color: var(--text-sub);
     padding: 0.6rem 1.2rem; cursor: pointer; border-radius: 8px; font-weight: 600;
@@ -34,61 +44,142 @@ body { background-color: var(--bg-dark); color: var(--text-main); min-height: 10
 .tab-content { display: none; }
 .tab-content.active { display: block; }
 
-/* CAMPO VOLLEY 2D/3D */
-.volleyball-court {
-    background-color: var(--court-green); position: relative;
-    height: 480px; border-radius: 12px; border: 4px solid var(--court-line);
-    margin: 1.5rem 0; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between;
-}
+/* CONTROLLI COMUNI */
+.btn { padding: 0.6rem 1.2rem; border-radius: 6px; border: none; font-weight: 700; cursor: pointer; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-primary { background: var(--accent); color: white; }
+.btn-secondary { background: #475569; color: white; }
+.btn-small { padding: 0.35rem 0.7rem; font-size: 0.85rem; }
 
-.net {
-    position: absolute; top: 50%; left: 0; right: 0; height: 4px;
-    background: var(--court-line); box-shadow: 0 0 10px rgba(0,0,0,0.5); z-index: 2;
+input[type="text"], input[type="search"], input[type="number"], select {
+    background: var(--bg-dark); color: var(--text-main); border: 1px solid var(--line);
+    border-radius: 6px; padding: 0.55rem 0.7rem; font-size: 0.95rem;
 }
+input:focus, select:focus, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.check-inline { display: inline-flex; align-items: center; gap: 0.4rem; color: var(--text-sub); font-size: 0.9rem; cursor: pointer; }
 
-.attack-line { position: absolute; left: 0; right: 0; height: 2px; background: rgba(255,255,255,0.4); }
-.line-top { top: 30%; }
-.line-bottom { bottom: 30%; }
-
-.starter-grid {
-    display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr);
-    height: 100%; padding: 1rem; gap: 1rem; z-index: 3;
-}
-
-.slot-card {
-    background: rgba(30, 41, 59, 0.85); backdrop-filter: blur(4px);
-    border: 2px dashed #475569; border-radius: 8px;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    color: var(--text-sub); cursor: pointer; transition: 0.2s; position: relative;
-}
-.slot-card:hover { border-color: var(--accent); background: rgba(30, 41, 59, 0.95); }
+.notice { background: var(--card-bg); border-left: 4px solid var(--accent); padding: 1rem 1.2rem; border-radius: 8px; color: var(--text-sub); margin: 1rem 0; }
+.msg-error { color: var(--error); font-size: 0.9rem; }
+.msg-warning { color: var(--warn); font-size: 0.9rem; }
+.admin-sub { color: var(--text-sub); font-size: 0.9rem; }
 
 .role-tag {
-    position: absolute; top: 6px; left: 6px; background: var(--accent);
-    color: white; font-size: 0.75rem; font-weight: 700; padding: 2px 6px; border-radius: 4px;
+    display: inline-block; background: var(--accent); color: white;
+    font-size: 0.75rem; font-weight: 700; padding: 2px 6px; border-radius: 4px; min-width: 1.6rem; text-align: center;
 }
-
-/* PANCHINA */
-.bench-section { background: var(--card-bg); padding: 1rem; border-radius: 12px; }
-.bench-grid { display: flex; gap: 1rem; margin-top: 0.8rem; overflow-x: auto; }
-
-/* MERCATO TABLE */
-.market-table-wrapper { background: var(--card-bg); border-radius: 12px; overflow: hidden; margin-top: 1rem; }
-.market-table { width: 100%; border-collapse: collapse; text-align: left; }
-.market-table th, .market-table td { padding: 1rem; border-bottom: 1px solid #334155; }
-.market-table th { background: #0f172a; color: var(--text-sub); }
-
+.player-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: var(--line); flex-shrink: 0; }
 .player-row { display: flex; align-items: center; gap: 0.8rem; }
-.player-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: #334155; }
+.owner { color: var(--accent-gold); font-weight: 600; }
+.free { color: var(--ok); }
+.president-icon { color: var(--accent-gold); margin-left: 0.4rem; font-size: 0.85rem; }
 
-/* PANNELLO ADMIN */
+/* BENVENUTO */
+.welcome { max-width: 560px; margin: 4rem auto; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 1rem; }
+.welcome-icon { font-size: 3.5rem; color: var(--accent); }
+.welcome p { color: var(--text-sub); line-height: 1.5; }
+
+/* CAMPO */
+.squad-header { display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem; flex-wrap: wrap; }
+.deadline-badge { display: inline-block; color: var(--accent-gold); font-weight: 600; font-size: 0.95rem; }
+.budget-card { background: var(--card-bg); padding: 0.6rem 1rem; border-radius: 10px; display: flex; flex-direction: column; color: var(--text-sub); font-size: 0.85rem; }
+.budget-card strong { color: var(--text-main); font-size: 1.3rem; }
+
+.volleyball-court {
+    background-color: var(--court-green); position: relative;
+    border-radius: 12px; border: 4px solid var(--court-line); margin: 1.5rem 0; overflow: hidden;
+}
+.net {
+    position: absolute; top: 0; left: 0; right: 0; height: 4px;
+    background: var(--court-line); box-shadow: 0 0 10px rgba(0,0,0,0.5);
+}
+.starter-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; padding: 1.5rem 1rem;
+    grid-template-areas:
+        "s1 c1 o"
+        "s2 c2 p"
+        ". l .";
+}
+.slot-s1 { grid-area: s1; } .slot-s2 { grid-area: s2; } .slot-c1 { grid-area: c1; } .slot-c2 { grid-area: c2; }
+.slot-o { grid-area: o; } .slot-p { grid-area: p; } .slot-l { grid-area: l; }
+
+.slot-card {
+    background: rgba(30, 41, 59, 0.88); border: 2px dashed #475569; border-radius: 10px; color: var(--text-sub);
+    min-height: 110px; padding: 1.6rem 0.5rem 0.6rem; position: relative; cursor: pointer; transition: border-color 0.2s, background 0.2s;
+}
+.slot-card:hover:not(:disabled) { border-color: var(--accent); background: rgba(30, 41, 59, 0.97); }
+.slot-card:disabled { cursor: default; }
+.slot-card.filled { border-style: solid; border-color: #64748b; color: var(--text-main); }
+.slot-card.captain { border-color: var(--accent-gold); }
+.slot-card .role-tag { position: absolute; top: 6px; left: 6px; }
+.captain-tag { position: absolute; top: 6px; right: 6px; background: var(--accent-gold); color: #111; font-weight: 800; font-size: 0.75rem; border-radius: 50%; width: 1.4rem; height: 1.4rem; display: grid; place-items: center; }
+
+.player-slot-content { display: flex; flex-direction: column; align-items: center; gap: 0.25rem; text-align: center; }
+.player-slot-content small { color: var(--text-sub); font-size: 0.75rem; }
+.player-slot-content.empty { justify-content: center; min-height: 60px; }
+
+.field-actions { display: flex; align-items: center; gap: 0.8rem; flex-wrap: wrap; margin-bottom: 1.2rem; }
+
+.bench-section { background: var(--card-bg); padding: 1rem; border-radius: 12px; }
+.bench-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.8rem; margin-top: 0.8rem; }
+.bench-card { background: var(--card-bg-2); border-radius: 10px; padding: 1.6rem 0.5rem 0.6rem; position: relative; }
+.bench-card .role-tag { position: absolute; top: 6px; left: 6px; background: #475569; }
+
+/* FINESTRA DI SCELTA DEL GIOCATORE */
+.picker { position: fixed; inset: 0; background: rgba(2, 6, 23, 0.75); display: grid; place-items: center; z-index: 20; padding: 1rem; }
+.picker-box { background: var(--card-bg); border-radius: 12px; padding: 1.2rem; width: min(420px, 100%); max-height: 85vh; display: flex; flex-direction: column; gap: 0.8rem; }
+.picker-list { display: flex; flex-direction: column; gap: 0.5rem; overflow-y: auto; }
+.picker-item { background: var(--card-bg-2); border: 1px solid var(--line); border-radius: 8px; padding: 0.6rem; color: var(--text-main); cursor: pointer; text-align: left; }
+.picker-item:hover { border-color: var(--accent); }
+.picker-item .player-slot-content { flex-direction: row; justify-content: flex-start; gap: 0.7rem; text-align: left; }
+
+/* LISTONE */
+.market-controls { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+.market-controls input[type="search"] { flex: 1 1 260px; }
+.role-filters { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+.filter-chip { background: var(--card-bg); color: var(--text-sub); border: 1px solid var(--line); border-radius: 999px; padding: 0.35rem 0.9rem; cursor: pointer; font-weight: 600; }
+.filter-chip.active, .filter-chip:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+
+.market-table-wrapper { background: var(--card-bg); border-radius: 12px; overflow-x: auto; margin: 1rem 0 0.5rem; }
+.market-table { width: 100%; border-collapse: collapse; text-align: left; }
+.market-table th, .market-table td { padding: 0.8rem 1rem; border-bottom: 1px solid var(--line); }
+.market-table th { background: var(--bg-dark); color: var(--text-sub); white-space: nowrap; }
+
+/* LEGA */
+.league-select { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1rem; }
+.league-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap; }
+.code-box { background: var(--card-bg); padding: 0.6rem 1rem; border-radius: 8px; color: var(--text-sub); }
+.code-box strong { color: var(--accent-gold); letter-spacing: 2px; font-size: 1.1rem; }
+
+.join-create { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.5rem; margin-top: 1rem; }
+.form-col { display: flex; flex-direction: column; gap: 0.6rem; }
+#joinCreateBox summary { cursor: pointer; }
+
+.roster-summary { display: flex; flex-direction: column; gap: 0.3rem; }
+.roster-summary span { color: var(--text-sub); }
+.roster-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; margin-top: 0.8rem; }
+.roster-role { background: var(--card-bg-2); border-radius: 10px; padding: 0.8rem; display: flex; flex-direction: column; gap: 0.5rem; }
+.roster-row { display: flex; align-items: center; gap: 0.5rem; }
+.roster-name { flex: 1; min-width: 0; }
+.roster-name small { color: var(--text-sub); }
+.roster-add select { flex: 1; min-width: 0; }
+.price-input { width: 4.8rem; }
+
+/* PANNELLO ADMIN (e riquadri) */
 .admin-card { background: var(--card-bg); border-radius: 12px; padding: 1.2rem; margin-top: 1rem; display: flex; flex-direction: column; gap: 0.8rem; }
+details.admin-card { display: block; }
 .admin-card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap; }
-.admin-sub { color: var(--text-sub); font-size: 0.9rem; }
 .admin-diff summary { cursor: pointer; font-weight: 600; padding: 0.3rem 0; }
 .admin-diff ul { margin: 0.3rem 0 0.6rem 1.4rem; color: var(--text-sub); font-size: 0.9rem; }
 .admin-actions { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
 
-.btn { padding: 0.6rem 1.2rem; border-radius: 6px; border: none; font-weight: 700; cursor: pointer; }
-.btn-primary { background: var(--accent); color: white; }
-.btn-secondary { background: #475569; color: white; }
+/* TELEFONO */
+@media (max-width: 700px) {
+    .navbar { padding: 0.8rem 1rem; }
+    .nav-links { width: 100%; overflow-x: auto; flex-wrap: nowrap; }
+    .nav-btn { padding: 0.5rem 0.8rem; white-space: nowrap; }
+    .container { margin: 1rem auto; }
+    .starter-grid { gap: 0.5rem; padding: 1rem 0.5rem; }
+    .slot-card { min-height: 96px; font-size: 0.85rem; }
+    .slot-card .player-avatar { width: 32px; height: 32px; }
+    .market-table th, .market-table td { padding: 0.6rem; }
+}

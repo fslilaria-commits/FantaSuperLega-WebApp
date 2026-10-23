@@ -9,11 +9,11 @@ Le regole del gioco seguono la Modalità Leghe del [FantaLVF](https://fantaking.
 | **Admin** | Chi è nella collezione `admins` (si nomina solo dalla console Firebase) | Dati di gioco: listone, giornate e scadenze, statistiche, punteggi e classifiche. Legge tutte le leghe, ma non fa il Presidente e non schiera formazioni altrui |
 | **Presidente** | Chi ha creato la lega | Impostazioni della lega e rose dopo l'asta, rimozione dei partecipanti |
 | **Partecipante** | Chi è entrato con il codice | Il proprio nome squadra e la propria formazione, solo prima della scadenza |
-| **Visitatore** | Chi non ha fatto l'accesso | Solo il listone |
+| **Visitatore** | Chi non ha fatto l'accesso | Solo la schermata di benvenuto con l'invito ad accedere |
 
 ## Da dove arrivano i dati
 
-Un workflow GitHub settimanale (`.github/workflows/aggiorna-dati.yaml`, martedì mattina o a mano da Actions) scarica dal sito della Lega una **proposta** e la salva nella repo (`data/players.json`). Non scrive su Firestore: un admin apre il pannello Admin dell'app, vede le differenze e le applica. Così non serve nessuna chiave di servizio e nessun dato entra nel gioco senza essere stato visto.
+Un workflow GitHub settimanale (`.github/workflows/aggiorna-dati.yaml`, martedì mattina o a mano da Actions) scarica dal sito della Lega una **proposta** di listone e calendario e la salva nella repo (`data/players.json`, `data/calendario.json`). Non scrive su Firestore: un admin apre il pannello Admin dell'app, vede le differenze e le applica. Così non serve nessuna chiave di servizio e nessun dato entra nel gioco senza essere stato visto.
 
 Regole del listone, come nei fantasy più diffusi:
 - i nuovi giocatori entrano con il ruolo indicato dalla Lega;
@@ -42,16 +42,25 @@ Un documento per admin, con id uguale all'uid di Firebase Authentication. Si cre
 | `active` | bool | `false` se lascia la SuperLega |
 | `updatedAt` | timestamp | |
 
-`playerId` è il **codice ufficiale della Lega** (es. `GIA-SIM-96`): resta lo stesso se il giocatore cambia squadra. Lettura pubblica; scrittura solo admin, nel formato sopra; nessuna cancellazione.
+`playerId` è il **codice ufficiale della Lega** (es. `GIA-SIM-96`): resta lo stesso se il giocatore cambia squadra. Lettura per chi ha fatto l'accesso; scrittura solo admin, nel formato sopra; nessuna cancellazione.
 
 ### `matchdays/{n}` — giornate
 | Campo | Tipo | Note |
 |---|---|---|
-| `number` | number | 1–22 della regular season |
-| `lockAt` | timestamp | 1 minuto prima della prima partita della giornata |
+| `number` | number | 1–22 della regular season (andata 1–11, ritorno 12–22) |
+| `label` | string | Es. `1ª Andata` |
+| `legaId` | number | Codice della giornata sul sito della Lega (lo stesso delle statistiche) |
+| `lockAt` | timestamp | 1 minuto prima della prima gara della giornata |
+| `provisional` | bool | `true` se qualche gara non ha ancora l'orario ufficiale |
+| `matches` | list | Gare: squadre, id Lega, orario, `moved` |
 | `status` | string | `open`, `locked`, `scored` |
 
+Una gara giocata più di 4 giorni prima o 3 giorni dopo la data della sua giornata è **spostata** (`moved: true`): non conta per la scadenza e, come nel FantaLVF, i suoi giocatori prenderanno il punteggio medio. La scadenza di una giornata già bloccata non viene mai spostata dagli aggiornamenti.
+
 Sottocollezione `matchdays/{n}/stats/{playerId}` con le statistiche del tabellino (Fase 5). Lettura per utenti autenticati, scrittura solo admin.
+
+### `users/{uid}/leagues/{leagueId}` — le mie leghe
+Un documento (`joinedAt`) per ogni lega in cui l'utente è entrato, per ritrovarle all'accesso. Lo scrive l'utente stesso, solo insieme alla propria iscrizione alla lega; nessuno legge quelle degli altri.
 
 ### `leagueCodes/{code}` — codici invito
 | Campo | Tipo |
@@ -90,7 +99,7 @@ Ognuno crea e modifica solo il proprio documento. Il Presidente può rimuovere u
 | `prices` | map | `playerId → crediti pagati all'asta` |
 | `creditsLeft` | number | Crediti avanzati per il mercato |
 
-Scrive solo il Presidente. Le regole controllano numero di giocatori per ruolo e assenza di doppioni; l'esclusività tra squadre e il massimo di 4 per club li controlla il pannello del Presidente (le regole non possono confrontare tutte le rose).
+Scrive solo il Presidente. Durante l'asta la rosa si può salvare anche incompleta: le regole controllano i massimi per ruolo (2, 4, 3, 2, 1), l'assenza di doppioni e la coerenza dei prezzi. Esclusività tra squadre, massimo 4 per club e budget li controlla il pannello del Presidente (`frontend/js/rose-check.js`), perché le regole non possono confrontare tutte le rose.
 
 ### `leagues/{leagueId}/lineups/{matchday}_{uid}` — formazioni
 | Campo | Tipo | Note |
@@ -101,7 +110,7 @@ Scrive solo il Presidente. Le regole controllano numero di giocatori per ruolo e
 | `bench` | list | 5 playerId |
 | `captain` | string | Uno dei titolari |
 
-Ognuno scrive solo la propria, e solo prima di `lockAt`. I giocatori devono essere della propria rosa, nel ruolo giusto, senza doppioni. Le formazioni degli altri si vedono solo dopo la scadenza.
+Ognuno scrive solo la propria, e solo prima di `lockAt`. I giocatori devono essere della propria rosa (completa), nel ruolo giusto, senza doppioni; la panchina sono gli altri 5. Le formazioni degli altri si vedono solo dopo la scadenza. Per una nuova giornata l'app riparte dalla formazione precedente.
 
 ### `leagues/{leagueId}/scores/{matchday}_{uid}` e `leagues/{leagueId}/standings/{uid}`
 Punteggi di giornata e classifica. Lettura per i membri e gli admin, scrittura solo admin (calcolati dai tabellini ufficiali).

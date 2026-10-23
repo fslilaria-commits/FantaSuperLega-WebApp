@@ -13,8 +13,10 @@ import {
     doc,
     getDoc,
     getDocs,
+    query,
     setDoc,
     updateDoc,
+    where,
     writeBatch,
 } from 'firebase/firestore';
 
@@ -85,8 +87,9 @@ beforeEach(async () => {
 const as = uid => (uid ? env.authenticatedContext(uid) : env.unauthenticatedContext()).firestore();
 
 describe('listone e giornate', () => {
-    test('il listone è leggibile anche senza accesso', async () => {
-        await assertSucceeds(getDoc(doc(as(null), 'players/p1')));
+    test('il listone si vede solo dopo l\'accesso', async () => {
+        await assertFails(getDoc(doc(as(null), 'players/p1')));
+        await assertSucceeds(getDoc(doc(as('marco'), 'players/p1')));
     });
 
     test('nessun utente può modificare il listone', async () => {
@@ -159,6 +162,26 @@ describe('ingresso nella lega', () => {
     });
 });
 
+describe('le mie leghe', () => {
+    test('entrando in una lega la si aggiunge alle proprie', async () => {
+        const db = as('marco');
+        const batch = writeBatch(db);
+        batch.set(doc(db, `leagues/${LEAGUE}/members/marco`), { teamName: 'Marco FC', code: CODE, joinedAt: Timestamp.now() });
+        batch.set(doc(db, `users/marco/leagues/${LEAGUE}`), { joinedAt: Timestamp.now() });
+        await assertSucceeds(batch.commit());
+        await assertSucceeds(getDocs(collection(db, 'users/marco/leagues')));
+    });
+
+    test('non si aggiunge una lega in cui non si è entrati', async () => {
+        await assertFails(setDoc(doc(as('marco'), `users/marco/leagues/${LEAGUE}`), { joinedAt: Timestamp.now() }));
+    });
+
+    test('non si leggono né si scrivono le leghe di un altro', async () => {
+        await assertFails(getDocs(collection(as('marco'), 'users/anna/leagues')));
+        await assertFails(setDoc(doc(as('marco'), `users/anna/leagues/${LEAGUE}`), { joinedAt: Timestamp.now() }));
+    });
+});
+
 describe('impostazioni della lega', () => {
     test('il Presidente cambia le impostazioni', async () => {
         await assertSucceeds(updateDoc(doc(as('pres'), `leagues/${LEAGUE}`), { 'settings.budget': 500 }));
@@ -183,9 +206,19 @@ describe('rose', () => {
         await assertFails(setDoc(doc(as('anna'), `leagues/${LEAGUE}/rosters/anna`), roster));
     });
 
-    test('i ruoli devono essere 2 P, 4 S, 3 C, 2 O, 1 L', async () => {
+    test('al massimo 2 P, 4 S, 3 C, 2 O, 1 L', async () => {
         const wrong = { ...roster, P: ['p1'], S: ['p2', 's1', 's2', 's3', 's4'] };
         await assertFails(setDoc(doc(as('pres'), `leagues/${LEAGUE}/rosters/anna`), wrong));
+    });
+
+    test('durante l\'asta la rosa si salva anche incompleta', async () => {
+        const parziale = { P: ['p1'], S: ['s1'], C: [], O: [], L: [], all: ['p1', 's1'], prices: { p1: 20, s1: 35 }, creditsLeft: 245 };
+        await assertSucceeds(setDoc(doc(as('pres'), `leagues/${LEAGUE}/rosters/anna`), parziale));
+    });
+
+    test('i prezzi devono corrispondere ai giocatori della rosa', async () => {
+        const sbagliata = { ...roster, prices: { p1: 10 } };
+        await assertFails(setDoc(doc(as('pres'), `leagues/${LEAGUE}/rosters/anna`), sbagliata));
     });
 
     test('nessun giocatore ripetuto', async () => {
@@ -233,6 +266,12 @@ describe('formazioni', () => {
 
     test('il capitano deve essere titolare', async () => {
         await assertFails(setDoc(ref(as('anna'), '1_anna'), lineup(1, 'anna', { captain: 'p2' })));
+    });
+
+    test('ognuno ritrova con una ricerca le proprie formazioni', async () => {
+        const db = as('pres');
+        await assertSucceeds(getDocs(query(collection(db, `leagues/${LEAGUE}/lineups`), where('uid', '==', 'pres'))));
+        await assertFails(getDocs(query(collection(db, `leagues/${LEAGUE}/lineups`), where('uid', '==', 'anna'))));
     });
 
     test('le formazioni altrui si vedono solo dopo la scadenza', async () => {
