@@ -41,16 +41,21 @@ function renderMarket() {
     if (marketFilter.sort === 'media') visibili.sort((a, b) => (stat(b.id)?.media ?? -999) - (stat(a.id)?.media ?? -999));
     if (marketFilter.sort === 'ultima') visibili.sort((a, b) => (stat(b.id)?.ultima.fp ?? -999) - (stat(a.id)?.ultima.fp ?? -999));
 
+    // Il pulsante di mercato compare due volte: nella sua colonna (computer) e sotto il nome (telefono, dove
+    // la colonna è nascosta): il CSS ne mostra uno solo
+    const azione = p => azioneMercato(p, owners[p.id]?.uid);
     riempi(document.getElementById('marketTableBody'), visibili.map(p => el('tr', {},
         el('td', {}, el('div', { class: 'player-row' },
             fotoGiocatore(p),
-            el('button', { class: 'link-player', onclick: () => apriGiocatore(p.id), title: 'Apri la scheda del giocatore' }, p.name))),
+            el('div', { class: 'player-cell' },
+                el('button', { class: 'link-player', onclick: () => apriGiocatore(p.id), title: 'Apri la scheda del giocatore' }, p.name),
+                el('div', { class: 'azione-telefono' }, azione(p))))),
         el('td', {}, p.team),
         el('td', {}, el('span', { class: 'role-tag', title: ROLE_NAMES[p.role] }, p.role)),
         el('td', { class: 'num' }, stat(p.id) ? stat(p.id).media.toFixed(2) : '—'),
         el('td', { class: 'num' }, stat(p.id) ? stat(p.id).ultima.fp.toFixed(2) : '—'),
         el('td', {}, state.league ? (owners[p.id] ? el('span', { class: 'owner' }, owners[p.id].nome) : el('span', { class: 'free' }, 'Svincolato')) : '—'),
-        el('td', {}, azioneMercato(p, owners[p.id]?.uid)),
+        el('td', { class: 'col-mercato' }, azione(p)),
     )));
 
     document.getElementById('marketCount').textContent = `${visibili.length} giocatori su ${state.players.length}`;

@@ -95,6 +95,10 @@ input:focus, select:focus, button:focus-visible { outline: 2px solid var(--blue)
 }
 .player-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; object-position: center top; background: var(--blue-soft); flex-shrink: 0; border: 2px solid #fff; box-shadow: var(--shadow); }
 .player-row { display: flex; align-items: center; gap: 0.8rem; }
+.player-cell { display: flex; flex-direction: column; align-items: flex-start; gap: 0.3rem; min-width: 0; }
+.azione-telefono { display: none; }
+.azione-telefono:empty { display: none !important; }
+.azione-telefono .btn { white-space: nowrap; }
 .owner { color: var(--navy); font-weight: 700; }
 .free { color: var(--ok); font-weight: 500; }
 .president-icon { color: var(--gold); margin-left: 0.4rem; font-size: 0.85rem; }
@@ -300,5 +304,7 @@ details.admin-card > summary { cursor: pointer; font-family: var(--font-title); 
     .slot-card { min-height: 96px; font-size: 0.82rem; }
     .slot-card .player-avatar { width: 32px; height: 32px; }
     .market-table th, .market-table td { padding: 0.55rem; }
+    .market-table .col-mercato { display: none; }
+    .azione-telefono { display: block; }
     .welcome { margin: 1.5rem auto; padding: 2rem 1.2rem; }
 }
