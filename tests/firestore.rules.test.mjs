@@ -14,6 +14,7 @@ import {
     getDoc,
     getDocs,
     query,
+    serverTimestamp,
     setDoc,
     updateDoc,
     where,
@@ -386,6 +387,80 @@ describe('scontri diretti', () => {
 
     test('nella classifica generale si entra anche a campionato iniziato', async () => {
         await assertSucceeds(setDoc(doc(as('marco'), `leagues/${LEAGUE}/members/marco`), { teamName: 'Marco FC', code: CODE, joinedAt: Timestamp.now() }));
+    });
+});
+
+describe('mercato', () => {
+    const offerta = (uid, extra = 5) => ({ uid, playerIn: 'sx', playerOut: 's1', role: 'S', extra, status: 'active', createdAt: Timestamp.now(), updatedAt: Timestamp.now() });
+    const offRef = (db, n, uid) => doc(db, `leagues/${LEAGUE}/markets/${n}/offers/${uid}_sx`);
+    const scambio = { from: 'pres', to: 'anna', give: 's2', take: 's3', role: 'S', extra: 10, status: 'proposed', matchday: 1, createdAt: Timestamp.now(), updatedAt: Timestamp.now() };
+
+    beforeEach(async () => {
+        await env.withSecurityRulesDisabled(async ctx => {
+            // offerta di Anna nella finestra già chiusa della giornata 2, e uno scambio già accettato
+            await setDoc(offRef(ctx.firestore(), 2, 'anna'), offerta('anna'));
+            await setDoc(doc(ctx.firestore(), `leagues/${LEAGUE}/trades/accettato`), { ...scambio, status: 'accepted' });
+        });
+    });
+
+    test('a mercato aperto si fa un\'offerta lasciando un proprio giocatore dello stesso ruolo', async () => {
+        await assertSucceeds(setDoc(offRef(as('anna'), 1, 'anna'), offerta('anna')));
+    });
+
+    test('offerte non valide: dopo la chiusura, giocatore già in rosa, giocatore da lasciare non proprio', async () => {
+        await assertFails(setDoc(offRef(as('pres'), 2, 'pres'), offerta('pres')));
+        await assertFails(setDoc(doc(as('anna'), `leagues/${LEAGUE}/markets/1/offers/anna_s4`), { ...offerta('anna'), playerIn: 's4' }));
+        await assertFails(setDoc(offRef(as('anna'), 1, 'anna'), { ...offerta('anna'), playerOut: 'nonmio' }));
+        await assertFails(setDoc(offRef(as('anna'), 1, 'pres'), offerta('pres')), 'a nome di un altro');
+    });
+
+    test('con il mercato sospeso dal Presidente niente offerte', async () => {
+        await assertSucceeds(updateDoc(doc(as('pres'), `leagues/${LEAGUE}`), { 'settings.marketSuspended': true }));
+        await assertFails(setDoc(offRef(as('anna'), 1, 'anna'), offerta('anna')));
+    });
+
+    test('le offerte sono segrete: nessuno le legge prima della chiusura, nemmeno il Presidente', async () => {
+        await setDoc(offRef(as('anna'), 1, 'anna'), offerta('anna'));
+        await assertSucceeds(getDoc(offRef(as('anna'), 1, 'anna')));
+        await assertFails(getDoc(offRef(as('pres'), 1, 'anna')));
+        await assertFails(getDocs(collection(as('pres'), `leagues/${LEAGUE}/markets/1/offers`)));
+        await assertSucceeds(getDocs(collection(as('pres'), `leagues/${LEAGUE}/markets/2/offers`)), 'dopo la chiusura sì');
+    });
+
+    test('chi ha fatto l\'offerta la cambia o la ritira, ma non cambia il giocatore richiesto', async () => {
+        await setDoc(offRef(as('anna'), 1, 'anna'), offerta('anna'));
+        await assertSucceeds(updateDoc(offRef(as('anna'), 1, 'anna'), { extra: 20, updatedAt: Timestamp.now() }));
+        await assertFails(updateDoc(offRef(as('anna'), 1, 'anna'), { playerIn: 'sy' }));
+        await assertSucceeds(updateDoc(offRef(as('anna'), 1, 'anna'), { status: 'withdrawn', updatedAt: Timestamp.now() }));
+        await assertSucceeds(updateDoc(offRef(as('anna'), 1, 'anna'), { status: 'active', extra: 3, updatedAt: Timestamp.now() }), 'e la rifà');
+    });
+
+    test('il Presidente segna l\'esito solo dopo la chiusura', async () => {
+        await assertSucceeds(updateDoc(offRef(as('pres'), 2, 'anna'), { status: 'won', updatedAt: Timestamp.now() }));
+        await setDoc(offRef(as('anna'), 1, 'anna'), offerta('anna'));
+        await assertFails(updateDoc(offRef(as('pres'), 1, 'anna'), { status: 'won', updatedAt: Timestamp.now() }));
+        await assertFails(updateDoc(offRef(as('anna'), 2, 'anna'), { status: 'won', updatedAt: Timestamp.now() }), 'non da solo');
+    });
+
+    test('scambi: si propone tra giocatori dello stesso ruolo, l\'altro accetta o rifiuta', async () => {
+        await assertSucceeds(setDoc(doc(as('pres'), `leagues/${LEAGUE}/trades/t1`), scambio));
+        await assertFails(setDoc(doc(as('pres'), `leagues/${LEAGUE}/trades/t2`), { ...scambio, take: 'c1' }), 'ruolo diverso');
+        await assertFails(updateDoc(doc(as('pres'), `leagues/${LEAGUE}/trades/t1`), { status: 'accepted', updatedAt: Timestamp.now() }), 'non si accetta da soli');
+        await assertSucceeds(updateDoc(doc(as('anna'), `leagues/${LEAGUE}/trades/t1`), { status: 'accepted', updatedAt: Timestamp.now() }));
+        await assertFails(getDoc(doc(as('marco'), `leagues/${LEAGUE}/trades/t1`)), 'chi non c\'entra non lo vede');
+    });
+
+    test('gli scambi accettati li applica solo il Presidente', async () => {
+        await assertFails(updateDoc(doc(as('anna'), `leagues/${LEAGUE}/trades/accettato`), { status: 'executed', updatedAt: Timestamp.now() }));
+        await assertSucceeds(updateDoc(doc(as('pres'), `leagues/${LEAGUE}/trades/accettato`), { status: 'executed', updatedAt: Timestamp.now() }));
+    });
+
+    test('il registro dei movimenti lo scrive il Presidente e lo leggono tutti i membri', async () => {
+        const mov = { tipo: 'svincolato', uid: 'anna', playerIn: 'sx', playerOut: 's1', valore: 15, extra: 5, matchday: 2, at: serverTimestamp() };
+        await assertSucceeds(setDoc(doc(as('pres'), `leagues/${LEAGUE}/transfers/m1`), mov));
+        await assertFails(setDoc(doc(as('anna'), `leagues/${LEAGUE}/transfers/m2`), mov));
+        await assertSucceeds(getDocs(collection(as('anna'), `leagues/${LEAGUE}/transfers`)));
+        await assertFails(getDocs(collection(as('marco'), `leagues/${LEAGUE}/transfers`)));
     });
 });
 

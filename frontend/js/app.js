@@ -10,6 +10,8 @@ const state = {
     standings: {},      // uid -> { total, giornate, ultima: { matchday, total } }
     scores: [],         // punteggi di giornata della lega: [{ uid, matchday, total, dettaglio }]
     schedule: null,     // calendario degli scontri diretti: { teams, rounds: { giornata: [{ a, b }] } }
+    transfers: [],      // registro dei movimenti di mercato della lega
+    matchdays: [],      // tutte le giornate del calendario
     matchday: null,     // prossima giornata da schierare: { id, number, label, lockAt: Date, provisional }
 };
 
@@ -47,7 +49,7 @@ function initAuth() {
         document.getElementById('mainNav').hidden = !user;
 
         if (!user) {
-            Object.assign(state, { players: [], playersById: {}, leagues: [], league: null, members: [], rosters: {}, standings: {}, scores: [], schedule: null, matchday: null });
+            Object.assign(state, { players: [], playersById: {}, leagues: [], league: null, members: [], rosters: {}, standings: {}, scores: [], schedule: null, transfers: [], matchdays: [], matchday: null });
             switchTab('welcome');
             return;
         }
@@ -71,15 +73,14 @@ async function loadPlayers() {
         .sort((a, b) => a.name.localeCompare(b.name, 'it'));
 }
 
-// La prossima giornata non ancora bloccata
+// Tutte le giornate (servono anche per la finestra di mercato) e la prossima non ancora bloccata
 async function loadNextMatchday() {
-    const snap = await db.collection('matchdays').where('lockAt', '>', new Date()).orderBy('lockAt').limit(1).get();
-    if (snap.empty) {
-        state.matchday = null;
-        return;
-    }
-    const d = snap.docs[0];
-    state.matchday = { id: d.id, ...d.data(), lockAt: d.data().lockAt.toDate() };
+    const snap = await db.collection('matchdays').get();
+    state.matchdays = snap.docs
+        .map(d => ({ id: d.id, ...d.data(), lockAt: d.data().lockAt.toDate() }))
+        .sort((a, b) => a.number - b.number);
+    const now = new Date();
+    state.matchday = state.matchdays.find(g => g.lockAt > now) || null;
 }
 
 // Ridisegna tutte le schede dopo un cambio di dati (lega, rose, listone)
@@ -89,6 +90,8 @@ function refreshAll() {
     renderRosterEditor();
     renderField();
     renderRisultati();
+    renderMercato();
+    renderPresidenteMercato();
 }
 
 function currentTab() {
