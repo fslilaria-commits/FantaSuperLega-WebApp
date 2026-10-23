@@ -81,6 +81,14 @@ body { background-color: var(--bg-dark); color: var(--text-main); min-height: 10
 .player-row { display: flex; align-items: center; gap: 0.8rem; }
 .player-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: #334155; }
 
+/* PANNELLO ADMIN */
+.admin-card { background: var(--card-bg); border-radius: 12px; padding: 1.2rem; margin-top: 1rem; display: flex; flex-direction: column; gap: 0.8rem; }
+.admin-card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap; }
+.admin-sub { color: var(--text-sub); font-size: 0.9rem; }
+.admin-diff summary { cursor: pointer; font-weight: 600; padding: 0.3rem 0; }
+.admin-diff ul { margin: 0.3rem 0 0.6rem 1.4rem; color: var(--text-sub); font-size: 0.9rem; }
+.admin-actions { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+
 .btn { padding: 0.6rem 1.2rem; border-radius: 6px; border: none; font-weight: 700; cursor: pointer; }
 .btn-primary { background: var(--accent); color: white; }
 .btn-secondary { background: #475569; color: white; }

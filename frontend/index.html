@@ -26,6 +26,7 @@
             <button class="nav-btn" data-tab="market" onclick="switchTab('market')"><i class="fas fa-store"></i> Mercato</button>
             <button class="nav-btn" data-tab="league" onclick="switchTab('league')"><i class="fas fa-trophy"></i> Lega</button>
             <button class="nav-btn" data-tab="calculator" onclick="switchTab('calculator')"><i class="fas fa-calculator"></i> Tabellini</button>
+            <button class="nav-btn" data-tab="admin" id="adminNavBtn" onclick="switchTab('admin')" hidden><i class="fas fa-user-shield"></i> Admin</button>
         </nav>
         <div class="user-box">
             <span class="user-status" id="userStatus">Inizializzazione...</span>
@@ -169,10 +170,33 @@
             <p>Inserisci i tabellini ufficiali o simula la giornata per calcolare i punteggi di tutte le squadre della lega.</p>
             <button class="btn btn-primary" onclick="simulateMatchday()">Calcola e Sincronizza Giornata</button>
         </section>
+
+        <!-- SEZIONE ADMIN: visibile solo agli admin (le regole Firestore bloccano comunque chi non lo è) -->
+        <section id="tab-admin" class="tab-content">
+            <h2><i class="fas fa-user-shield"></i> Pannello Admin</h2>
+
+            <div class="admin-card">
+                <div class="admin-card-head">
+                    <div>
+                        <h3>Listone giocatori</h3>
+                        <p class="admin-sub" id="listoneInfo">Ultimo aggiornamento applicato: —</p>
+                    </div>
+                    <button class="btn btn-secondary" id="listoneCheckBtn"><i class="fas fa-magnifying-glass"></i> Controlla proposta</button>
+                </div>
+                <p class="admin-sub">La proposta viene scaricata ogni martedì dal sito della Lega. Per scaricarla subito: GitHub → Actions → "Aggiorna dati SuperLega" → Run workflow.</p>
+                <div id="listoneDiff"></div>
+                <div class="admin-actions">
+                    <button class="btn btn-primary" id="listoneApplyBtn" hidden><i class="fas fa-check"></i> Applica aggiornamento</button>
+                    <span class="admin-sub" id="listoneStatus"></span>
+                </div>
+            </div>
+        </section>
     </main>
 
     <script src="js/config.js"></script>
     <script src="js/players-data.js"></script>
     <script src="js/app.js"></script>
+    <script src="js/listone-diff.js"></script>
+    <script src="js/admin.js"></script>
 </body>
 </html>
