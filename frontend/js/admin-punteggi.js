@@ -96,6 +96,9 @@ async function applyPunteggi() {
         let squadre = 0;
         for (const lega of leghe.docs) squadre += await calcolaLega(lega, numero, punti, scadenza);
 
+        status.textContent = 'Aggiorno le statistiche dei giocatori…';
+        await aggiornaStatistiche();
+
         await db.doc('meta/punteggi').set({ appliedAt: firebase.firestore.FieldValue.serverTimestamp(), appliedBy: auth.currentUser.uid, matchday: numero });
         status.textContent = `Fatto: giornata ${numero} calcolata per ${squadre} squadre in ${leghe.size} leghe.`;
         applyBtn.hidden = true;
@@ -171,4 +174,17 @@ async function calendarioScontri(lega, iscritti, inizio) {
     const calendario = Scontri.generaCalendario(iscritti.map(m => m.uid), { start: inizio });
     await ref.set({ ...calendario, createdAt: firebase.firestore.FieldValue.serverTimestamp(), createdBy: auth.currentUser.uid });
     return calendario;
+}
+
+// Riepilogo stagionale dei giocatori (meta/statistiche), ricostruito da tutte le giornate calcolate
+async function aggiornaStatistiche() {
+    const calcolate = await db.collection('matchdays').where('status', '==', 'scored').get();
+    const giornate = [];
+    for (const g of calcolate.docs) {
+        const stats = await g.ref.collection('stats').get();
+        giornate.push({ number: g.data().number, stats: Object.fromEntries(stats.docs.map(d => [d.id, d.data()])) });
+    }
+    const players = Statistiche.costruisciRiepilogo(giornate);
+    await db.doc('meta/statistiche').set({ players, giornate: giornate.map(g => g.number).sort((a, b) => a - b), updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    state.statistiche = players;
 }
