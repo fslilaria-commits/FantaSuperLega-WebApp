@@ -12,8 +12,8 @@ const firebaseConfig = {
 const firebaseConfigured = !firebaseConfig.apiKey.startsWith('YOUR_');
 
 // Chiave del sito reCAPTCHA v3 per App Check (pubblica come la configurazione). Vuota = App Check spento.
-// Come ottenerla: docs/sicurezza.md
-const appCheckSiteKey = '';
+// Vale solo sul dominio fslilaria-commits.github.io; come ottenerla o cambiarla: docs/sicurezza.md
+const appCheckSiteKey = '6Lda_PwtAAAAACq0phKN4Kyu9qi-C6hHB9J-kRvv';
 
 // Solo per lo sviluppo: http://localhost:<porta>/frontend/?emulatori usa gli emulatori Firebase locali
 // (npm run emulatori) invece del progetto vero. Sul sito pubblicato non si attiva mai.
