@@ -113,7 +113,7 @@ async function saveRoster() {
         await db.doc(`leagues/${state.league.id}/rosters/${rosterEdit.uid}`).set(roster);
         state.rosters[rosterEdit.uid] = roster;
         rosterEdit.dirty = false;
-        status.textContent = check.complete ? 'Rosa completa salvata.' : `Rosa salvata (${rosterEdit.picks.length}/12).`;
+        status.textContent = check.complete ? 'Rosa completa salvata.' : `Rosa salvata (${rosterEdit.picks.length}/${RoseCheck.TOTALE}).`;
         refreshAll();
     } catch (e) {
         status.textContent = 'Salvataggio non riuscito: ' + (e.code === 'permission-denied' ? 'solo il Presidente può modificare le rose.' : e.message);

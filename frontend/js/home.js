@@ -66,7 +66,7 @@ async function renderHome() {
     // Prossima giornata e formazione
     if (state.matchday) {
         let formazione;
-        if (!FormazioneCheck.isRosterComplete(rosa)) formazione = el('p', { class: 'msg-warning' }, `Rosa incompleta (${rosa?.all?.length || 0}/12): il Presidente deve completarla.`);
+        if (!FormazioneCheck.isRosterComplete(rosa)) formazione = el('p', { class: 'msg-warning' }, `Rosa incompleta (${rosa?.all?.length || 0}/${RoseCheck.TOTALE}): il Presidente deve completarla.`);
         else if (state.lineupSalvata) formazione = el('p', { class: 'ok-text' }, el('i', { class: 'fas fa-circle-check' }), ' Formazione salvata');
         else formazione = el('p', { class: 'msg-error' }, el('i', { class: 'fas fa-circle-exclamation' }), " Formazione non ancora salvata: se non la salvi vale l'ultima.");
         lista.push(homeCard('fa-stopwatch', state.matchday.label, [
@@ -127,7 +127,7 @@ async function renderHome() {
 async function promemoria(f) {
     const voci = [];
     if (isPresident()) {
-        const incomplete = state.members.filter(m => (state.rosters[m.uid]?.all?.length || 0) < 12).length;
+        const incomplete = state.members.filter(m => (state.rosters[m.uid]?.all?.length || 0) < RoseCheck.TOTALE).length;
         if (incomplete) voci.push(`Presidente: ${incomplete} rose da completare (scheda Lega)`);
         if (state.league.settings?.mode === 'scontri' && !state.schedule) voci.push('Presidente: genera il calendario delle sfide prima della giornata di inizio');
         if (f.matchday && !f.offerteAperte && f.aperto) voci.push('Presidente: le offerte sono chiuse, assegna gli svincolati (scheda Lega → Mercato)');

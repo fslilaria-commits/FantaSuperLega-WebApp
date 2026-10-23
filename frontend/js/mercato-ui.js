@@ -107,7 +107,7 @@ function nomeGiocatore(id) {
 function avvisoRosaIncompleta(cosa) {
     const rosa = myRoster();
     if (FormazioneCheck.isRosterComplete(rosa)) return null;
-    return `Per ${cosa} la tua rosa deve essere completa (${rosa?.all?.length || 0}/12): la inserisce il Presidente in Lega → Rose della lega.`;
+    return `Per ${cosa} la tua rosa deve essere completa (${rosa?.all?.length || 0}/${RoseCheck.TOTALE}): la inserisce il Presidente in Lega → Rose della lega.`;
 }
 
 function renderMieOfferte(f) {

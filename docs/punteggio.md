@@ -62,7 +62,7 @@ Il regolamento FantaLVF usa alcuni termini che i tabellini della Lega maschile n
 
 ## Fanta-squadra
 
-- Titolari al 100%, capitano ×2, panchina (gli altri 5) al 50%.
+- Titolari al 100%, capitano ×2, panchina (gli altri 7 della rosa da 14) al 50%.
 - Il totale è la somma delle righe arrotondate al centesimo.
 - Senza formazione salvata per la giornata vale l'ultima formazione precedente.
 - **Gare spostate** (più di 4 giorni prima o 3 dopo la data della giornata): i giocatori di quelle squadre prendono la loro **media stagionale** e, se capitani, non raddoppiano.
