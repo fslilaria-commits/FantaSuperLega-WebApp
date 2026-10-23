@@ -1,10 +1,108 @@
 // Scheda Lega: le mie leghe, creazione, ingresso con codice, partecipanti e classifica
 const LEAGUE_KEY = 'fsl-lega-selezionata';
+const INVITO_KEY = 'fsl-invito';
 let richiestaLega = 0; // solo l'ultima lega scelta aggiorna lo stato, anche se una risposta precedente arriva dopo
+let invitoInSospeso = leggiInvito();
 
 document.getElementById('leagueSelect').addEventListener('change', e => selectLeague(e.target.value));
 document.getElementById('createLeagueForm').addEventListener('submit', createLeague);
 document.getElementById('joinLeagueForm').addEventListener('submit', joinLeague);
+document.getElementById('inviteCopy').addEventListener('click', copiaInvito);
+document.getElementById('inviteShare').addEventListener('click', condividiInvito);
+document.getElementById('welcomeInvite').hidden = !invitoInSospeso;
+
+// --- Inviti: link con il codice della lega (?invito=123456) ---
+
+// All'apertura il codice si toglie dall'indirizzo e resta in sospeso fino all'accesso con Google
+function leggiInvito() {
+    const url = new URL(location.href);
+    const codice = url.searchParams.get('invito');
+    if (codice !== null) {
+        url.searchParams.delete('invito');
+        history.replaceState(null, '', url.pathname + url.search + url.hash);
+    }
+    if (codice && /^\d{6}$/.test(codice)) {
+        try { sessionStorage.setItem(INVITO_KEY, codice); } catch { /* resta per questa pagina */ }
+        return codice;
+    }
+    try { return sessionStorage.getItem(INVITO_KEY); } catch { return null; }
+}
+
+function linkInvito(codice) {
+    const url = new URL(location.pathname, location.origin);
+    url.searchParams.set('invito', codice);
+    if (useEmulators) url.searchParams.set('emulatori', '');
+    return url.toString();
+}
+
+function testoInvito(l) {
+    return `Ti invito nella mia lega "${l.name}" del Fanta SuperLega 2026/27, il fantavolley della SuperLega. Apri il link, entra con Google e scegli il nome della tua squadra:`;
+}
+
+async function copiaInvito() {
+    const link = linkInvito(state.league.code);
+    const nota = document.getElementById('inviteNote');
+    try {
+        await navigator.clipboard.writeText(link);
+        nota.textContent = 'Link copiato: incollalo nella chat che vuoi.';
+    } catch {
+        nota.textContent = `Copia questo link: ${link}`;
+    }
+}
+
+async function condividiInvito() {
+    const l = state.league;
+    try {
+        await navigator.share({ title: `Lega ${l.name}`, text: testoInvito(l), url: linkInvito(l.code) });
+    } catch { /* condivisione annullata */ }
+}
+
+// Squadre che ci stanno in una lega con il listone di oggi (0 = listone non ancora caricato: nessun limite)
+function postiMassimi() {
+    return RoseCheck.maxSquadre(state.players);
+}
+
+// Dopo l'accesso: chi arriva da un link di invito trova il modulo "Unisciti" già compilato
+async function gestisciInvito() {
+    const codice = invitoInSospeso;
+    invitoInSospeso = null;
+    try { sessionStorage.removeItem(INVITO_KEY); } catch { /* niente da togliere */ }
+    document.getElementById('welcomeInvite').hidden = true;
+    if (!codice) return;
+    switchTab('league');
+    const box = document.getElementById('joinCreateBox');
+    const status = document.getElementById('leagueFormStatus');
+    try {
+        const codeDoc = await db.doc(`leagueCodes/${codice}`).get();
+        const leagueId = codeDoc.exists ? codeDoc.data().leagueId : null;
+        if (leagueId && state.leagues.some(l => l.id === leagueId)) {
+            await selectLeague(leagueId); // ci sei già: si apre la lega
+            return;
+        }
+        if (!leagueId) {
+            box.open = true;
+            status.textContent = 'Il link di invito non corrisponde a nessuna lega: chiedi di nuovo il codice a chi ti ha invitato.';
+            return;
+        }
+    } catch { /* si prova comunque con il modulo */ }
+    box.dataset.invito = '1';
+    box.open = true;
+    document.getElementById('joinCode').value = codice;
+    status.textContent = 'Ti hanno invitato in una lega: scrivi il nome della tua squadra e premi Unisciti.';
+    document.getElementById('joinTeam').focus();
+}
+
+// Pulsanti di invito: spariscono quando la lega è al completo o non accetta più iscrizioni
+function disegnaInvito(l, max) {
+    const piena = max > 0 && state.members.length >= max;
+    const chiusa = l.settings?.mode === 'scontri' && !!state.schedule;
+    document.getElementById('inviteActions').hidden = piena || chiusa;
+    document.getElementById('inviteShare').hidden = !navigator.share;
+    document.getElementById('inviteWhatsApp').href = `https://wa.me/?text=${encodeURIComponent(`${testoInvito(l)} ${linkInvito(l.code)}`)}`;
+    document.getElementById('inviteNote').textContent = chiusa ? 'Iscrizioni chiuse: il calendario delle sfide è già stato generato.'
+        : piena ? `Lega al completo: con il listone di oggi ci stanno al massimo ${max} squadre.`
+            : '';
+}
 
 function readSavedLeague() {
     try { return localStorage.getItem(`${LEAGUE_KEY}-${state.user.uid}`); } catch { return null; }
@@ -72,15 +170,20 @@ function renderLeague() {
 
     const dashboard = document.getElementById('leagueDashboard');
     dashboard.hidden = !state.league;
-    document.getElementById('joinCreateBox').open = state.leagues.length === 0;
+    const box = document.getElementById('joinCreateBox');
+    box.open = state.leagues.length === 0 || box.dataset.invito === '1';
     if (!state.league) return;
 
     const l = state.league;
     const modalita = l.settings?.mode === 'scontri' ? 'Scontri diretti' : 'Classifica generale';
     const crediti = l.settings?.budget ? `${l.settings.budget} crediti per l'asta` : 'Asta senza crediti';
     document.getElementById('leagueTitle').textContent = l.name;
-    document.getElementById('leagueMeta').textContent = `${modalita} · ${crediti} · dalla giornata ${l.settings?.startMatchday ?? 1}`;
+    // Posti: le rose sono esclusive, quindi il listone decide quante squadre ci stanno
+    const max = postiMassimi();
+    const squadre = max ? `squadre ${state.members.length}/${max}` : `${state.members.length} squadre`;
+    document.getElementById('leagueMeta').textContent = `${modalita} · ${crediti} · dalla giornata ${l.settings?.startMatchday ?? 1} · ${squadre}`;
     document.getElementById('leagueCodeDisplay').textContent = l.code;
+    disegnaInvito(l, max);
 
     // Classifica: negli scontri diretti contano i punti delle sfide, nella classifica generale i fanta-punti.
     // A parità: fanta-punti totali, poi chi si è iscritto prima (come nel FantaLVF)
@@ -111,6 +214,16 @@ function renderLeague() {
         ? (scontri ? 'Vittoria 3 punti; a parità di fanta-punti tie-break: 2 punti a chi ha più punti in classifica generale, 1 all\'altro.' : '')
         : 'I punti compaiono dopo il calcolo della prima giornata.';
     renderSfide();
+}
+
+// Chi è entrato quando i posti erano già finiti: conta l'ordine di iscrizione (data del server)
+async function oltreIPosti(leagueId, uid) {
+    const max = postiMassimi();
+    if (!max) return false;
+    const membri = (await db.collection(`leagues/${leagueId}/members`).get()).docs
+        .map(d => ({ uid: d.id, quando: d.data().joinedAt?.toMillis?.() ?? Infinity }))
+        .sort((a, b) => a.quando - b.quando || a.uid.localeCompare(b.uid));
+    return membri.findIndex(m => m.uid === uid) >= max;
 }
 
 // Perché le regole hanno rifiutato l'ingresso: chi era già entrato ed è stato tolto, o calendario delle sfide già fatto
@@ -201,6 +314,16 @@ async function joinLeague(e) {
         batch.set(db.doc(`leagues/${leagueId}/members/${uid}`), { teamName, code, joinedAt: now });
         batch.set(db.doc(`users/${uid}/leagues/${leagueId}`), { joinedAt: now });
         await batch.commit();
+        // Le regole non sanno contare i partecipanti: se la lega era già al completo si esce subito
+        if (await oltreIPosti(leagueId, uid)) {
+            const esci = db.batch();
+            esci.delete(db.doc(`leagues/${leagueId}/members/${uid}`));
+            esci.delete(db.doc(`users/${uid}/leagues/${leagueId}`));
+            await esci.commit();
+            status.textContent = `La lega è al completo: con il listone di oggi ci stanno al massimo ${postiMassimi()} squadre (le rose sono esclusive). Chiedi al Presidente.`;
+            return;
+        }
+        delete document.getElementById('joinCreateBox').dataset.invito;
         status.textContent = 'Sei entrato nella lega!';
         e.target.reset();
         await loadMyLeagues(leagueId);

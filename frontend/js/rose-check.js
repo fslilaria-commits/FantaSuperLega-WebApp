@@ -16,6 +16,14 @@
         return perClub;
     }
 
+    // Squadre al massimo in una lega: le rose sono esclusive, quindi decide il ruolo con meno giocatori
+    // nel listone rispetto a quanti ne servono per rosa. players: i giocatori attivi. 0 se il listone è vuoto
+    function maxSquadre(players) {
+        const perRuolo = {};
+        for (const p of players) perRuolo[p.role] = (perRuolo[p.role] || 0) + 1;
+        return Math.min(...Object.entries(MAX_PER_RUOLO).map(([ruolo, n]) => Math.floor((perRuolo[ruolo] || 0) / n)));
+    }
+
     function clubOltreIlLimite(ids, playersById) {
         return Object.entries(contaPerClub(ids, playersById)).filter(([, n]) => n > MAX_PER_CLUB);
     }
@@ -92,7 +100,7 @@
         return { errors, warnings, complete: picks.length === TOTALE && errors.length === 0, creditsLeft };
     }
 
-    const api = { MAX_PER_RUOLO, TOTALE, MAX_PER_CLUB, contaPerClub, clubOltreIlLimite, riferimentoDa, buildRoster, rosterToPicks, checkRoster };
+    const api = { MAX_PER_RUOLO, TOTALE, MAX_PER_CLUB, contaPerClub, maxSquadre, clubOltreIlLimite, riferimentoDa, buildRoster, rosterToPicks, checkRoster };
     if (typeof module !== 'undefined' && module.exports) module.exports = api;
     else root.RoseCheck = api;
 })(this);
