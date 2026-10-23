@@ -1,17 +1,12 @@
-name: Test regole Firestore
+name: Test
 
 on:
   pull_request:
   push:
     branches: [main]
-    paths:
-      - 'firestore.rules'
-      - 'tests/**'
-      - 'package.json'
-      - 'package-lock.json'
 
 jobs:
-  test-rules:
+  test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Codice
@@ -28,9 +23,20 @@ jobs:
         with:
           node-version: '22'
           cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            backend-bot/package-lock.json
 
       - name: Installa Dipendenze
-        run: npm ci
+        run: |
+          npm ci
+          npm ci --prefix backend-bot
 
-      - name: Esegui i test delle regole
+      - name: Test della logica del pannello Admin
+        run: npm run test:unit
+
+      - name: Test del generatore del listone
+        run: npm test --prefix backend-bot
+
+      - name: Test delle regole Firestore
         run: npm run test:rules

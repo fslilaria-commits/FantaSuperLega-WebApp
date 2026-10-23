@@ -12,13 +12,13 @@ Fantavolley sulla SuperLega maschile, per leghe private tra amici. Le regole seg
 
 ## Avviare il frontend in locale
 
-L'app è statica: basta servire la cartella `frontend/` con un qualsiasi server web, per esempio:
+L'app è statica: basta servire la **cartella principale della repo** con un qualsiasi server web e aprire `/frontend/` (il pannello Admin legge la proposta di listone da `data/`):
 
 ```bash
-npx serve frontend
+npx serve .
 ```
 
-Senza configurazione Firebase l'app parte in **modalità offline** e mostra i giocatori di esempio di `js/players-data.js`.
+Se il listone su Firestore è vuoto l'app mostra i giocatori di esempio di `js/players-data.js`.
 
 ## Collegare Firebase
 
@@ -37,18 +37,32 @@ npm install
 npm run test:rules
 ```
 
-Il comando avvia l'emulatore Firestore, che richiede **Java 11 o superiore**. Gli stessi test girano su GitHub a ogni pull request.
+Il comando avvia l'emulatore Firestore, che richiede **Java 11 o superiore**. `npm run test:unit` lancia i test della logica del pannello Admin. Tutti i test girano su GitHub a ogni pull request.
 
-## Bot del listone
+## Ruoli e pannello Admin
 
-Lo script `backend-bot/updater.js` scrive su Firestore con le credenziali di un service account, lette dalla variabile d'ambiente `FIREBASE_SERVICE_ACCOUNT` (il JSON completo della chiave). Su GitHub va salvata come secret del repository con lo stesso nome.
+I ruoli (Admin, Presidente, Partecipante, Visitatore) sono descritti in [`docs/modello-dati.md`](docs/modello-dati.md#ruoli).
+
+**Nominare un admin** (solo dalla console Firebase, mai dall'app):
+1. La persona fa una volta l'accesso con Google sul sito.
+2. Firebase Console → **Authentication → Utenti**: copiare il suo **UID**.
+3. Firebase Console → **Firestore Database → Dati → Avvia raccolta** (la prima volta) `admins`, ID documento = l'UID copiato, un campo qualsiasi (per esempio `nome` = `Andrea`).
+4. Ricaricando il sito compare la scheda **Admin**.
+
+## Aggiornamento del listone
+
+Il workflow **Aggiorna dati SuperLega** (`.github/workflows/aggiorna-dati.yaml`) gira ogni martedì mattina, o a mano da **Actions → Aggiorna dati SuperLega → Run workflow**:
+1. legge le rose delle 12 squadre dal sito della Lega (`backend-bot/genera-listone.js`);
+2. si ferma senza scrivere niente se i dati sembrano sbagliati (squadre con meno di 10 giocatori, più di un quarto dei giocatori spariti, doppioni);
+3. se ci sono novità, salva la proposta in `data/players.json` con un commit.
+
+Nel gioco non cambia niente finché un admin non apre il **pannello Admin → Controlla proposta → Applica aggiornamento**. Il ruolo dei giocatori già presenti non cambia mai da solo e nessuno viene cancellato: chi esce dalla SuperLega diventa non attivo.
+
+Per lanciare il generatore in locale:
 
 ```bash
 cd backend-bot
 npm install
-FIREBASE_SERVICE_ACCOUNT="$(cat chiave.json)" node updater.js
+npm run genera-listone
+npm test
 ```
-
-**Non committare mai la chiave del service account**: `.gitignore` esclude i nomi più comuni, ma conviene tenerla fuori dalla cartella del progetto.
-
-L'esecuzione settimanale automatica è sospesa: lo scraping di legavolley.it va sostituito con un listone curato a mano.

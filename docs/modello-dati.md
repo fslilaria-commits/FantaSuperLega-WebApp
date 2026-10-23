@@ -2,27 +2,47 @@
 
 Le regole del gioco seguono la Modalità Leghe del [FantaLVF](https://fantaking.gitbook.io/fantalvf/regolamento-leghe): asta offline, rose esclusive inserite dal **Presidente** della lega, valori dei giocatori fissi.
 
-Chi scrive cosa:
+## Ruoli
 
-| Chi | Cosa scrive |
-|---|---|
-| **Script** (GitHub Action con service account) | listone, calendario giornate, statistiche, punteggi, classifiche |
-| **Presidente** | impostazioni della lega e rose dopo l'asta |
-| **Ogni utente** | la propria iscrizione alla lega e la propria formazione, solo prima della scadenza |
+| Ruolo | Chi | Cosa può fare |
+|---|---|---|
+| **Admin** | Chi è nella collezione `admins` (si nomina solo dalla console Firebase) | Dati di gioco: listone, giornate e scadenze, statistiche, punteggi e classifiche. Legge tutte le leghe, ma non fa il Presidente e non schiera formazioni altrui |
+| **Presidente** | Chi ha creato la lega | Impostazioni della lega e rose dopo l'asta, rimozione dei partecipanti |
+| **Partecipante** | Chi è entrato con il codice | Il proprio nome squadra e la propria formazione, solo prima della scadenza |
+| **Visitatore** | Chi non ha fatto l'accesso | Solo il listone |
 
-Lo script usa l'Admin SDK, che non passa dalle regole: tutto ciò che è "solo script" nelle regole è semplicemente negato ai client.
+## Da dove arrivano i dati
+
+Un workflow GitHub settimanale (`.github/workflows/aggiorna-dati.yaml`, martedì mattina o a mano da Actions) scarica dal sito della Lega una **proposta** e la salva nella repo (`data/players.json`). Non scrive su Firestore: un admin apre il pannello Admin dell'app, vede le differenze e le applica. Così non serve nessuna chiave di servizio e nessun dato entra nel gioco senza essere stato visto.
+
+Regole del listone, come nei fantasy più diffusi:
+- i nuovi giocatori entrano con il ruolo indicato dalla Lega;
+- per chi c'è già **il ruolo non cambia mai da solo**: un ruolo diverso sul sito viene solo segnalato;
+- nessuno viene cancellato: chi lascia la SuperLega diventa `active: false` e resta nelle rose.
 
 ## Collezioni
+
+### `admins/{uid}` — admin del gioco
+Un documento per admin, con id uguale all'uid di Firebase Authentication. Si crea solo dalla console; dall'app ognuno può leggere solo il proprio documento, per sapere se è admin.
+
+### `meta/listone`
+`appliedAt`, `appliedBy`, `changes`: quando e da chi è stato applicato l'ultimo aggiornamento del listone. Scrittura solo admin.
 
 ### `players/{playerId}` — listone
 | Campo | Tipo | Note |
 |---|---|---|
 | `name` | string | Nome e cognome |
 | `team` | string | Squadra di SuperLega |
+| `teamId` | number | Id della squadra su legavolley.it |
 | `role` | string | `P`, `S`, `C`, `O` o `L` |
+| `number` | number | Numero di maglia |
+| `birthYear` | number | |
+| `nationality` | string | Nazionalità sportiva (es. `ITA`) |
+| `photo` | string | Foto ufficiale della Lega |
 | `active` | bool | `false` se lascia la SuperLega |
+| `updatedAt` | timestamp | |
 
-`playerId` è `cognome-nome-squadra` senza accenti. Lettura pubblica, scrittura solo script.
+`playerId` è il **codice ufficiale della Lega** (es. `GIA-SIM-96`): resta lo stesso se il giocatore cambia squadra. Lettura pubblica; scrittura solo admin, nel formato sopra; nessuna cancellazione.
 
 ### `matchdays/{n}` — giornate
 | Campo | Tipo | Note |
@@ -31,7 +51,7 @@ Lo script usa l'Admin SDK, che non passa dalle regole: tutto ciò che è "solo s
 | `lockAt` | timestamp | 1 minuto prima della prima partita della giornata |
 | `status` | string | `open`, `locked`, `scored` |
 
-Sottocollezione `matchdays/{n}/stats/{playerId}` con le statistiche del tabellino (Fase 5). Lettura per utenti autenticati, scrittura solo script.
+Sottocollezione `matchdays/{n}/stats/{playerId}` con le statistiche del tabellino (Fase 5). Lettura per utenti autenticati, scrittura solo admin.
 
 ### `leagueCodes/{code}` — codici invito
 | Campo | Tipo |
@@ -84,4 +104,4 @@ Scrive solo il Presidente. Le regole controllano numero di giocatori per ruolo e
 Ognuno scrive solo la propria, e solo prima di `lockAt`. I giocatori devono essere della propria rosa, nel ruolo giusto, senza doppioni. Le formazioni degli altri si vedono solo dopo la scadenza.
 
 ### `leagues/{leagueId}/scores/{matchday}_{uid}` e `leagues/{leagueId}/standings/{uid}`
-Punteggi di giornata e classifica. Lettura per i membri, scrittura solo script.
+Punteggi di giornata e classifica. Lettura per i membri e gli admin, scrittura solo admin (calcolati dai tabellini ufficiali).
