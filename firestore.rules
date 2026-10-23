@@ -37,7 +37,18 @@ service cloud.firestore {
       allow list, write: if false;
     }
 
-    // Listone: pubblico, aggiornato dagli admin dal pannello
+    // Le leghe di ogni utente, per ritrovarle all'accesso; si aggiunge una lega solo entrandoci davvero
+    match /users/{uid}/leagues/{leagueId} {
+      allow read: if signedIn() && uid == request.auth.uid;
+      allow create: if signedIn()
+        && uid == request.auth.uid
+        && request.resource.data.keys().hasOnly(['joinedAt'])
+        && existsAfter(/databases/$(database)/documents/leagues/$(leagueId)/members/$(uid));
+      allow delete: if signedIn() && uid == request.auth.uid;
+      allow update: if false;
+    }
+
+    // Listone: visibile a chi ha fatto l'accesso, aggiornato dagli admin dal pannello
     match /players/{playerId} {
       function validPlayer(d) {
         return d.keys().hasOnly(['name', 'team', 'teamId', 'role', 'number', 'birthYear', 'nationality', 'photo', 'active', 'updatedAt'])
@@ -47,7 +58,7 @@ service cloud.firestore {
           && d.active is bool;
       }
 
-      allow read: if true;
+      allow read: if signedIn();
       allow create, update: if isAdmin() && validPlayer(request.resource.data);
       allow delete: if false;
     }
@@ -129,15 +140,16 @@ service cloud.firestore {
       }
 
       match /rosters/{uid} {
+        // Durante l'asta la rosa si salva anche incompleta: al massimo 2 P, 4 S, 3 C, 2 O, 1 L
         function validRoster(d) {
           return d.keys().hasOnly(['P', 'S', 'C', 'O', 'L', 'all', 'prices', 'creditsLeft'])
-            && d.P is list && d.P.size() == 2
-            && d.S is list && d.S.size() == 4
-            && d.C is list && d.C.size() == 3
-            && d.O is list && d.O.size() == 2
-            && d.L is list && d.L.size() == 1
-            && d.all is list && d.all.size() == 12
-            && d.all.toSet().size() == 12
+            && d.P is list && d.P.size() <= 2
+            && d.S is list && d.S.size() <= 4
+            && d.C is list && d.C.size() <= 3
+            && d.O is list && d.O.size() <= 2
+            && d.L is list && d.L.size() <= 1
+            && d.all is list && d.all.size() <= 12
+            && d.all.toSet().size() == d.all.size()
             && d.all.toSet() == d.P.concat(d.S).concat(d.C).concat(d.O).concat(d.L).toSet()
             && d.prices is map && d.prices.keys().toSet() == d.all.toSet()
             && d.creditsLeft is number && d.creditsLeft >= 0;
