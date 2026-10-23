@@ -155,6 +155,19 @@ input:focus, select:focus, button:focus-visible { outline: 2px solid var(--accen
 .prossima-sfida { color: var(--text-sub); }
 .prossima-sfida strong { color: var(--accent-gold); }
 
+/* MERCATO */
+.market-status.aperto { border-left-color: var(--ok); color: var(--text-main); }
+.market-panels { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1rem; margin-bottom: 1rem; }
+.market-panels .admin-card { margin-top: 0; }
+.market-row { display: flex; justify-content: space-between; align-items: center; gap: 0.6rem; flex-wrap: wrap; padding: 0.5rem 0; border-bottom: 1px solid var(--line); }
+.market-row:last-child { border-bottom: none; }
+.pill { display: inline-block; margin-left: 0.5rem; padding: 1px 8px; border-radius: 999px; font-size: 0.75rem; font-weight: 700; background: var(--card-bg-2); color: var(--text-sub); }
+.pill.active, .pill.proposed { background: var(--accent-soft); color: var(--accent); }
+.pill.won, .pill.executed, .pill.accepted { background: rgba(34, 197, 94, 0.15); color: var(--ok); }
+.pill.lost, .pill.refused, .pill.void { background: rgba(248, 113, 113, 0.15); color: var(--error); }
+#transfersList ul { margin: 0.6rem 0 0 1.2rem; color: var(--text-sub); font-size: 0.9rem; display: flex; flex-direction: column; gap: 0.3rem; }
+#marketForm { gap: 0.6rem; }
+
 /* LEGA */
 .league-select { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1rem; }
 .league-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap; }
