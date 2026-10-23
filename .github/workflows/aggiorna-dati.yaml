@@ -1,6 +1,6 @@
 name: Aggiorna dati SuperLega
 
-# Ogni settimana scarica dal sito della Lega le proposte di listone e calendario e le salva in data/.
+# Ogni settimana scarica dal sito della Lega le proposte di listone, calendario e tabellini e le salva in data/.
 # Non tocca il gioco: gli admin le applicano dal pannello Admin dell'app.
 on:
   schedule:
@@ -40,16 +40,23 @@ jobs:
         working-directory: backend-bot
         run: npm run genera-calendario
 
+      - name: Scarica i tabellini delle giornate concluse
+        working-directory: backend-bot
+        run: npm run genera-tabellini
+
+      # Anche se uno dei passi precedenti si è fermato per un controllo, salva ciò che è stato scaricato bene
       - name: Salva le differenze, se ci sono
+        if: always()
         run: |
-          if git diff --quiet -- data/; then
-            echo "Nessuna novità in listone e calendario." >> "$GITHUB_STEP_SUMMARY"
+          # status --porcelain vede anche i file nuovi (per esempio il tabellino di una nuova giornata)
+          if [ -z "$(git status --porcelain -- data/)" ]; then
+            echo "Nessuna novità nei dati della Lega." >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
-          git diff --stat -- data/ >> "$GITHUB_STEP_SUMMARY"
+          git add data/
+          git diff --cached --stat >> "$GITHUB_STEP_SUMMARY"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/
-          git commit -m "Proposte di listone e calendario aggiornate dal sito della Lega"
+          git commit -m "Dati aggiornati dal sito della Lega (listone, calendario, tabellini)"
           git push
           echo "Nuove proposte salvate: da applicare dal pannello Admin." >> "$GITHUB_STEP_SUMMARY"
