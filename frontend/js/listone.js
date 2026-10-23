@@ -41,9 +41,9 @@ function renderMarket() {
     if (marketFilter.sort === 'media') visibili.sort((a, b) => (stat(b.id)?.media ?? -999) - (stat(a.id)?.media ?? -999));
     if (marketFilter.sort === 'ultima') visibili.sort((a, b) => (stat(b.id)?.ultima.fp ?? -999) - (stat(a.id)?.ultima.fp ?? -999));
 
-    document.getElementById('marketTableBody').replaceChildren(...visibili.map(p => el('tr', {},
+    riempi(document.getElementById('marketTableBody'), visibili.map(p => el('tr', {},
         el('td', {}, el('div', { class: 'player-row' },
-            el('img', { src: p.photo || 'img/avatar.svg', class: 'player-avatar', alt: '', loading: 'lazy', onerror: e => { e.target.onerror = null; e.target.src = 'img/avatar.svg'; } }),
+            fotoGiocatore(p),
             el('button', { class: 'link-player', onclick: () => apriGiocatore(p.id), title: 'Apri la scheda del giocatore' }, p.name))),
         el('td', {}, p.team),
         el('td', {}, el('span', { class: 'role-tag', title: ROLE_NAMES[p.role] }, p.role)),

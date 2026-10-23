@@ -7,7 +7,7 @@ Le regole del gioco seguono la Modalità Leghe del [FantaLVF](https://fantaking.
 | Ruolo | Chi | Cosa può fare |
 |---|---|---|
 | **Admin** | Chi è nella collezione `admins` (si nomina solo dalla console Firebase) | Dati di gioco: listone, giornate e scadenze, statistiche, punteggi e classifiche. Legge tutte le leghe, comprese rose e formazioni per il calcolo dei punteggi, ma non fa il Presidente e non schiera formazioni altrui |
-| **Presidente** | Chi ha creato la lega | Impostazioni della lega e rose dopo l'asta, rimozione dei partecipanti |
+| **Presidente** | Chi ha creato la lega | Impostazioni della lega e rose dopo l'asta, assegnazioni di mercato e scambi |
 | **Partecipante** | Chi è entrato con il codice | Il proprio nome squadra e la propria formazione, solo prima della scadenza |
 | **Visitatore** | Chi non ha fatto l'accesso | Solo la schermata di benvenuto con l'invito ad accedere |
 
@@ -53,14 +53,14 @@ Un documento per admin, con id uguale all'uid di Firebase Authentication. Si cre
 | `lockAt` | timestamp | 1 minuto prima della prima gara della giornata |
 | `provisional` | bool | `true` se qualche gara non ha ancora l'orario ufficiale |
 | `matches` | list | Gare: squadre, id Lega, orario, `moved` |
-| `status` | string | `open`, `locked`, `scored` |
+| `status` | string | `open`, poi `scored` dopo il calcolo. Il blocco delle formazioni lo decide solo `lockAt` |
 
 Una gara giocata più di 4 giorni prima o 3 giorni dopo la data della sua giornata è **spostata** (`moved: true`): non conta per la scadenza e, come nel FantaLVF, i suoi giocatori prenderanno il punteggio medio. La scadenza di una giornata già bloccata non viene mai spostata dagli aggiornamenti.
 
 Sottocollezione `matchdays/{n}/stats/{playerId}` con le statistiche del tabellino (Fase 5). Lettura per utenti autenticati, scrittura solo admin. Dopo il calcolo contiene i fanta-punti di ogni giocatore (`fp`, voci, moltiplicatore, `media` per le gare spostate).
 
 ### `users/{uid}/leagues/{leagueId}` — le mie leghe
-Un documento (`joinedAt`) per ogni lega in cui l'utente è entrato, per ritrovarle all'accesso. Lo scrive l'utente stesso, solo insieme alla propria iscrizione alla lega; nessuno legge quelle degli altri.
+Un documento (`joinedAt`, data del server) per ogni lega in cui l'utente è entrato, per ritrovarle all'accesso. Lo scrive l'utente stesso, solo insieme alla propria iscrizione alla lega; nessuno legge quelle degli altri.
 
 ### `leagueCodes/{code}` — codici invito
 | Campo | Tipo |
@@ -79,18 +79,18 @@ Il codice a 6 cifre è l'id del documento. Si legge un codice alla volta (niente
 | `settings.mode` | string | `classifica` o `scontri` |
 | `settings.startMatchday` | number | Prima giornata valida |
 | `settings.marketSuspended` | bool | Mercato sospeso dal Presidente (facoltativo) |
-| `createdAt` | timestamp | |
+| `createdAt` | timestamp | Data del server |
 
-Leggibile dai membri, modificabile solo dal Presidente (che non può cedere la presidenza).
+Leggibile dai membri, modificabile solo dal Presidente (che non può cedere la presidenza). Giornata di inizio e tipo di lega si cambiano solo prima della scadenza della giornata di inizio e prima che esista il calendario delle sfide.
 
 ### `leagues/{leagueId}/members/{uid}` — partecipanti
 | Campo | Tipo | Note |
 |---|---|---|
 | `teamName` | string | Nome della fanta-squadra |
 | `code` | string | Il codice usato per entrare: deve coincidere con quello della lega |
-| `joinedAt` | timestamp | |
+| `joinedAt` | timestamp | Data del server: a parità in classifica vince chi si è iscritto prima |
 
-Ognuno crea e modifica solo il proprio documento. Il Presidente può rimuovere un partecipante.
+Ognuno crea e modifica solo il proprio documento. Le regole permettono al Presidente di togliere un partecipante e a ognuno di uscire, ma l'app non ha ancora il pulsante: per ora si fa dalla console Firebase, cancellando il documento del partecipante e la sua rosa. Chi è stato tolto può rientrare con il codice finché la lega accetta iscrizioni (vedi `docs/sicurezza.md`).
 
 ### `leagues/{leagueId}/rosters/{uid}` — rose
 | Campo | Tipo | Note |
@@ -110,8 +110,9 @@ Scrive solo il Presidente. Durante l'asta la rosa si può salvare anche incomple
 | `starters` | map | `P, S1, S2, C1, C2, O, L` → playerId |
 | `bench` | list | 5 playerId |
 | `captain` | string | Uno dei titolari |
+| `savedAt` | timestamp | Data del server del salvataggio |
 
-Ognuno scrive solo la propria, e solo prima di `lockAt`. I giocatori devono essere della propria rosa (completa), nel ruolo giusto, senza doppioni; la panchina sono gli altri 5. Le formazioni degli altri si vedono solo dopo la scadenza. Per una nuova giornata l'app riparte dalla formazione precedente.
+Ognuno scrive solo la propria, e solo prima di `lockAt`. I trasferimenti di mercato registrati dopo `savedAt` e prima della scadenza sostituiscono nella formazione i giocatori partiti. I giocatori devono essere della propria rosa (completa), nel ruolo giusto, senza doppioni; la panchina sono gli altri 5. Le formazioni degli altri si vedono solo dopo la scadenza. Per una nuova giornata l'app riparte dalla formazione precedente.
 
 ### `leagues/{leagueId}/schedule/main` — calendario degli scontri diretti
 | Campo | Tipo | Note |
@@ -120,7 +121,7 @@ Ognuno scrive solo la propria, e solo prima di `lockAt`. I giocatori devono esse
 | `rounds` | map | `giornata → [{ a, b }]` (Firestore non accetta liste dentro liste); `MEDIA` è la Squadra media |
 | `createdAt`, `createdBy` | | |
 
-Solo per le leghe `scontri`. Lo genera il Presidente prima della giornata di inizio, oppure un admin al primo calcolo se manca. Girone all'italiana ripetuto a ciclo fino all'ultima giornata; con squadre dispari entra la Squadra media, che prende la media dei punti della giornata. Una volta generato, nella lega non entra più nessuno (come nel FantaLVF).
+Solo per le leghe `scontri`. Lo genera il Presidente una sola volta prima della giornata di inizio, oppure un admin al primo calcolo se manca; dopo lo può cambiare solo un admin. Girone all'italiana ripetuto a ciclo fino all'ultima giornata; con squadre dispari entra la Squadra media, che prende la media dei punti della giornata. Una volta generato, nella lega non entra più nessuno (come nel FantaLVF).
 
 ## Mercato (Modalità Leghe FantaLVF)
 

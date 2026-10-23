@@ -44,6 +44,7 @@ const lineup = (matchday, uid, overrides = {}) => ({
     starters: { P: 'p1', S1: 's1', S2: 's2', C1: 'c1', C2: 'c2', O: 'o1', L: 'l1' },
     bench: ['p2', 's3', 's4', 'c3', 'o2'],
     captain: 's1',
+    savedAt: serverTimestamp(),
     ...overrides,
 });
 
@@ -76,8 +77,8 @@ beforeEach(async () => {
             createdAt: Timestamp.now(),
         });
         await setDoc(doc(db, `leagueCodes/${CODE}`), { leagueId: LEAGUE });
-        await setDoc(doc(db, `leagues/${LEAGUE}/members/pres`), { teamName: 'Presidenti', code: CODE, joinedAt: Timestamp.now() });
-        await setDoc(doc(db, `leagues/${LEAGUE}/members/anna`), { teamName: 'Anna Team', code: CODE, joinedAt: Timestamp.now() });
+        await setDoc(doc(db, `leagues/${LEAGUE}/members/pres`), { teamName: 'Presidenti', code: CODE, joinedAt: serverTimestamp() });
+        await setDoc(doc(db, `leagues/${LEAGUE}/members/anna`), { teamName: 'Anna Team', code: CODE, joinedAt: serverTimestamp() });
         await setDoc(doc(db, `leagues/${LEAGUE}/rosters/anna`), roster);
         await setDoc(doc(db, `leagues/${LEAGUE}/rosters/pres`), roster);
         await setDoc(doc(db, `leagues/${LEAGUE}/lineups/2_pres`), lineup(2, 'pres'));
@@ -108,7 +109,7 @@ describe('creazione lega e codici invito', () => {
         code: '654321',
         presidentUid,
         settings: { budget: 300, mode: 'scontri', startMatchday: 3 },
-        createdAt: Timestamp.now(),
+        createdAt: serverTimestamp(),
     });
 
     test('chiunque abbia fatto l\'accesso crea una lega di cui è Presidente', async () => {
@@ -116,7 +117,7 @@ describe('creazione lega e codici invito', () => {
         const batch = writeBatch(db);
         batch.set(doc(db, 'leagues/lega2'), newLeague('marco'));
         batch.set(doc(db, 'leagueCodes/654321'), { leagueId: 'lega2' });
-        batch.set(doc(db, 'leagues/lega2/members/marco'), { teamName: 'Marco FC', code: '654321', joinedAt: Timestamp.now() });
+        batch.set(doc(db, 'leagues/lega2/members/marco'), { teamName: 'Marco FC', code: '654321', joinedAt: serverTimestamp() });
         await assertSucceeds(batch.commit());
     });
 
@@ -141,19 +142,19 @@ describe('creazione lega e codici invito', () => {
 describe('ingresso nella lega', () => {
     test('si entra con il codice giusto', async () => {
         await assertSucceeds(setDoc(doc(as('marco'), `leagues/${LEAGUE}/members/marco`), {
-            teamName: 'Marco FC', code: CODE, joinedAt: Timestamp.now(),
+            teamName: 'Marco FC', code: CODE, joinedAt: serverTimestamp(),
         }));
     });
 
     test('con un codice sbagliato no', async () => {
         await assertFails(setDoc(doc(as('marco'), `leagues/${LEAGUE}/members/marco`), {
-            teamName: 'Marco FC', code: '000000', joinedAt: Timestamp.now(),
+            teamName: 'Marco FC', code: '000000', joinedAt: serverTimestamp(),
         }));
     });
 
     test('non si iscrive qualcun altro', async () => {
         await assertFails(setDoc(doc(as('marco'), `leagues/${LEAGUE}/members/luca`), {
-            teamName: 'Luca FC', code: CODE, joinedAt: Timestamp.now(),
+            teamName: 'Luca FC', code: CODE, joinedAt: serverTimestamp(),
         }));
     });
 
@@ -167,19 +168,19 @@ describe('le mie leghe', () => {
     test('entrando in una lega la si aggiunge alle proprie', async () => {
         const db = as('marco');
         const batch = writeBatch(db);
-        batch.set(doc(db, `leagues/${LEAGUE}/members/marco`), { teamName: 'Marco FC', code: CODE, joinedAt: Timestamp.now() });
-        batch.set(doc(db, `users/marco/leagues/${LEAGUE}`), { joinedAt: Timestamp.now() });
+        batch.set(doc(db, `leagues/${LEAGUE}/members/marco`), { teamName: 'Marco FC', code: CODE, joinedAt: serverTimestamp() });
+        batch.set(doc(db, `users/marco/leagues/${LEAGUE}`), { joinedAt: serverTimestamp() });
         await assertSucceeds(batch.commit());
         await assertSucceeds(getDocs(collection(db, 'users/marco/leagues')));
     });
 
     test('non si aggiunge una lega in cui non si è entrati', async () => {
-        await assertFails(setDoc(doc(as('marco'), `users/marco/leagues/${LEAGUE}`), { joinedAt: Timestamp.now() }));
+        await assertFails(setDoc(doc(as('marco'), `users/marco/leagues/${LEAGUE}`), { joinedAt: serverTimestamp() }));
     });
 
     test('non si leggono né si scrivono le leghe di un altro', async () => {
         await assertFails(getDocs(collection(as('marco'), 'users/anna/leagues')));
-        await assertFails(setDoc(doc(as('marco'), `users/anna/leagues/${LEAGUE}`), { joinedAt: Timestamp.now() }));
+        await assertFails(setDoc(doc(as('marco'), `users/anna/leagues/${LEAGUE}`), { joinedAt: serverTimestamp() }));
     });
 });
 
@@ -284,7 +285,7 @@ describe('formazioni', () => {
 describe('ruolo Admin', () => {
     const giocatore = {
         name: 'Simone Giannelli', team: 'Sir Susa Scai Perugia', teamId: 6865, role: 'P',
-        number: 6, birthYear: 1996, nationality: 'ITA', photo: 'https://example.org/f.jpg', active: true,
+        number: 6, birthYear: 1996, nationality: 'ITA', photo: 'https://www.legavolley.it/Foto.aspx?Key=GIA-SIM-96', active: true,
     };
 
     test('nessuno si nomina admin dall\'app', async () => {
@@ -360,7 +361,7 @@ describe('scontri diretti', () => {
                     settings: { budget: 300, mode: 'scontri', startMatchday: start }, createdAt: Timestamp.now(),
                 });
                 await setDoc(doc(db, `leagueCodes/${code}`), { leagueId: id });
-                await setDoc(doc(db, `leagues/${id}/members/pres`), { teamName: 'Presidenti', code, joinedAt: Timestamp.now() });
+                await setDoc(doc(db, `leagues/${id}/members/pres`), { teamName: 'Presidenti', code, joinedAt: serverTimestamp() });
             }
         });
     });
@@ -374,26 +375,43 @@ describe('scontri diretti', () => {
         await assertSucceeds(setDoc(doc(as('boss'), 'leagues/lega-iniziata/schedule/main'), calendario));
     });
 
+    test('dopo la creazione il calendario lo cambia solo un admin', async () => {
+        await setDoc(doc(as('pres'), `leagues/${SCONTRI}/schedule/main`), calendario);
+        await assertFails(setDoc(doc(as('pres'), `leagues/${SCONTRI}/schedule/main`), { ...calendario, rounds: {} }));
+        await assertSucceeds(setDoc(doc(as('boss'), `leagues/${SCONTRI}/schedule/main`), { ...calendario, rounds: {} }));
+    });
+
+    test("dopo l'inizio il Presidente non cambia giornata di inizio né tipo di lega", async () => {
+        await assertFails(updateDoc(doc(as('pres'), 'leagues/lega-iniziata'), { 'settings.startMatchday': 22 }));
+        await assertFails(updateDoc(doc(as('pres'), 'leagues/lega-iniziata'), { 'settings.mode': 'classifica' }));
+        await assertSucceeds(updateDoc(doc(as('pres'), 'leagues/lega-iniziata'), { 'settings.budget': 400 }), 'il budget sì');
+    });
+
+    test('con il calendario generato la giornata di inizio non si cambia più', async () => {
+        await setDoc(doc(as('pres'), `leagues/${SCONTRI}/schedule/main`), calendario);
+        await assertFails(updateDoc(doc(as('pres'), `leagues/${SCONTRI}`), { 'settings.startMatchday': 3 }));
+    });
+
     test('un partecipante non scrive il calendario', async () => {
         await assertFails(setDoc(doc(as('anna'), `leagues/${SCONTRI}/schedule/main`), calendario));
     });
 
     test('senza calendario si entra, con il calendario generato no', async () => {
-        const entra = uid => setDoc(doc(as(uid), `leagues/${SCONTRI}/members/${uid}`), { teamName: uid, code: '222222', joinedAt: Timestamp.now() });
+        const entra = uid => setDoc(doc(as(uid), `leagues/${SCONTRI}/members/${uid}`), { teamName: uid, code: '222222', joinedAt: serverTimestamp() });
         await assertSucceeds(entra('marco'));
         await env.withSecurityRulesDisabled(ctx => setDoc(doc(ctx.firestore(), `leagues/${SCONTRI}/schedule/main`), calendario));
         await assertFails(entra('luca'));
     });
 
     test('nella classifica generale si entra anche a campionato iniziato', async () => {
-        await assertSucceeds(setDoc(doc(as('marco'), `leagues/${LEAGUE}/members/marco`), { teamName: 'Marco FC', code: CODE, joinedAt: Timestamp.now() }));
+        await assertSucceeds(setDoc(doc(as('marco'), `leagues/${LEAGUE}/members/marco`), { teamName: 'Marco FC', code: CODE, joinedAt: serverTimestamp() }));
     });
 });
 
 describe('mercato', () => {
-    const offerta = (uid, extra = 5) => ({ uid, playerIn: 'sx', playerOut: 's1', role: 'S', extra, status: 'active', createdAt: Timestamp.now(), updatedAt: Timestamp.now() });
+    const offerta = (uid, extra = 5) => ({ uid, playerIn: 'sx', playerOut: 's1', role: 'S', extra, status: 'active', createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
     const offRef = (db, n, uid) => doc(db, `leagues/${LEAGUE}/markets/${n}/offers/${uid}_sx`);
-    const scambio = { from: 'pres', to: 'anna', give: 's2', take: 's3', role: 'S', extra: 10, status: 'proposed', matchday: 1, createdAt: Timestamp.now(), updatedAt: Timestamp.now() };
+    const scambio = { from: 'pres', to: 'anna', give: 's2', take: 's3', role: 'S', extra: 10, status: 'proposed', matchday: 1, createdAt: serverTimestamp(), updatedAt: serverTimestamp() };
 
     beforeEach(async () => {
         await env.withSecurityRulesDisabled(async ctx => {
@@ -429,30 +447,39 @@ describe('mercato', () => {
 
     test('chi ha fatto l\'offerta la cambia o la ritira, ma non cambia il giocatore richiesto', async () => {
         await setDoc(offRef(as('anna'), 1, 'anna'), offerta('anna'));
-        await assertSucceeds(updateDoc(offRef(as('anna'), 1, 'anna'), { extra: 20, updatedAt: Timestamp.now() }));
+        await assertSucceeds(updateDoc(offRef(as('anna'), 1, 'anna'), { extra: 20, updatedAt: serverTimestamp() }));
         await assertFails(updateDoc(offRef(as('anna'), 1, 'anna'), { playerIn: 'sy' }));
-        await assertSucceeds(updateDoc(offRef(as('anna'), 1, 'anna'), { status: 'withdrawn', updatedAt: Timestamp.now() }));
-        await assertSucceeds(updateDoc(offRef(as('anna'), 1, 'anna'), { status: 'active', extra: 3, updatedAt: Timestamp.now() }), 'e la rifà');
+        await assertSucceeds(updateDoc(offRef(as('anna'), 1, 'anna'), { status: 'withdrawn', updatedAt: serverTimestamp() }));
+        await assertSucceeds(updateDoc(offRef(as('anna'), 1, 'anna'), { status: 'active', extra: 3, updatedAt: serverTimestamp() }), 'e la rifà');
     });
 
     test('il Presidente segna l\'esito solo dopo la chiusura', async () => {
-        await assertSucceeds(updateDoc(offRef(as('pres'), 2, 'anna'), { status: 'won', updatedAt: Timestamp.now() }));
+        await assertSucceeds(updateDoc(offRef(as('pres'), 2, 'anna'), { status: 'won', updatedAt: serverTimestamp() }));
         await setDoc(offRef(as('anna'), 1, 'anna'), offerta('anna'));
-        await assertFails(updateDoc(offRef(as('pres'), 1, 'anna'), { status: 'won', updatedAt: Timestamp.now() }));
-        await assertFails(updateDoc(offRef(as('anna'), 2, 'anna'), { status: 'won', updatedAt: Timestamp.now() }), 'non da solo');
+        await assertFails(updateDoc(offRef(as('pres'), 1, 'anna'), { status: 'won', updatedAt: serverTimestamp() }));
+        await assertFails(updateDoc(offRef(as('anna'), 2, 'anna'), { status: 'won', updatedAt: serverTimestamp() }), 'non da solo');
     });
 
     test('scambi: si propone tra giocatori dello stesso ruolo, l\'altro accetta o rifiuta', async () => {
         await assertSucceeds(setDoc(doc(as('pres'), `leagues/${LEAGUE}/trades/t1`), scambio));
         await assertFails(setDoc(doc(as('pres'), `leagues/${LEAGUE}/trades/t2`), { ...scambio, take: 'c1' }), 'ruolo diverso');
-        await assertFails(updateDoc(doc(as('pres'), `leagues/${LEAGUE}/trades/t1`), { status: 'accepted', updatedAt: Timestamp.now() }), 'non si accetta da soli');
-        await assertSucceeds(updateDoc(doc(as('anna'), `leagues/${LEAGUE}/trades/t1`), { status: 'accepted', updatedAt: Timestamp.now() }));
+        await assertFails(updateDoc(doc(as('pres'), `leagues/${LEAGUE}/trades/t1`), { status: 'accepted', updatedAt: serverTimestamp() }), 'non si accetta da soli');
+        await assertSucceeds(updateDoc(doc(as('anna'), `leagues/${LEAGUE}/trades/t1`), { status: 'accepted', updatedAt: serverTimestamp() }));
         await assertFails(getDoc(doc(as('marco'), `leagues/${LEAGUE}/trades/t1`)), 'chi non c\'entra non lo vede');
     });
 
+    test('il rilancio chiude la proposta ricevuta e parte la controproposta nella stessa scrittura', async () => {
+        await setDoc(doc(as('pres'), `leagues/${LEAGUE}/trades/t1`), scambio);
+        const db = as('anna');
+        const batch = writeBatch(db);
+        batch.update(doc(db, `leagues/${LEAGUE}/trades/t1`), { status: 'countered', updatedAt: serverTimestamp() });
+        batch.set(doc(db, `leagues/${LEAGUE}/trades/t2`), { ...scambio, from: 'anna', to: 'pres', give: 's3', take: 's2', extra: 0, counterOf: 't1' });
+        await assertSucceeds(batch.commit());
+    });
+
     test('gli scambi accettati li applica solo il Presidente', async () => {
-        await assertFails(updateDoc(doc(as('anna'), `leagues/${LEAGUE}/trades/accettato`), { status: 'executed', updatedAt: Timestamp.now() }));
-        await assertSucceeds(updateDoc(doc(as('pres'), `leagues/${LEAGUE}/trades/accettato`), { status: 'executed', updatedAt: Timestamp.now() }));
+        await assertFails(updateDoc(doc(as('anna'), `leagues/${LEAGUE}/trades/accettato`), { status: 'executed', updatedAt: serverTimestamp() }));
+        await assertSucceeds(updateDoc(doc(as('pres'), `leagues/${LEAGUE}/trades/accettato`), { status: 'executed', updatedAt: serverTimestamp() }));
     });
 
     test('il registro dei movimenti lo scrive il Presidente e lo leggono tutti i membri', async () => {
@@ -461,6 +488,30 @@ describe('mercato', () => {
         await assertFails(setDoc(doc(as('anna'), `leagues/${LEAGUE}/transfers/m2`), mov));
         await assertSucceeds(getDocs(collection(as('anna'), `leagues/${LEAGUE}/transfers`)));
         await assertFails(getDocs(collection(as('marco'), `leagues/${LEAGUE}/transfers`)));
+    });
+});
+
+describe('protezioni aggiunte con la revisione', () => {
+    test('la data di iscrizione la mette il server, non il browser', async () => {
+        await assertFails(setDoc(doc(as('marco'), `leagues/${LEAGUE}/members/marco`), {
+            teamName: 'Marco FC', code: CODE, joinedAt: Timestamp.fromMillis(Date.UTC(2099, 0, 1)),
+        }));
+    });
+
+    test("la formazione porta l'ora di salvataggio del server", async () => {
+        const { savedAt, ...senza } = lineup(1, 'anna');
+        await assertFails(setDoc(doc(as('anna'), `leagues/${LEAGUE}/lineups/1_anna`), senza));
+    });
+
+    test('la scadenza di una giornata già bloccata non si sposta, nemmeno da un admin', async () => {
+        await assertFails(updateDoc(doc(as('boss'), 'matchdays/2'), { lockAt: future }));
+        await assertSucceeds(updateDoc(doc(as('boss'), 'matchdays/2'), { status: 'scored' }), 'gli altri campi sì');
+    });
+
+    test('le foto dei giocatori arrivano solo dal sito della Lega', async () => {
+        const g = { name: 'X', team: 'Y', role: 'P', active: true };
+        await assertSucceeds(setDoc(doc(as('boss'), 'players/ok'), { ...g, photo: 'https://www.legavolley.it/Foto.aspx?Key=X' }));
+        await assertFails(setDoc(doc(as('boss'), 'players/ko'), { ...g, photo: 'https://altro-sito.example/traccia.gif' }));
     });
 });
 

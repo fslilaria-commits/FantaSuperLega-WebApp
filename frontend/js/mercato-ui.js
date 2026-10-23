@@ -14,10 +14,6 @@ function finestraCorrente() {
     return { ...f, sospeso, aperto: f.aperto && !sospeso, offerteAperte: f.offerteAperte && !sospeso };
 }
 
-function mioRoster() {
-    return state.rosters[state.user?.uid];
-}
-
 // Giocatori della mia rosa già impegnati in un'offerta attiva o in uno scambio proposto
 function impegnati(tranne) {
     const ids = new Set();
@@ -27,7 +23,7 @@ function impegnati(tranne) {
 }
 
 function creditiDisponibili(tranne) {
-    const rosa = mioRoster();
+    const rosa = myRoster();
     const offerte = Mercato.creditiImpegnati(mercatoDati.offerte, state.user.uid, tranne);
     const scambi = mercatoDati.scambiInviati
         .filter(t => ['proposed', 'accepted'].includes(t.status) && t.id !== tranne)
@@ -48,6 +44,7 @@ async function caricaMercatoPersonale(f) {
             db.collection(`${base}/trades`).where('to', '==', state.user.uid).get(),
             db.collection(`${base}/trades`).where('from', '==', state.user.uid).get(),
         ]);
+        if (mercatoDati.key !== key) return; // nel frattempo è cambiata lega o finestra
         mercatoDati.offerte = offerte.docs.map(d => ({ id: d.id, ...d.data() }));
         const recenti = docs => docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (b.createdAt?.toMillis?.() ?? 0) - (a.createdAt?.toMillis?.() ?? 0));
         mercatoDati.scambiRicevuti = recenti(ricevuti.docs);
@@ -91,10 +88,10 @@ function nomeGiocatore(id) {
 
 function renderMieOfferte(f) {
     const box = document.getElementById('myOffers');
-    const rosa = mioRoster();
+    const rosa = myRoster();
     const visibili = mercatoDati.offerte.filter(o => o.status !== 'withdrawn' || f.offerteAperte);
     if (!visibili.length) {
-        box.replaceChildren(el('p', { class: 'admin-sub' }, f.offerteAperte
+        riempi(box, el('p', { class: 'admin-sub' }, f.offerteAperte
             ? 'Nessuna offerta. Nel listone, accanto agli svincolati, trovi "Fai un\'offerta".'
             : 'Nessuna offerta in questa finestra.'));
         return;
@@ -103,7 +100,7 @@ function renderMieOfferte(f) {
     // Dopo l'assegnazione il giocatore lasciato non è più in rosa: per le vinte vale il prezzo del nuovo arrivato
     const valore = o => (o.status === 'won' ? rosa?.prices?.[o.playerIn]
         : rosa?.prices?.[o.playerOut] !== undefined ? rosa.prices[o.playerOut] + o.extra : null);
-    box.replaceChildren(...visibili.map(o => el('div', { class: 'market-row' },
+    riempi(box, visibili.map(o => el('div', { class: 'market-row' },
         el('div', {},
             el('strong', {}, nomeGiocatore(o.playerIn)),
             el('small', { class: 'admin-sub' }, ` · lasci ${state.playersById[o.playerOut]?.name || o.playerOut} · +${o.extra} crediti${valore(o) != null ? ` · valore ${valore(o)}` : ''}`),
@@ -138,19 +135,19 @@ function renderScambi(f) {
         ...mercatoDati.scambiRicevuti.slice(0, 10).map(t => riga(t, true)),
         ...mercatoDati.scambiInviati.slice(0, 10).map(t => riga(t, false)),
     ];
-    box.replaceChildren(...(righe.length ? righe : [el('p', { class: 'admin-sub' }, f.aperto
+    riempi(box, righe.length ? righe : el('p', { class: 'admin-sub' }, f.aperto
         ? 'Nessuno scambio. Nel listone, accanto ai giocatori delle altre squadre, trovi "Proponi scambio".'
-        : 'Nessuno scambio.')]));
+        : 'Nessuno scambio.'));
 }
 
 function renderMovimenti() {
     const box = document.getElementById('transfersList');
     document.getElementById('transfersBox').hidden = !state.league;
     if (!state.transfers.length) {
-        box.replaceChildren(el('p', { class: 'admin-sub' }, 'Ancora nessun movimento.'));
+        riempi(box, el('p', { class: 'admin-sub' }, 'Ancora nessun movimento.'));
         return;
     }
-    box.replaceChildren(el('ul', {}, state.transfers.slice(0, 50).map(m => el('li', {},
+    riempi(box, el('ul', {}, state.transfers.slice(0, 50).map(m => el('li', {},
         `${new Date(m.at).toLocaleDateString('it-IT')} · ${nomeSquadra(m.uid)}: `,
         el('strong', {}, state.playersById[m.playerIn]?.name || m.playerIn),
         ` al posto di ${state.playersById[m.playerOut]?.name || m.playerOut} (${m.tipo}, valore ${m.valore})`))));
@@ -160,11 +157,12 @@ function renderMovimenti() {
 function azioneMercato(p, ownerUid) {
     if (!state.league) return null;
     const f = finestraCorrente();
-    const rosa = mioRoster();
+    const rosa = myRoster();
     if (!FormazioneCheck.isRosterComplete(rosa)) return null;
     if (!ownerUid && f.offerteAperte) {
-        const giaFatta = mercatoDati.offerte.find(o => o.playerIn === p.id && o.status === 'active');
-        return el('button', { class: 'btn btn-secondary btn-small', onclick: () => apriOfferta(p, giaFatta) }, giaFatta ? 'Modifica offerta' : "Fai un'offerta");
+        const giaFatta = mercatoDati.offerte.find(o => o.playerIn === p.id && ['active', 'withdrawn'].includes(o.status));
+        const testo = giaFatta?.status === 'active' ? 'Modifica offerta' : giaFatta ? "Rifai l'offerta" : "Fai un'offerta";
+        return el('button', { class: 'btn btn-secondary btn-small', onclick: () => apriOfferta(p, giaFatta) }, testo);
     }
     if (ownerUid && ownerUid !== state.user.uid && f.aperto) {
         return el('button', { class: 'btn btn-secondary btn-small', onclick: () => apriScambio(p, ownerUid) }, 'Proponi scambio');
@@ -173,11 +171,11 @@ function azioneMercato(p, ownerUid) {
 }
 
 function riempiGiocatoriDaLasciare(ruolo, preselezionato, tranne) {
-    const rosa = mioRoster();
+    const rosa = myRoster();
     const occupati = impegnati(tranne);
     const select = document.getElementById('marketGive');
     const opzioni = (rosa[ruolo] || []).filter(id => !occupati.has(id) || id === preselezionato);
-    select.replaceChildren(...opzioni.map(id => el('option', { value: id, selected: id === preselezionato },
+    riempi(select, opzioni.map(id => el('option', { value: id, selected: id === preselezionato },
         `${state.playersById[id]?.name || id} · valore ${rosa.prices?.[id] ?? 0}`)));
     return opzioni.length;
 }
@@ -188,7 +186,7 @@ function apriOfferta(player, offerta) {
     document.getElementById('marketDialogInfo').textContent = `${ROLE_NAMES[player.role]} · ${player.team}. Offerta segreta: vince la più alta (valore del giocatore lasciato + crediti); a parità chi è più in basso in classifica.`;
     const n = riempiGiocatoriDaLasciare(player.role, offerta?.playerOut, offerta?.id);
     document.getElementById('marketExtra').value = offerta?.extra ?? 0;
-    document.getElementById('marketSubmit').textContent = offerta ? 'Aggiorna offerta' : 'Invia offerta';
+    document.getElementById('marketSubmit').textContent = offerta?.status === 'active' ? 'Aggiorna offerta' : 'Invia offerta';
     document.getElementById('marketDialogError').textContent = n ? '' : `Nessun ${ROLE_NAMES[player.role].toLowerCase()} libero da lasciare: sono già tutti in altre offerte o scambi.`;
     aggiornaValoreDialogo();
     document.getElementById('marketDialog').hidden = false;
@@ -208,7 +206,7 @@ function apriScambio(player, ownerUid, counterOf, giveSuggerito) {
 
 function aggiornaValoreDialogo() {
     if (!dialogo) return;
-    const rosa = mioRoster();
+    const rosa = myRoster();
     const give = document.getElementById('marketGive').value;
     const extra = parseInt(document.getElementById('marketExtra').value, 10) || 0;
     const disponibili = creditiDisponibili(dialogo.offerta?.id);
@@ -246,10 +244,14 @@ async function inviaDialogo(e) {
             else await ref.set({ uid: state.user.uid, playerIn: dialogo.player.id, playerOut: give, role: dialogo.player.role, extra, status: 'active', createdAt: now, updatedAt: now });
         } else {
             const proposta = { from: state.user.uid, to: dialogo.owner, give, take: dialogo.player.id, role: dialogo.player.role, extra, status: 'proposed', matchday: f.matchday, createdAt: now, updatedAt: now };
-            if (dialogo.counterOf) proposta.counterOf = dialogo.counterOf;
-            await db.collection(`${base}/trades`).add(proposta);
-            // Il rilancio chiude la proposta ricevuta solo quando la controproposta parte davvero
-            if (dialogo.counterOf) await db.doc(`${base}/trades/${dialogo.counterOf}`).update({ status: 'countered', updatedAt: now });
+            const batch = db.batch();
+            if (dialogo.counterOf) {
+                // Il rilancio chiude la proposta ricevuta nello stesso momento in cui parte la controproposta
+                proposta.counterOf = dialogo.counterOf;
+                batch.update(db.doc(`${base}/trades/${dialogo.counterOf}`), { status: 'countered', updatedAt: now });
+            }
+            batch.set(db.collection(`${base}/trades`).doc(), proposta);
+            await batch.commit();
         }
         chiudiDialogo();
         mercatoDati.key = null;
@@ -262,28 +264,30 @@ async function inviaDialogo(e) {
     }
 }
 
-async function ritiraOfferta(o) {
-    const f = finestraCorrente();
-    await db.doc(`leagues/${state.league.id}/markets/${f.matchday}/offers/${o.id}`)
-        .update({ status: 'withdrawn', updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
-    mercatoDati.key = null;
-    await renderMercato();
-}
-
-async function rispondiScambio(t, stato) {
+// Cambia lo stato di un'offerta o di uno scambio e ricarica il mercato; se non riesce lo dice
+async function aggiornaStato(percorso, stato, errore) {
+    let riuscito = true;
     try {
-        await db.doc(`leagues/${state.league.id}/trades/${t.id}`).update({ status: stato, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+        await db.doc(percorso).update({ status: stato, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
     } catch (e) {
-        document.getElementById('marketStatus').textContent = 'Risposta non riuscita: il mercato potrebbe essere chiuso.';
+        console.error(e);
+        riuscito = false;
     }
     mercatoDati.key = null;
     await renderMercato();
+    if (!riuscito) document.getElementById('marketStatus').textContent = `${errore}: il mercato potrebbe essere chiuso.`;
 }
 
-async function ritiraScambio(t) {
-    await db.doc(`leagues/${state.league.id}/trades/${t.id}`).update({ status: 'withdrawn', updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
-    mercatoDati.key = null;
-    await renderMercato();
+function ritiraOfferta(o) {
+    return aggiornaStato(`leagues/${state.league.id}/markets/${finestraCorrente().matchday}/offers/${o.id}`, 'withdrawn', 'Ritiro non riuscito');
+}
+
+function rispondiScambio(t, stato) {
+    return aggiornaStato(`leagues/${state.league.id}/trades/${t.id}`, stato, 'Risposta non riuscita');
+}
+
+function ritiraScambio(t) {
+    return aggiornaStato(`leagues/${state.league.id}/trades/${t.id}`, 'withdrawn', 'Ritiro non riuscito');
 }
 
 // Rilancio: rispondi con una tua proposta sugli stessi giocatori
