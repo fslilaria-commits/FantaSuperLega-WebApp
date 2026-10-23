@@ -66,6 +66,7 @@ function initAuth() {
 
         if (!user) {
             Object.assign(state, structuredClone(STATO_VUOTO));
+            chiudiInvito({ svuota: true });
             switchTab('welcome');
             return;
         }

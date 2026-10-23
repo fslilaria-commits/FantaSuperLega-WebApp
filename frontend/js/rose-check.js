@@ -17,7 +17,8 @@
     }
 
     // Squadre al massimo in una lega: le rose sono esclusive, quindi decide il ruolo con meno giocatori
-    // nel listone rispetto a quanti ne servono per rosa. players: i giocatori attivi. 0 se il listone è vuoto
+    // nel listone rispetto a quanti ne servono per rosa. players: i giocatori attivi.
+    // 0 se il listone non basta per una rosa intera (vuoto, non caricato, o senza giocatori di un ruolo)
     function maxSquadre(players) {
         const perRuolo = {};
         for (const p of players) perRuolo[p.role] = (perRuolo[p.role] || 0) + 1;
