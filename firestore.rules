@@ -1,12 +1,17 @@
 rules_version = '2';
 
-// Modello dati e motivazioni: docs/modello-dati.md
-// Lo script (Admin SDK) non passa da queste regole: ciò che è "solo script" qui è negato ai client.
+// Modello dati, ruoli e motivazioni: docs/modello-dati.md
+// Ruoli: Admin (dati di gioco), Presidente (la sua lega), Partecipante (la sua squadra), Visitatore.
 service cloud.firestore {
   match /databases/{database}/documents {
 
     function signedIn() {
       return request.auth != null;
+    }
+
+    // Gli admin si nominano solo dalla console Firebase (collezione admins, documento = uid)
+    function isAdmin() {
+      return signedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
     }
 
     function league(leagueId) {
@@ -26,20 +31,41 @@ service cloud.firestore {
       return value is string && value.size() > 0 && value.size() <= maxLen;
     }
 
-    // Listone: pubblico, aggiornato solo dallo script
-    match /players/{playerId} {
-      allow read: if true;
-      allow write: if false;
+    // Elenco admin: ognuno può solo verificare se è admin; nessuna scrittura dall'app
+    match /admins/{uid} {
+      allow get: if signedIn() && uid == request.auth.uid;
+      allow list, write: if false;
     }
 
-    // Giornate e statistiche: aggiornate solo dallo script
+    // Listone: pubblico, aggiornato dagli admin dal pannello
+    match /players/{playerId} {
+      function validPlayer(d) {
+        return d.keys().hasOnly(['name', 'team', 'teamId', 'role', 'number', 'birthYear', 'nationality', 'photo', 'active', 'updatedAt'])
+          && isString(d.name, 80)
+          && isString(d.team, 80)
+          && d.role in ['P', 'S', 'C', 'O', 'L']
+          && d.active is bool;
+      }
+
+      allow read: if true;
+      allow create, update: if isAdmin() && validPlayer(request.resource.data);
+      allow delete: if false;
+    }
+
+    // Informazioni sugli aggiornamenti (ultimo listone applicato, ecc.)
+    match /meta/{docId} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    // Giornate e statistiche: gestite dagli admin
     match /matchdays/{n} {
       allow read: if signedIn();
-      allow write: if false;
+      allow write: if isAdmin();
 
       match /stats/{playerId} {
         allow read: if signedIn();
-        allow write: if false;
+        allow write: if isAdmin();
       }
     }
 
@@ -72,7 +98,7 @@ service cloud.firestore {
           && d.createdAt is timestamp;
       }
 
-      allow read: if isMember(leagueId) || isPresident(leagueId);
+      allow read: if isMember(leagueId) || isPresident(leagueId) || isAdmin();
       allow create: if signedIn()
         && request.resource.data.presidentUid == request.auth.uid
         && validLeague(request.resource.data);
@@ -163,14 +189,15 @@ service cloud.firestore {
         allow delete: if false;
       }
 
+      // Punteggi e classifica: li calcolano gli admin a partire dai tabellini ufficiali
       match /scores/{scoreId} {
-        allow read: if isMember(leagueId);
-        allow write: if false;
+        allow read: if isMember(leagueId) || isAdmin();
+        allow write: if isAdmin();
       }
 
       match /standings/{uid} {
-        allow read: if isMember(leagueId);
-        allow write: if false;
+        allow read: if isMember(leagueId) || isAdmin();
+        allow write: if isAdmin();
       }
     }
   }

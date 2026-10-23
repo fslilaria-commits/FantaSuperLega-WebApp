@@ -1,9 +1,10 @@
 {
   "name": "fanta-superlega",
   "private": true,
-  "description": "Strumenti di sviluppo: test delle regole Firestore con l'emulatore",
+  "description": "Strumenti di sviluppo: test delle regole Firestore e della logica del pannello Admin",
   "scripts": {
-    "test:rules": "firebase emulators:exec --only firestore --project demo-fantasuperlega \"node --test tests/*.test.mjs\""
+    "test:rules": "firebase emulators:exec --only firestore --project demo-fantasuperlega \"node --test tests/*.test.mjs\"",
+    "test:unit": "node --test tests/unit/*.test.js"
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^6.0.0",
