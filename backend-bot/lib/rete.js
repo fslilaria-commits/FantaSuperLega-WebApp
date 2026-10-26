@@ -1,12 +1,13 @@
-// Scaricamento delle pagine del sito della Lega, uguale per listone, calendario e tabellini.
-// Il sito sta dietro Cloudflare, che può rifiutare le richieste dai server di GitHub: si presentano le
-// intestazioni di un browser normale e, se la pagina viene rifiutata, l'errore dice chi l'ha bloccata e perché.
+// Scaricamento delle pagine del sito della Lega, uguale per stagione, listone, calendario e tabellini.
+// Il bot si presenta per quello che è (nome e indirizzo del progetto) e lascia una pausa tra una pagina e l'altra,
+// come una persona che naviga. Il sito sta dietro Cloudflare, che rifiuta le richieste dai server di GitHub: per
+// questo il bot gira su un PC (docs/bot-pc.md). Se una pagina viene rifiutata, l'errore dice chi l'ha bloccata e perché.
 const INTESTAZIONI = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36',
+    'User-Agent': 'FantaSuperLega-bot/1.0 (+https://github.com/fslilaria-commits/FantaSuperLega-WebApp)',
     Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
     'Accept-Language': 'it-IT,it;q=0.9,en;q=0.8',
-    Referer: 'https://www.legavolley.it/',
 };
+const PAUSA_MS = 1000;
 
 // Messaggio per una risposta non riuscita: stato, chi ha risposto e titolo della pagina d'errore
 function descriviErrore(url, res, testo) {
@@ -25,11 +26,17 @@ function descriviErrore(url, res, testo) {
     return `HTTP ${res.status} per ${url}${dettagli.length ? ` (${dettagli.join(', ')})` : ''}.${spiegazione}`;
 }
 
+let ultimaRichiesta = 0;
+const aspetta = ms => new Promise(r => setTimeout(r, ms));
+
 async function scaricaPagina(url) {
+    const attesa = ultimaRichiesta + PAUSA_MS - Date.now();
+    if (attesa > 0) await aspetta(attesa);
+    ultimaRichiesta = Date.now();
     const res = await fetch(url, { headers: INTESTAZIONI });
     const testo = await res.text();
     if (!res.ok) throw new Error(descriviErrore(url, res, testo));
     return testo;
 }
 
-module.exports = { INTESTAZIONI, descriviErrore, scaricaPagina };
+module.exports = { INTESTAZIONI, PAUSA_MS, descriviErrore, scaricaPagina };

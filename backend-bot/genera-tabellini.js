@@ -48,7 +48,8 @@ async function main() {
             continue;
         }
         const nuovo = JSON.stringify(tabellino, null, 2) + '\n';
-        if (!fs.existsSync(file) || fs.readFileSync(file, 'utf8') !== nuovo) {
+        // Su Windows il file può avere gli a capo \r\n: conta solo il contenuto
+        if (!fs.existsSync(file) || fs.readFileSync(file, 'utf8').replace(/\r\n/g, '\n') !== nuovo) {
             fs.writeFileSync(file, nuovo);
             scritte.push(g.label);
         }

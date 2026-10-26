@@ -133,12 +133,11 @@ async function preparaStagione(dir = DATA, scarica = scaricaPagina) {
     if (esito === 'nuova') {
         for (const nome of DA_TOGLIERE) fs.rmSync(path.join(dir, nome), { recursive: true, force: true });
     }
-    const file = path.join(dir, FILE_STAGIONE);
-    const testo = JSON.stringify(stagione, null, 2) + '\n';
-    const cambiata = !fs.existsSync(file) || fs.readFileSync(file, 'utf8') !== testo;
+    // Si confronta il contenuto, non il testo: su Windows il file può avere gli a capo \r\n
+    const cambiata = JSON.stringify(dati) !== JSON.stringify(stagione);
     if (cambiata) {
         fs.mkdirSync(dir, { recursive: true });
-        fs.writeFileSync(file, testo);
+        fs.writeFileSync(path.join(dir, FILE_STAGIONE), JSON.stringify(stagione, null, 2) + '\n');
     }
     return { esito, stagione, cambiata, avviso };
 }

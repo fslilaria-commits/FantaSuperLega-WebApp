@@ -42,12 +42,17 @@ async function controllaRoutine() {
 
         const giornate = await giornateDaCalcolare();
         righe.push(rigaRoutine(giornate.length ? 'da' : 'ok', giornate.length ? `Punteggi: giornate da calcolare ${giornate.join(', ')}` : 'Punteggi: tutte le giornate scaricate sono già calcolate'));
+        // Se il bot dei dati si è fermato, "tutto aggiornato" vorrebbe dire solo che non è arrivato niente
+        const avvisiBot = await avvisiBotDati().catch(() => []);
+        for (const avviso of avvisiBot) righe.push(rigaRoutine('errore', `Bot dei dati: ${avviso} (guida admin, punto 7)`));
 
         routine = { listone: modificheListone > 0, calendario: modificheCalendario > 0, giornate };
         riempi(lista, righe);
         const daFare = routine.listone || routine.calendario || giornate.length > 0;
         applyBtn.hidden = !daFare;
-        status.textContent = daFare ? 'Controlla le voci e applica.' : 'Tutto aggiornato: niente da fare questa settimana.';
+        status.textContent = daFare ? 'Controlla le voci e applica.'
+            : avvisiBot.length ? 'Niente da applicare, ma i dati della Lega potrebbero non essere aggiornati: vedi il bot dei dati qui sopra.'
+                : 'Tutto aggiornato: niente da fare questa settimana.';
     } catch (e) {
         riempi(lista, righe, rigaRoutine('errore', e.message));
         status.textContent = '';

@@ -7,8 +7,8 @@ Fantavolley sulla SuperLega maschile, per leghe private tra amici. Le regole seg
 | Cartella | Contenuto |
 |---|---|
 | `frontend/` | App web statica (HTML, CSS, JS) con Firebase Auth e Firestore |
-| `backend-bot/` | Script Node che scaricano dal sito della Lega listone, calendario e tabellini in `data/` (non scrivono su Firestore) |
-| `.github/workflows/` | Aggiornamento settimanale dei dati (`aggiorna-dati.yaml`) e test a ogni pull request (`test.yaml`) |
+| `backend-bot/` | Script Node che scaricano dal sito della Lega listone, calendario e tabellini in `data/` (non scrivono su Firestore); `aggiorna-dati.js` li lancia ogni giorno da un PC |
+| `.github/workflows/` | Aggiornamento dei dati solo a mano (`aggiorna-dati.yaml`) e test a ogni pull request (`test.yaml`) |
 
 ## Avviare il frontend in locale
 
@@ -62,11 +62,13 @@ I ruoli (Admin, Presidente, Partecipante, Visitatore) sono descritti in [`docs/m
 
 ## Aggiornamento di listone, calendario e tabellini
 
-Il workflow **Aggiorna dati SuperLega** (`.github/workflows/aggiorna-dati.yaml`) gira ogni martedì mattina o a mano da **Actions → Aggiorna dati SuperLega → Run workflow**:
-1. legge dal sito della Lega la stagione in corso, il codice della sua regular season e le squadre con i loro codici delle statistiche, e li scrive in `data/stagione.json` (`backend-bot/prepara-stagione.js`). La stagione non sta nel codice: quando la Lega passa a quella nuova, toglie da `data/` le proposte della stagione finita;
-2. legge dal sito della Lega le rose delle squadre di `data/stagione.json` (`backend-bot/genera-listone.js`), il calendario di andata e ritorno (`backend-bot/genera-calendario.js`) e i tabellini delle giornate concluse (`backend-bot/genera-tabellini.js`), sempre e solo della stagione di `data/stagione.json`;
-3. si ferma senza scrivere niente se i dati sembrano sbagliati (squadre con meno di 10 giocatori, più di un quarto dei giocatori spariti, doppioni, giornate o gare mancanti);
-4. se ci sono novità, salva le proposte in `data/` con un commit.
+Ogni giorno lo fa il **bot sul PC**: `backend-bot/aggiorna-dati.js`, lanciato da un'attività pianificata di Windows che si installa con `backend-bot/installa-bot.ps1` (istruzioni in [`docs/bot-pc.md`](docs/bot-pc.md)). Il sito della Lega rifiuta i server di GitHub (Cloudflare), quindi il workflow **Aggiorna dati SuperLega** (`.github/workflows/aggiorna-dati.yaml`) fa le stesse cose ma resta solo per l'avvio a mano. A ogni giro il bot:
+1. allinea la sua copia della repo a GitHub e, se sono cambiate, installa le dipendenze;
+2. legge dal sito della Lega la stagione in corso, il codice della sua regular season e le squadre con i loro codici delle statistiche, e li scrive in `data/stagione.json` (`backend-bot/prepara-stagione.js`). La stagione non sta nel codice: quando la Lega passa a quella nuova, toglie da `data/` le proposte della stagione finita;
+3. legge dal sito della Lega le rose delle squadre di `data/stagione.json` (`backend-bot/genera-listone.js`), il calendario di andata e ritorno (`backend-bot/genera-calendario.js`) e i tabellini delle giornate concluse (`backend-bot/genera-tabellini.js`), sempre e solo della stagione di `data/stagione.json`;
+4. si ferma senza scrivere niente se i dati sembrano sbagliati (squadre con meno di 10 giocatori, più di un quarto dei giocatori spariti, doppioni, giornate o gare mancanti);
+5. scrive in `data/bot.json` se qualcosa non è andato: il sito lo mostra agli admin, insieme ai tabellini in ritardo di 3 giorni;
+6. se ci sono novità, salva su GitHub solo `data/` con un commit. Il bot si presenta con il nome del progetto e lascia un secondo tra una pagina e l'altra.
 
 Nel gioco non cambia niente finché un admin non apre il **pannello Admin → Controlla proposta → Applica aggiornamento**. Il ruolo dei giocatori già presenti non cambia mai da solo e durante la stagione nessuno viene cancellato: chi esce dalla SuperLega diventa non attivo. A ogni stagione nuova un admin usa invece **pannello Admin → Nuova stagione** (vedi `docs/guida-admin.md`, sezione 9). La scadenza di ogni giornata è 1 minuto prima della prima gara; quella di una giornata già bloccata non viene mai spostata.
 
