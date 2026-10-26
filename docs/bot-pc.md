@@ -78,10 +78,13 @@ Il registro di ogni esecuzione è in `%LOCALAPPDATA%\FantaSuperLega-bot\aggiorna
 | «GitHub non ha accettato i dati» | Accesso scaduto o revocato: rilancia `installa-bot.ps1`, che riapre il browser per entrare |
 | «sono cambiati gli stessi dati» | Qualcun altro ha salvato dati nello stesso momento: il bot riprova da solo il giorno dopo |
 | «Cloudflare ha rifiutato la richiesta» | Il sito della Lega non accetta programmi da questa rete: il bot si ferma e riprova il giorno dopo. Se dura, avvisa chi sviluppa (non serve cambiare rete) |
-| «il robots.txt … chiede ai programmi di non leggere» | Il sito della Lega ha vietato una pagina che il bot usa: il bot la salta apposta. Avvisa chi sviluppa |
+| «il robots.txt … chiede ai programmi di non leggere» | Il sito della Lega ha vietato una pagina che il bot usa (anche se ci si arriva da un reindirizzamento): quel passo si ferma apposta e gli altri continuano. Avvisa chi sviluppa |
+| «le colonne della pagina partita non sono quelle attese», «i giocatori non tornano con i totali» | La Lega ha cambiato la pagina delle partite: il bot scarta quella giornata invece di scrivere numeri sbagliati. Avvisa chi sviluppa |
+| «commit non inviati fatti da altri» | Qualcuno ha fatto un commit nella cartella del bot: il bot non lo butta. Mandalo su GitHub o toglilo, poi il bot riparte |
 | «questa non è la cartella del bot» | Il bot è stato lanciato in un'altra copia della repo: lancialo solo nella cartella installata con `installa-bot.ps1` |
 | «un altro aggiornamento è già in corso» | È partito mentre ne girava già uno (per esempio a mano): aspetta che finisca |
-| «Trovato un blocco di git rimasto» | Un aggiornamento era stato interrotto (PC spento a metà): il bot lo sistema da solo, non serve fare niente |
+| «Trovato un blocco di git rimasto» | Un aggiornamento era stato interrotto (PC spento a metà): il bot lo sistema da solo, non serve fare niente. Lo toglie solo se ha più di 10 minuti, così non disturba un git ancora al lavoro |
+| «non ha finito in tempo» | Un comando è rimasto appeso (rete lentissima): il bot si ferma e riprova al prossimo giro |
 | «la pagina potrebbe essere cambiata», «proposta scartata», «calendario scartato» | Il sito della Lega è cambiato o i dati sembrano sbagliati: il bot si ferma apposta e riprova ogni giorno. Se dura, avvisa chi sviluppa |
 | «serve Node.js 20 o più recente» | Aggiorna Node.js |
 

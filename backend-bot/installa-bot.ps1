@@ -51,7 +51,7 @@ if ($origine -match '^[a-z+]+://[^/]*@') {
 & git -C $Radice config credential.useHttpPath true
 # Il bot butta via le modifiche in data/ e riallinea la cartella a GitHub: si segna come cartella del bot solo una
 # copia pulita, su main e senza commit da inviare. Senza il segno aggiorna-dati.js non parte
-if ((& git -C $Radice config --get fsl.cartellaBot) -ne 'true') {
+if ((& git -C $Radice config --local --get fsl.cartellaBot) -ne 'true') {
     $ramo = & git -C $Radice rev-parse --abbrev-ref HEAD
     & git -C $Radice fetch --quiet origin main
     $modifiche = & git -C $Radice status --porcelain
@@ -59,7 +59,7 @@ if ((& git -C $Radice config --get fsl.cartellaBot) -ne 'true') {
     if ($ramo -ne 'main' -or $modifiche -or $daInviare -ne '0') {
         Ferma 'questa cartella ha modifiche, commit da inviare o non è su main: per il bot serve una copia nuova della repo, che userà solo lui (docs/bot-pc.md, passo 2).'
     }
-    & git -C $Radice config fsl.cartellaBot true
+    & git -C $Radice config --local fsl.cartellaBot true
 }
 Write-Host $Radice
 

@@ -1,6 +1,6 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { urlPartita, num, parsePartita, parseRisultato, validiDal, checkTabellino } = require('../lib/tabellini');
+const { urlPartita, num, parsePartita, abbinaSquadre, controllaPartita, parseRisultato, validiDal, checkTabellino } = require('../lib/tabellini');
 
 // Una tabella di squadra come nella pagina partita della Lega (righe vere di Verona – Lube, 1ª giornata 2026/27)
 const riga = celle => `<tr>${celle.map(c => `<td>${c}</td>`).join('')}</tr>`;
@@ -80,6 +80,34 @@ test('senza le due tabelle o senza i totali la partita non ha ancora il tabellin
     assert.equal(parsePartita(pagina(verona)), null);
     assert.equal(parsePartita('<p>Partita non ancora giocata</p>'), null);
     assert.equal(parsePartita(pagina(verona.replace(/<tr><td>Totali squadra.*?<\/tr>/, ''), lube)), null);
+});
+
+test('se la Lega cambia le colonne della pagina ci si ferma invece di leggere numeri sbagliati', () => {
+    assert.throws(() => parsePartita(pagina(verona.replace('Pos%', 'Eff%'), lube)), /Rana Verona: le colonne della pagina partita non sono quelle attese/);
+});
+
+test('le squadre si abbinano per nome; se un nome non torna vale l\'altro; se nessuno torna ci si ferma', () => {
+    const [v, l] = parsePartita(pagina(verona, lube));
+    // anche con la pagina che mette gli ospiti per primi
+    assert.deepEqual(abbinaSquadre([l, v], 'Rana Verona', 'Cucine Lube Civitanova'), [v, l]);
+    assert.deepEqual(abbinaSquadre([v, l], 'Rana  Verona', 'Lube Civitanova'), [v, l], 'spazi diversi e nome ospite diverso');
+    assert.deepEqual(abbinaSquadre([v, l], 'Verona Volley', 'Cucine Lube Civitanova'), [v, l], 'nome di casa diverso');
+    assert.throws(() => abbinaSquadre([v, l], 'Itas Trentino', 'Valsa Group Modena'), /ha Rana Verona e Cucine Lube Civitanova, non Itas Trentino e Valsa Group Modena/);
+    assert.throws(() => abbinaSquadre([v, v], 'Rana Verona', 'Cucine Lube Civitanova'), /non Rana Verona/);
+});
+
+test('i giocatori devono tornare con i totali di squadra e i set con il risultato', () => {
+    const giocatore = (punti, batTot) => ({ points: punti, serve: { tot: batTot, ace: 0, err: 1 }, rec: { tot: 2, err: 0 }, att: { tot: 3, err: 0, blocked: 0, kills: 1 }, block: { pts: 0 } });
+    const squadra = (team, giocatori, set = 3) => ({
+        team, players: giocatori,
+        totals: { set, points: giocatori.reduce((s, p) => s + p.points, 0), serve: { tot: giocatori.reduce((s, p) => s + p.serve.tot, 0), ace: 0, err: giocatori.length }, rec: { tot: 2 * giocatori.length, err: 0 }, att: { tot: 3 * giocatori.length, err: 0, blocked: 0, kills: giocatori.length }, block: { pts: 0 } },
+    });
+    const a = squadra('A', [giocatore(5, 4), giocatore(3, 6)]);
+    const b = squadra('B', [giocatore(2, 5)]);
+    assert.deepEqual(controllaPartita([a, b], { home: 3, away: 0 }), []);
+    const sbagliata = { ...a, totals: { ...a.totals, points: 99 } };
+    assert.match(controllaPartita([sbagliata, b], { home: 3, away: 0 })[0], /A: i giocatori non tornano con i totali di squadra \(points\)/);
+    assert.match(controllaPartita([a, b], { home: 3, away: 1 })[0], /set del tabellino non tornano con il risultato 3-1/);
 });
 
 test('risultati: solo partite concluse', () => {
