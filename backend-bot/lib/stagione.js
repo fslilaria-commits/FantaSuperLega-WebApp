@@ -1,8 +1,7 @@
 // Stagione dei dati in data/stagione.json. Non la decide il codice ma la Lega: a ogni aggiornamento il bot guarda
 // quale stagione mostra il calendario sul sito della Lega e ne ricava
 // - l'anno (2026 = stagione 2026/27) e il codice della sua regular season (campionato: cambia ogni anno);
-// - le squadre: id della loro pagina sul sito (cambia ogni anno), nome e codice nelle statistiche della Lega
-//   (dal link "Statistiche per Giornata 2026/2027" della pagina squadra).
+// - le squadre: id della loro pagina sul sito (cambia ogni anno) e nome.
 // Listone, calendario e tabellini scaricano solo questa stagione. Quando la Lega passa alla stagione nuova, le
 // proposte di quella finita si tolgono prima di scaricare le nuove: il controllo "spariscono troppi giocatori"
 // fermerebbe il listone nuovo, e i tabellini dell'anno prima hanno gli stessi numeri di giornata di quelli nuovi.
@@ -17,7 +16,6 @@ const DATA = path.join(__dirname, '..', '..', 'data');
 const FILE_STAGIONE = 'stagione.json';
 const DA_TOGLIERE = ['players.json', 'calendario.json', 'tabellini'];
 const MIN_SQUADRE = 4;
-const urlSquadra = teamId => `https://www.legavolley.it/team/${teamId}`;
 
 function leggiStagioneDati(dir = DATA) {
     try {
@@ -63,19 +61,6 @@ function parseSquadre(html, stagione) {
     return squadre;
 }
 
-// Dalla pagina di una squadra: il suo codice nelle statistiche della Lega, letto dal link
-// "Statistiche per Giornata 2026/2027"; null se il link di quella stagione non c'è (ancora) o non è chiaro
-function parseCodiceStatistiche(html, anno) {
-    const $ = cheerio.load(html);
-    const codici = new Set();
-    $('a[href*="Squadra="]').each((_, a) => {
-        if (!$(a).text().includes(`${anno}/${anno + 1}`)) return;
-        const codice = ($(a).attr('href').match(/[?&]Squadra=([A-Z0-9-]+)/i) || [])[1];
-        if (codice) codici.add(codice.toUpperCase());
-    });
-    return codici.size === 1 ? [...codici][0] : null;
-}
-
 // 'inizia' se data/stagione.json manca, 'nuova' se la Lega è passata a una stagione successiva, 'uguale' se è la
 // stessa; errore se la Lega mostra una stagione precedente a quella dei dati
 function confrontaStagione(annoDati, annoLega) {
@@ -115,21 +100,7 @@ async function preparaStagione(dir = DATA, scarica = scaricaPagina) {
         esito = 'uguale';
     }
 
-    // Codici delle statistiche: nella stessa stagione si tengono quelli già trovati e si cercano solo quelli che mancano
-    const noti = new Map(esito === 'uguale' ? (dati.squadre || []).map(s => [s.teamId, s.codiceStatistiche]) : []);
-    const squadre = [];
-    for (const s of lega.squadre) {
-        let codice = noti.get(s.teamId) || null;
-        if (!codice) {
-            const pagina = await scarica(urlSquadra(s.teamId)).catch(e => { throw new Error(`${s.team}: ${e.message}`); });
-            codice = parseCodiceStatistiche(pagina, lega.anno);
-        }
-        squadre.push({ ...s, codiceStatistiche: codice });
-    }
-    const codici = squadre.map(s => s.codiceStatistiche).filter(Boolean);
-    if (new Set(codici).size !== codici.length) throw new Error(`stagione ${nomeDi(lega.anno)}: lo stesso codice delle statistiche per due squadre (${codici.join(', ')})`);
-
-    const stagione = { anno: lega.anno, campionato: lega.campionato, squadre };
+    const stagione = { anno: lega.anno, campionato: lega.campionato, squadre: lega.squadre };
     if (esito === 'nuova') {
         for (const nome of DA_TOGLIERE) fs.rmSync(path.join(dir, nome), { recursive: true, force: true });
     }
@@ -143,6 +114,5 @@ async function preparaStagione(dir = DATA, scarica = scaricaPagina) {
 }
 
 module.exports = {
-    DA_TOGLIERE, leggiStagioneDati, stagioneDeiDati, parseStagioneLega, parseSquadre, parseCodiceStatistiche,
-    confrontaStagione, preparaStagione,
+    DA_TOGLIERE, leggiStagioneDati, stagioneDeiDati, parseStagioneLega, parseSquadre, confrontaStagione, preparaStagione,
 };

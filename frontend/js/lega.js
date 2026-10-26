@@ -271,6 +271,11 @@ async function createLeague(e) {
         return;
     }
 
+    const nuova = await stagioneNuovaInAttesa();
+    if (nuova) {
+        status.textContent = `La stagione ${nuova.nome} non è ancora cominciata nel gioco: le leghe nuove si creano dopo che un admin preme «Inizia la stagione». Una lega creata prima verrebbe cancellata insieme alla stagione finita.`;
+        return;
+    }
     status.textContent = 'Creo la lega…';
     const uid = state.user.uid;
     for (let tentativo = 0; tentativo < 5; tentativo++) {

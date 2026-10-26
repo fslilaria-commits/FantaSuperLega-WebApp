@@ -64,11 +64,13 @@ I ruoli (Admin, Presidente, Partecipante, Visitatore) sono descritti in [`docs/m
 
 Ogni giorno lo fa il **bot sul PC**: `backend-bot/aggiorna-dati.js`, lanciato da un'attività pianificata di Windows che si installa con `backend-bot/installa-bot.ps1` (istruzioni in [`docs/bot-pc.md`](docs/bot-pc.md)). Il sito della Lega rifiuta i server di GitHub (Cloudflare), quindi il workflow **Aggiorna dati SuperLega** (`.github/workflows/aggiorna-dati.yaml`) fa le stesse cose ma resta solo per l'avvio a mano. A ogni giro il bot:
 1. allinea la sua copia della repo a GitHub e, se sono cambiate, installa le dipendenze;
-2. legge dal sito della Lega la stagione in corso, il codice della sua regular season e le squadre con i loro codici delle statistiche, e li scrive in `data/stagione.json` (`backend-bot/prepara-stagione.js`). La stagione non sta nel codice: quando la Lega passa a quella nuova, toglie da `data/` le proposte della stagione finita;
-3. legge dal sito della Lega le rose delle squadre di `data/stagione.json` (`backend-bot/genera-listone.js`), il calendario di andata e ritorno (`backend-bot/genera-calendario.js`) e i tabellini delle giornate concluse (`backend-bot/genera-tabellini.js`), sempre e solo della stagione di `data/stagione.json`;
+2. legge dal sito della Lega la stagione in corso, il codice della sua regular season e le squadre, e li scrive in `data/stagione.json` (`backend-bot/prepara-stagione.js`). La stagione non sta nel codice: quando la Lega passa a quella nuova, toglie da `data/` le proposte della stagione finita;
+3. legge dal sito della Lega le rose delle squadre di `data/stagione.json` (`backend-bot/genera-listone.js`), il calendario di andata e ritorno (`backend-bot/genera-calendario.js`) e i tabellini delle giornate concluse dalle pagine delle partite (`backend-bot/genera-tabellini.js`), sempre e solo della stagione di `data/stagione.json`;
 4. si ferma senza scrivere niente se i dati sembrano sbagliati (squadre con meno di 10 giocatori, più di un quarto dei giocatori spariti, doppioni, giornate o gare mancanti);
 5. scrive in `data/bot.json` se qualcosa non è andato: il sito lo mostra agli admin, insieme ai tabellini in ritardo di 3 giorni;
-6. se ci sono novità, salva su GitHub solo `data/` con un commit. Il bot si presenta con il nome del progetto e lascia un secondo tra una pagina e l'altra.
+6. se ci sono novità, salva su GitHub solo `data/` con un commit.
+
+Il bot legge il `robots.txt` del sito e non scarica le pagine che il sito chiede ai programmi di non leggere (`/statistiche/`): per questo i tabellini vengono dalle pagine delle partite (`/match/…`), che hanno gli stessi numeri. Si presenta con il nome del progetto, lascia un secondo tra una pagina e l'altra e, se il sito lo blocca, si ferma senza provare ad aggirare il blocco.
 
 Nel gioco non cambia niente finché un admin non apre il **pannello Admin → Controlla proposta → Applica aggiornamento**. Il ruolo dei giocatori già presenti non cambia mai da solo e durante la stagione nessuno viene cancellato: chi esce dalla SuperLega diventa non attivo. A ogni stagione nuova un admin usa invece **pannello Admin → Nuova stagione** (vedi `docs/guida-admin.md`, sezione 9). La scadenza di ogni giornata è 1 minuto prima della prima gara; quella di una giornata già bloccata non viene mai spostata.
 

@@ -39,8 +39,18 @@ test('gli avvisi per gli admin', () => {
         stato: { esito: 'errore', dal: '2026-10-27T19:30:00Z', errori: ['calendario: HTTP 403', 'tabellini: HTTP 403'] },
     });
     assert.deepEqual(avvisi, [
-        'il bot dei dati ha un problema dal 2026-10-27: calendario: HTTP 403; tabellini: HTTP 403',
-        'i tabellini delle giornate 1, 2 non sono ancora arrivati: controlla che il PC del bot sia acceso',
+        'il bot dei dati ha un problema dal 2026-10-27: calendario: HTTP 403; tabellini: HTTP 403 (guida admin, punto 7)',
+        'i tabellini delle giornate 1, 2 non sono ancora arrivati: controlla che il PC del bot sia acceso (guida admin, punto 7)',
     ]);
     assert.match(avvisiBot({ giornate, conTabellino: [1], stato: null, adesso: new Date('2026-10-28T18:00:00Z') })[0], /^il tabellino della giornata 2 non è ancora arrivato/);
+});
+
+test('in estate, con la Lega già alla stagione nuova, niente falsi ritardi e gli errori del bot sono attesi', () => {
+    const estate = new Date('2027-07-20T18:00:00Z');
+    const stato = { esito: 'errore', dal: '2027-07-10T19:30:00Z', errori: ['listone: solo 3 giocatori'] };
+    assert.deepEqual(avvisiBot({ giornate, conTabellino: [], stato, stagioneNuova: '2027/28', adesso: estate }), [
+        'sul sito della Lega è cominciata la stagione 2027/28: quando listone e calendario sono pronti, premi «Inizia la stagione» (Admin → Nuova stagione; guida admin, punto 9)',
+        'intanto il bot aspetta i dati della stagione nuova: listone: solo 3 giocatori (guida admin, punto 9)',
+    ]);
+    assert.equal(avvisiBot({ giornate, conTabellino: [], stato: { esito: 'ok' }, stagioneNuova: '2027/28', adesso: estate }).length, 1);
 });

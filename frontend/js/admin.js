@@ -21,10 +21,27 @@ if (auth) {
         }
     });
 
-    document.getElementById('listoneCheckBtn').addEventListener('click', checkListone);
-    document.getElementById('listoneApplyBtn').addEventListener('click', applyListone);
-    document.getElementById('calendarioCheckBtn').addEventListener('click', checkCalendario);
-    document.getElementById('calendarioApplyBtn').addEventListener('click', applyCalendario);
+    document.getElementById('listoneCheckBtn').addEventListener('click', soloStessaStagione(checkListone, 'listoneStatus'));
+    document.getElementById('listoneApplyBtn').addEventListener('click', soloStessaStagione(applyListone, 'listoneStatus'));
+    document.getElementById('calendarioCheckBtn').addEventListener('click', soloStessaStagione(checkCalendario, 'calendarioStatus'));
+    document.getElementById('calendarioApplyBtn').addEventListener('click', soloStessaStagione(applyCalendario, 'calendarioStatus'));
+}
+
+// Listone e calendario della stagione nuova non si applicano sopra quella finita: lo fa "Inizia la stagione"
+// (che usa le stesse funzioni, senza passare di qui)
+function messaggioStagioneNuova(nuova) {
+    return `La Lega è già alla stagione ${nuova.nome}: listone e calendario nuovi entrano con «Inizia la stagione» (riquadro Nuova stagione), non da qui.`;
+}
+
+function soloStessaStagione(azione, idStato) {
+    return async () => {
+        const nuova = await stagioneNuovaInAttesa();
+        if (nuova) {
+            document.getElementById(idStato).textContent = messaggioStagioneNuova(nuova);
+            return;
+        }
+        await azione();
+    };
 }
 
 async function checkAdmin(uid) {
