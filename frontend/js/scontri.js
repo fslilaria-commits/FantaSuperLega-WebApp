@@ -5,9 +5,7 @@
 //   più vecchia): 2 punti a chi lo vince, 1 a chi lo perde
 // - classifica: punti, poi fanta-punti totali, poi iscrizione più vecchia
 (function (root) {
-    const Stagione = typeof module !== 'undefined' && module.exports ? require('./stagione.js') : root.Stagione;
     const MEDIA = 'MEDIA';
-    const ULTIMA_GIORNATA = Stagione.GIORNATE;
     const r2 = x => Math.round(x * 100) / 100;
 
     function mescola(lista, random) {
@@ -19,9 +17,10 @@
         return a;
     }
 
-    // Girone all'italiana (metodo del cerchio), ripetuto a ciclo dalla giornata di inizio all'ultima
-    function generaCalendario(uids, { start, end = ULTIMA_GIORNATA, random = Math.random } = {}) {
+    // Girone all'italiana (metodo del cerchio), ripetuto a ciclo dalla giornata di inizio all'ultima del calendario (end)
+    function generaCalendario(uids, { start, end, random = Math.random } = {}) {
         if (uids.length < 2) throw new Error('servono almeno 2 squadre');
+        if (!Number.isInteger(end) || end < start) throw new Error('manca il calendario delle giornate');
         const squadre = mescola(uids, random);
         if (squadre.length % 2) squadre.push(MEDIA);
         const n = squadre.length;

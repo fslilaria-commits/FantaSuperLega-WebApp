@@ -1,13 +1,15 @@
 const cheerio = require('cheerio');
 const { romeToUtc } = require('./calendario');
-const { SQUADRE_SUPERLEGA } = require('./listone');
-const { ANNO } = require('../../frontend/js/stagione');
 
-// Codici delle squadre nella pagina statistiche della Lega (parametro Squadra), per id squadra
-const CODICI_STATISTICHE = Object.fromEntries(SQUADRE_SUPERLEGA.map(s => [s.teamId, s.codiceStatistiche]));
-
-const urlStatistiche = (legaId, teamId) =>
-    `https://www.legavolley.it/statistiche/?TipoStat=1.1&Serie=1&AnnoInizio=${ANNO}&Fase=1&Giornata=${legaId}&Squadra=${CODICI_STATISTICHE[teamId]}`;
+// Pagina statistiche della Lega di una squadra in una giornata. stagione: data/stagione.json, con l'anno e il
+// codice della squadra nelle statistiche (parametro Squadra)
+function urlStatistiche(stagione, legaId, teamId) {
+    const squadra = stagione.squadre.find(s => s.teamId === teamId);
+    if (!squadra?.codiceStatistiche) {
+        throw new Error(`${squadra?.team ?? `squadra ${teamId}`}: manca il codice delle statistiche della Lega in data/stagione.json (prepara-stagione lo cerca a ogni aggiornamento nella pagina della squadra)`);
+    }
+    return `https://www.legavolley.it/statistiche/?TipoStat=1.1&Serie=1&AnnoInizio=${stagione.anno}&Fase=1&Giornata=${legaId}&Squadra=${encodeURIComponent(squadra.codiceStatistiche)}`;
+}
 
 // "45,2" -> 45.2, "" -> 0
 function num(text) {
@@ -78,4 +80,4 @@ function checkTabellino(t) {
     return errors;
 }
 
-module.exports = { CODICI_STATISTICHE, urlStatistiche, num, parseStatistiche, parseRisultato, validiDal, checkTabellino };
+module.exports = { urlStatistiche, num, parseStatistiche, parseRisultato, validiDal, checkTabellino };

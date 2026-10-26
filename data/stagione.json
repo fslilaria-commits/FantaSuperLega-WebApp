@@ -1,1 +1,66 @@
-{"anno":2026}
+{
+  "anno": 2026,
+  "campionato": 999,
+  "squadre": [
+    {
+      "teamId": 6863,
+      "team": "Acqua Sant'Anna Cuneo",
+      "codiceStatistiche": "CUNEOSPORT"
+    },
+    {
+      "teamId": 6858,
+      "team": "Allianz Milano",
+      "codiceStatistiche": "MI-POWER"
+    },
+    {
+      "teamId": 6859,
+      "team": "Cisterna Volley",
+      "codiceStatistiche": "CIS-VOLLEY"
+    },
+    {
+      "teamId": 6860,
+      "team": "Cucine Lube Civitanova",
+      "codiceStatistiche": "MC"
+    },
+    {
+      "teamId": 6861,
+      "team": "Gas Sales Bluenergy Piacenza",
+      "codiceStatistiche": "PIACENZAYOU"
+    },
+    {
+      "teamId": 6862,
+      "team": "Itas Trentino",
+      "codiceStatistiche": "TN-ITAS"
+    },
+    {
+      "teamId": 6866,
+      "team": "Pallavolo Padova",
+      "codiceStatistiche": "PD"
+    },
+    {
+      "teamId": 6864,
+      "team": "Rana Verona",
+      "codiceStatistiche": "VRI"
+    },
+    {
+      "teamId": 6865,
+      "team": "Sir Susa Scai Perugia",
+      "codiceStatistiche": "BASTIA"
+    },
+    {
+      "teamId": 6897,
+      "team": "Tinet Prata di Pordenone",
+      "codiceStatistiche": "PRATA"
+    },
+    {
+      "teamId": 6867,
+      "team": "Valsa Group Modena",
+      "codiceStatistiche": "MO"
+    },
+    {
+      "teamId": 6868,
+      "team": "Vero Volley Monza",
+      "codiceStatistiche": "MIVER"
+    }
+  ]
+}

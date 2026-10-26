@@ -135,14 +135,10 @@ Si fanno da https://console.firebase.google.com/project/fanta-superlega-734b1 co
 
 ## 9. Nuova stagione (ogni estate)
 
-A ogni stagione il gioco riparte da zero, come nel FantaLVF: nuovo listone, nuove leghe, nuova asta. Si fa in estate, quando la Lega ha pubblicato rose e calendario (di solito tra luglio e settembre). Bastano due passi.
+A ogni stagione il gioco riparte da zero, come nel FantaLVF: nuovo listone, nuove leghe, nuova asta. Si fa in estate, quando la Lega ha pubblicato rose e calendario (di solito tra luglio e settembre). **Nessuno deve cambiare il codice**: la stagione la decide la Lega, e all'admin resta un solo pulsante.
 
-1. **Chi sviluppa il progetto** prepara una modifica e la unisce nel `main`:
-   - in `frontend/js/stagione.js` cambia `ANNO` (2027 per la stagione 2027/28) e, se la SuperLega cambia numero di squadre, `SQUADRE`. Da lì si aggiornano da soli la scritta della stagione nel sito e nell'invito WhatsApp, il numero di giornate e gli indirizzi del sito della Lega usati dal bot;
-   - in `backend-bot/lib/listone.js` aggiorna l'elenco delle squadre (cambiano promosse e retrocesse): nome, `teamId` (il numero nell'indirizzo della pagina della squadra, `legavolley.it/team/…`) e `codiceStatistiche` (il valore di `Squadra` nell'indirizzo della pagina statistiche della Lega, scegliendo quella squadra). Di solito gli id cambiano a ogni stagione anche per le squadre che restano: vanno ricontrollati tutti. I test controllano che le squadre siano tante quante `SQUADRE` e senza doppioni.
-
-   Appena la modifica è nel `main`, il **bot** (su GitHub, «Aggiorna dati SuperLega») parte da solo: toglie da `data/` listone, calendario e tabellini della stagione finita e scarica quelli nuovi. Se la Lega non ha ancora pubblicato tutto, l'esecuzione resta rossa: il bot riprova da solo ogni martedì, oppure si rilancia a mano da **Actions → Run workflow**.
-2. **Un admin**, nel **pannello Admin → Nuova stagione**, preme **Controlla**. Se tutto è pronto compare il riepilogo: per confermare si scrive la stagione nuova (per esempio `2027/28`) e si preme **Inizia la stagione**. In un colpo il pulsante:
+1. **Il bot fa da solo.** A ogni aggiornamento dei dati guarda quale stagione mostra il calendario sul sito della Lega e la scrive in `data/stagione.json`: anno, codice della regular season e squadre, con il loro numero sul sito e il codice nelle statistiche (cambiano tutti a ogni stagione, anche per le squadre che restano). Quando la Lega passa alla stagione nuova, il bot toglie da `data/` listone, calendario e tabellini della stagione finita e scarica quelli nuovi; finché la Lega non ha pubblicato tutto, riprova a ogni aggiornamento. Se la Lega annuncia la stagione nuova ma non ha ancora la regular season o le squadre, il bot resta a quella di prima. Anche il sito prende la stagione da lì: la scritta in alto e quella dell'invito WhatsApp cambiano da sole.
+2. **Un admin**, nel **pannello Admin → Nuova stagione**, preme **Controlla** (quando il bot ha trovato la stagione nuova, in cima al riquadro compare «la Lega è già alla …»). Se tutto è pronto compare il riepilogo: per confermare si scrive la stagione nuova (per esempio `2027/28`) e si preme **Inizia la stagione**. In un colpo il pulsante:
    - salva la classifica finale di ogni lega nell'**archivio**: ogni partecipante la ritrova nella scheda **Lega → Stagioni passate**;
    - cancella i dati della stagione finita: leghe con rose, formazioni, mercato e punteggi, codici invito, giornate con statistiche e correzioni, listone. Restano gli admin e l'archivio;
    - applica listone e calendario nuovi.
@@ -153,9 +149,11 @@ Se **Controlla** non mostra il pulsante, dice il motivo:
 
 | Messaggio | Cosa fare |
 |---|---|
-| «La stagione … è in corso» | Niente: il codice non è ancora passato alla stagione nuova (passo 1) |
+| «La stagione … è in corso» | Niente: la Lega non è ancora passata alla stagione nuova, o il bot non l'ha ancora vista |
 | «La stagione nel gioco non è finita» | Ci sono giornate con la scadenza ancora da passare: si aspetta la fine del campionato |
-| «Il bot non ha ancora preparato i dati» | Aspetta l'esecuzione del bot dopo il passo 1, o lancialo a mano da Actions |
-| «Manca il listone nuovo» o «Manca il calendario nuovo» | La Lega non li ha ancora pubblicati: il bot riprova ogni martedì |
+| «Il bot non ha ancora trovato le squadre» | La Lega ha la stagione nuova ma non ancora l'elenco delle squadre: il bot riprova da solo |
+| «Manca il listone nuovo» o «Manca il calendario nuovo» | La Lega non li ha ancora pubblicati: il bot riprova a ogni aggiornamento |
 
-Se il riepilogo segnala **giornate giocate ma non calcolate**, calcolale prima con la routine settimanale: altrimenti i loro punti non entrano nella classifica archiviata.
+Se il riepilogo segnala **giornate giocate ma non calcolate**, calcolale prima con la routine settimanale: altrimenti i loro punti non entrano nella classifica archiviata. Meglio ancora, calcola tutte le giornate appena finisce la regular season: quando la Lega passa alla stagione nuova il bot toglie i tabellini di quella finita, e dal pannello non si possono più calcolare.
+
+Se la SuperLega cambia numero di squadre (per esempio 14), il bot lo vede dal calendario e il gioco si adatta da solo (26 giornate). Serve chi sviluppa solo se la Lega cambia il proprio sito: in quel caso il bot si ferma con un messaggio chiaro invece di scaricare dati sbagliati.

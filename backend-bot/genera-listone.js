@@ -1,10 +1,11 @@
-// Scarica le rose ufficiali delle 12 squadre di SuperLega da legavolley.it e scrive data/players.json.
+// Scarica le rose ufficiali delle squadre di SuperLega (quelle di data/stagione.json) da legavolley.it e scrive data/players.json.
 // È la "proposta" di listone: nel gioco entra solo quando un admin la applica dal pannello Admin.
 // Si ferma senza scrivere niente se i dati sembrano sbagliati (paracadute).
 const fs = require('node:fs');
 const path = require('node:path');
-const { SQUADRE_SUPERLEGA, parseRoster, checkProposal } = require('./lib/listone');
+const { parseRoster, checkProposal } = require('./lib/listone');
 const { scaricaPagina } = require('./lib/rete');
+const { stagioneDeiDati } = require('./lib/stagione');
 
 const OUTPUT = path.join(__dirname, '..', 'data', 'players.json');
 
@@ -17,8 +18,9 @@ function readPrevious() {
 }
 
 async function main() {
+    const { squadre } = stagioneDeiDati();
     const all = [];
-    for (const squadra of SQUADRE_SUPERLEGA) {
+    for (const squadra of squadre) {
         const pagina = await scaricaPagina(`https://www.legavolley.it/team/${squadra.teamId}`)
             .catch(e => { throw new Error(`${squadra.team}: ${e.message}`); });
         // La tabella delle rose è in UTF-8; i caratteri non validi nel resto della pagina (testi storici) non la toccano
@@ -27,7 +29,7 @@ async function main() {
         all.push(...players);
     }
 
-    const { errors, summary } = checkProposal(all, readPrevious());
+    const { errors, summary } = checkProposal(all, readPrevious(), squadre);
     if (errors.length) {
         throw new Error(`proposta scartata, niente è stato scritto:\n- ${errors.join('\n- ')}`);
     }

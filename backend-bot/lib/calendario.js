@@ -1,9 +1,7 @@
 const cheerio = require('cheerio');
-const { ANNO, SQUADRE } = require('../../frontend/js/stagione');
+const { nomeDi } = require('../../frontend/js/stagione');
 const { scaricaPagina } = require('./rete');
 
-const GIORNATE_PER_FASE = SQUADRE - 1;
-const GARE_PER_GIORNATA = SQUADRE / 2;
 const MESI = ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'];
 
 // Ora italiana (Europe/Rome, con ora legale) -> Date in UTC
@@ -35,8 +33,9 @@ function parseDataGiornata(text) {
     return romeToUtc(+m[3], MESI.indexOf(m[2]) + 1, +m[1], +m[4], +m[5]);
 }
 
-// Estrae le giornate di una fase (1 = andata, 2 = ritorno) dalla pagina calendario della Lega
-function parseCalendario(html, fase) {
+// Estrae le giornate di una fase (1 = andata, 2 = ritorno) dalla pagina calendario della Lega;
+// numeroSquadre: quante sono, per numerare il ritorno dopo l'andata (12 squadre: il ritorno parte dalla giornata 12)
+function parseCalendario(html, fase, numeroSquadre) {
     const $ = cheerio.load(html);
     const giornate = [];
     let corrente = null;
@@ -49,7 +48,7 @@ function parseCalendario(html, fase) {
             const legaId = (row.html().match(/RiposoSquadra\s+(\d+)/) || [])[1];
             const n = parseInt(mHead[1], 10);
             corrente = {
-                number: (fase - 1) * GIORNATE_PER_FASE + n,
+                number: (fase - 1) * (numeroSquadre - 1) + n,
                 label: `${n}ª ${mHead[2]}`,
                 legaId: legaId ? parseInt(legaId, 10) : null,
                 nominalStart: parseDataGiornata(mHead[3]),
@@ -105,30 +104,62 @@ function isMoved(start, nominalStart) {
     return start < nominalStart - FINESTRA_PRIMA || start > nominalStart.getTime() + FINESTRA_DOPO;
 }
 
-// Controlli prima di accettare il calendario
-function checkCalendario(giornate) {
+// Controlli prima di accettare il calendario. squadre: quelle della stagione (data/stagione.json)
+function checkCalendario(giornate, squadre) {
     const errors = [];
-    if (giornate.length !== 2 * GIORNATE_PER_FASE) errors.push(`trovate ${giornate.length} giornate invece di ${2 * GIORNATE_PER_FASE}`);
+    const giornateAttese = 2 * (squadre.length - 1);
+    const gareAttese = squadre.length / 2;
+    const ids = new Set(squadre.map(s => s.teamId));
+    if (giornate.length !== giornateAttese) errors.push(`trovate ${giornate.length} giornate invece di ${giornateAttese}`);
     for (const g of giornate) {
-        if (g.matches.length !== GARE_PER_GIORNATA) errors.push(`giornata ${g.number}: ${g.matches.length} gare invece di ${GARE_PER_GIORNATA}`);
+        if (g.matches.length !== gareAttese) errors.push(`giornata ${g.number}: ${g.matches.length} gare invece di ${gareAttese}`);
         if (!g.lockAt) errors.push(`giornata ${g.number}: manca qualsiasi data`);
         if (!g.legaId) errors.push(`giornata ${g.number}: manca il codice della Lega`);
-        const squadre = g.matches.flatMap(m => [m.homeId, m.awayId]);
-        if (new Set(squadre).size !== squadre.length || squadre.includes(null)) errors.push(`giornata ${g.number}: squadre mancanti o ripetute`);
+        const inCampo = g.matches.flatMap(m => [m.homeId, m.awayId]);
+        if (new Set(inCampo).size !== inCampo.length || inCampo.includes(null)) errors.push(`giornata ${g.number}: squadre mancanti o ripetute`);
+        else if (inCampo.some(id => !ids.has(id))) errors.push(`giornata ${g.number}: squadre che non sono in data/stagione.json`);
     }
     return errors;
 }
 
-const URL_CALENDARIO = fase => `https://www.legavolley.it/calendario/?Anno=${ANNO}&IdCampionato=999&IdFase=${fase}&IdSquadra=0`;
+// Pagina calendario della Lega. Senza parametri mostra la stagione in corso per la Lega; con anno e codice del
+// campionato (cambia ogni stagione: 999 è la regular season 2026/27) mostra proprio quello
+const URL_CALENDARIO = 'https://www.legavolley.it/calendario/';
+const urlCalendario = ({ anno, campionato }, fase = 1) => `${URL_CALENDARIO}?Anno=${anno}&IdCampionato=${campionato}&IdFase=${fase}&IdSquadra=0`;
 
-// Andata e ritorno dal sito della Lega, con i risultati delle gare giocate (campo score)
-async function scaricaCalendario() {
+// Le voci di un menu a tendina della pagina calendario (Anno, Campionato, Squadra): [{ valore, testo, scelta }]
+function vociMenu($, id) {
+    return $(`select#${id} option`).map((_, o) => ({
+        valore: $(o).attr('value'),
+        testo: $(o).text().trim(),
+        scelta: $(o).attr('selected') != null,
+    })).get();
+}
+
+// Anno e campionato che una pagina calendario sta mostrando davvero (null se nel menu non c'è una voce scelta)
+function calendarioMostrato(html) {
+    const $ = typeof html === 'string' ? cheerio.load(html) : html;
+    const scelto = id => parseInt(vociMenu($, id).find(v => v.scelta)?.valore, 10);
+    const [anno, campionato] = [scelto('Anno'), scelto('Campionato')];
+    return { anno: Number.isInteger(anno) ? anno : null, campionato: Number.isInteger(campionato) ? campionato : null };
+}
+
+// Andata e ritorno della stagione di data/stagione.json, con i risultati delle gare giocate (campo score).
+// Si ferma se la Lega mostra un'altra stagione: i dati di due stagioni non si mescolano mai
+async function scaricaCalendario(stagione) {
     const giornate = [];
     for (const fase of [1, 2]) {
-        const pagina = await scaricaPagina(URL_CALENDARIO(fase)).catch(e => { throw new Error(`calendario fase ${fase}: ${e.message}`); });
-        giornate.push(...parseCalendario(pagina, fase));
+        const pagina = await scaricaPagina(urlCalendario(stagione, fase)).catch(e => { throw new Error(`calendario fase ${fase}: ${e.message}`); });
+        const mostrato = calendarioMostrato(pagina);
+        if (mostrato.anno !== stagione.anno || mostrato.campionato !== stagione.campionato) {
+            throw new Error(`calendario fase ${fase}: la Lega ha mostrato un calendario diverso da quello della stagione ${nomeDi(stagione.anno)} (anno ${mostrato.anno}, campionato ${mostrato.campionato} invece di ${stagione.campionato})`);
+        }
+        giornate.push(...parseCalendario(pagina, fase, stagione.squadre.length));
     }
     return giornate;
 }
 
-module.exports = { romeToUtc, parseDataGara, parseDataGiornata, parseCalendario, checkCalendario, scaricaCalendario };
+module.exports = {
+    romeToUtc, parseDataGara, parseDataGiornata, parseCalendario, checkCalendario,
+    URL_CALENDARIO, urlCalendario, vociMenu, calendarioMostrato, scaricaCalendario,
+};

@@ -2,16 +2,11 @@ name: Aggiorna dati SuperLega
 
 # Ogni settimana scarica dal sito della Lega le proposte di listone, calendario e tabellini e le salva in data/.
 # Non tocca il gioco: gli admin le applicano dal pannello Admin dell'app.
-# Parte da solo anche quando nel main cambiano la stagione o l'elenco delle squadre (inizio di una stagione nuova).
+# La stagione la decide la Lega: il primo passo la legge dal sito e, quando cambia, prepara data/ da solo.
 on:
   schedule:
     - cron: '0 5 * * 2' # martedì alle 5:00 UTC, dopo la giornata del weekend
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - frontend/js/stagione.js
-      - backend-bot/lib/listone.js
 
 permissions:
   contents: write
@@ -38,7 +33,7 @@ jobs:
         working-directory: backend-bot
         run: npm ci
 
-      # Stagione nuova: toglie le proposte di quella finita prima di scaricare le nuove
+      # Legge dalla Lega stagione e squadre; se è cominciata una stagione nuova toglie le proposte di quella finita
       - name: Prepara la stagione
         id: prepara
         working-directory: backend-bot

@@ -1,6 +1,6 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { num, parseStatistiche, parseRisultato, validiDal, checkTabellino } = require('../lib/tabellini');
+const { urlStatistiche, num, parseStatistiche, parseRisultato, validiDal, checkTabellino } = require('../lib/tabellini');
 
 const riga = (prima, celle, tag = 'td') => `<tr><${tag}>${prima}</${tag}>${celle.map(c => `<td>${c}</td>`).join('')}</tr>`;
 // Le 23 colonne dopo il nome, come nella pagina della Lega
@@ -46,4 +46,11 @@ test('un tabellino incompleto viene scartato', () => {
     const errors = checkTabellino(t);
     assert.ok(errors.some(e => e.includes('meno di 6')));
     assert.ok(errors.some(e => e.includes('B: mancano')));
+});
+
+test('le statistiche si chiedono per anno e codice della squadra di data/stagione.json', () => {
+    const stagione = { anno: 2026, campionato: 999, squadre: [{ teamId: 6862, team: 'Itas Trentino', codiceStatistiche: 'TN-ITAS' }] };
+    assert.equal(urlStatistiche(stagione, 8485, 6862),
+        'https://www.legavolley.it/statistiche/?TipoStat=1.1&Serie=1&AnnoInizio=2026&Fase=1&Giornata=8485&Squadra=TN-ITAS');
+    assert.throws(() => urlStatistiche(stagione, 8485, 1), /squadra 1: manca il codice/);
 });

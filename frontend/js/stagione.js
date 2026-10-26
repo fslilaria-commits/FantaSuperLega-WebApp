@@ -1,20 +1,27 @@
-// La stagione di SuperLega: l'unico punto da cambiare ogni estate (il resto è nella lista "Nuova stagione"
-// di docs/guida-admin.md). La usano il sito (titolo, intestazione, invito, scontri diretti) e il bot dei dati
-// (indirizzi del calendario e delle statistiche della Lega, controlli sul numero di gare).
+// La stagione di SuperLega non si cambia a mano: la decide la Lega. Il bot la legge dal sito della Lega e la scrive in
+// data/stagione.json ({ anno, campionato, squadre }); da lì la prendono il sito (titolo, intestazione, invito), il
+// pannello Admin (passaggio alla stagione nuova) e gli scaricamenti del bot. Qui ci sono solo i nomi e i conti che ne
+// derivano, uguali per il sito e per il bot.
 (function (root) {
-    const ANNO = 2026;  // anno di inizio: 2026 = stagione 2026/27
-    const SQUADRE = 12; // squadre di SuperLega: andata e ritorno, tutte contro tutte
-
     const dueCifre = n => String(n).slice(-2);
-    const nomeDi = anno => `${anno}/${dueCifre(anno + 1)}`; // 2026 -> "2026/27", anche per le stagioni archiviate
-    const api = {
-        ANNO,
-        SQUADRE,
-        GIORNATE: 2 * (SQUADRE - 1),                      // regular season: 22 con 12 squadre
-        breve: `${dueCifre(ANNO)}/${dueCifre(ANNO + 1)}`, // "26/27"
-        nome: nomeDi(ANNO),                               // "2026/27"
-        nomeDi,
-    };
+    const nomeDi = anno => `${anno}/${dueCifre(anno + 1)}`;              // 2026 -> "2026/27", anche per le stagioni archiviate
+    const breveDi = anno => `${dueCifre(anno)}/${dueCifre(anno + 1)}`;   // 2026 -> "26/27"
+    const giornateDi = squadre => 2 * (squadre - 1);                     // andata e ritorno, tutte contro tutte: 22 con 12 squadre
+
+    // Il contenuto di data/stagione.json con i nomi pronti; null se non è valido
+    function descrivi(dati) {
+        if (!Number.isInteger(dati?.anno)) return null;
+        const squadre = Array.isArray(dati.squadre) ? dati.squadre.length : 0;
+        return {
+            anno: dati.anno,
+            nome: nomeDi(dati.anno),
+            breve: breveDi(dati.anno),
+            squadre,
+            giornate: squadre ? giornateDi(squadre) : null,
+        };
+    }
+
+    const api = { nomeDi, breveDi, giornateDi, descrivi };
     if (typeof module !== 'undefined' && module.exports) module.exports = api;
     else root.Stagione = api;
 })(this);

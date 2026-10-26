@@ -2,10 +2,9 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { controllaPassaggio, classificaFinale, archivioLega, idArchivio } = require('../../frontend/js/nuova-stagione.js');
 
-// Estate 2027: codice e dati del bot già alla stagione nuova, gioco ancora alla 2026
+// Estate 2027: la Lega è già alla stagione nuova (data/stagione.json del bot), il gioco ancora alla 2026
 const estate = (cambi = {}) => ({
-    annoGioco: 2026, annoCodice: 2027, annoDati: 2027,
-    giocatori: 180, giornate: 22, squadre: 12, giornateAttese: 22, daGiocare: 0, ...cambi,
+    annoGioco: 2026, annoLega: 2027, squadre: 12, giocatori: 180, giornate: 22, daGiocare: 0, ...cambi,
 });
 
 test('con giornate ancora da giocare la stagione non si chiude', () => {
@@ -15,14 +14,17 @@ test('con giornate ancora da giocare la stagione non si chiude', () => {
     assert.match(controllaPassaggio(estate({ daGiocare: 1 })).motivi[0], /ancora 1 giornata da giocare/);
 });
 
-test('il passaggio è pronto solo con codice, dati del bot, listone e calendario della stagione nuova', () => {
+test('il passaggio è pronto quando il bot ha scaricato squadre, listone e calendario della stagione nuova', () => {
     assert.deepEqual(controllaPassaggio(estate()), { stato: 'pronta', motivi: [] });
+    // con 14 squadre servono 26 giornate e almeno 140 giocatori
+    assert.equal(controllaPassaggio(estate({ squadre: 14, giornate: 26, giocatori: 200 })).stato, 'pronta');
 });
 
-test('durante la stagione non si può fare: il codice non è più avanti del gioco', () => {
-    assert.equal(controllaPassaggio(estate({ annoCodice: 2026, annoDati: 2026 })).stato, 'in-corso');
-    // codice tornato indietro per sbaglio: comunque niente
-    assert.equal(controllaPassaggio(estate({ annoCodice: 2025 })).stato, 'in-corso');
+test('durante la stagione non si può fare: la Lega non è più avanti del gioco', () => {
+    assert.equal(controllaPassaggio(estate({ annoLega: 2026 })).stato, 'in-corso');
+    // dati della Lega più vecchi del gioco: comunque niente
+    assert.equal(controllaPassaggio(estate({ annoLega: 2025 })).stato, 'in-corso');
+    assert.equal(controllaPassaggio(estate({ annoLega: null })).stato, 'in-corso');
 });
 
 test('senza la stagione del gioco non si cancella niente', () => {
@@ -30,18 +32,20 @@ test('senza la stagione del gioco non si cancella niente', () => {
     assert.equal(controllaPassaggio(estate({ annoGioco: undefined })).stato, 'in-corso');
 });
 
-test('il bot non ha ancora preparato la stagione nuova: i file in data/ sono ancora quelli vecchi', () => {
-    const esito = controllaPassaggio(estate({ annoDati: 2026 }));
+test('il bot non ha ancora trovato le squadre della stagione nuova', () => {
+    const esito = controllaPassaggio(estate({ squadre: 0 }));
     assert.equal(esito.stato, 'da-preparare');
-    assert.match(esito.motivi[0], /bot/);
-    assert.equal(esito.motivi.length, 1); // listone e calendario vecchi non contano
+    assert.match(esito.motivi[0], /squadre della stagione 2027\/28/);
+    assert.equal(esito.motivi.length, 1); // listone e calendario non contano ancora
 });
 
 test('la Lega non ha ancora pubblicato rose o calendario', () => {
     assert.match(controllaPassaggio(estate({ giocatori: null })).motivi.join(), /listone/);
     assert.match(controllaPassaggio(estate({ giocatori: 40 })).motivi.join(), /listone/); // poche squadre scaricate
+    assert.match(controllaPassaggio(estate({ squadre: 14, giocatori: 130, giornate: 26 })).motivi.join(), /listone/);
     assert.match(controllaPassaggio(estate({ giornate: null })).motivi.join(), /calendario/);
     assert.match(controllaPassaggio(estate({ giornate: 11 })).motivi.join(), /calendario/);
+    assert.match(controllaPassaggio(estate({ squadre: 14, giornate: 22, giocatori: 200 })).motivi.join(), /calendario/);
     assert.equal(controllaPassaggio(estate({ giocatori: null, giornate: null })).motivi.length, 2);
 });
 

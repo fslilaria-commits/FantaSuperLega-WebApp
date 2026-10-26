@@ -62,9 +62,9 @@ I ruoli (Admin, Presidente, Partecipante, Visitatore) sono descritti in [`docs/m
 
 ## Aggiornamento di listone, calendario e tabellini
 
-Il workflow **Aggiorna dati SuperLega** (`.github/workflows/aggiorna-dati.yaml`) gira ogni martedì mattina, a mano da **Actions → Aggiorna dati SuperLega → Run workflow**, e da solo quando nel `main` cambiano la stagione (`frontend/js/stagione.js`) o l'elenco delle squadre:
-1. se il codice è passato a una stagione nuova, toglie da `data/` le proposte di quella finita (`backend-bot/prepara-stagione.js`, vedi `data/stagione.json`);
-2. legge dal sito della Lega le rose delle 12 squadre (`backend-bot/genera-listone.js`), il calendario di andata e ritorno (`backend-bot/genera-calendario.js`) e i tabellini delle giornate concluse (`backend-bot/genera-tabellini.js`);
+Il workflow **Aggiorna dati SuperLega** (`.github/workflows/aggiorna-dati.yaml`) gira ogni martedì mattina o a mano da **Actions → Aggiorna dati SuperLega → Run workflow**:
+1. legge dal sito della Lega la stagione in corso, il codice della sua regular season e le squadre con i loro codici delle statistiche, e li scrive in `data/stagione.json` (`backend-bot/prepara-stagione.js`). La stagione non sta nel codice: quando la Lega passa a quella nuova, toglie da `data/` le proposte della stagione finita;
+2. legge dal sito della Lega le rose delle squadre di `data/stagione.json` (`backend-bot/genera-listone.js`), il calendario di andata e ritorno (`backend-bot/genera-calendario.js`) e i tabellini delle giornate concluse (`backend-bot/genera-tabellini.js`), sempre e solo della stagione di `data/stagione.json`;
 3. si ferma senza scrivere niente se i dati sembrano sbagliati (squadre con meno di 10 giocatori, più di un quarto dei giocatori spariti, doppioni, giornate o gare mancanti);
 4. se ci sono novità, salva le proposte in `data/` con un commit.
 

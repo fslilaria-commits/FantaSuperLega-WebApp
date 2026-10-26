@@ -1,16 +1,6 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { SQUADRE_SUPERLEGA, mapRole, normalizeName, parseRoster, checkProposal } = require('../lib/listone');
-const Stagione = require('../../frontend/js/stagione');
-
-test('la lista delle squadre è completa per la stagione, senza doppioni', () => {
-    assert.equal(SQUADRE_SUPERLEGA.length, Stagione.SQUADRE, 'numero di squadre diverso da quello di frontend/js/stagione.js');
-    for (const campo of ['teamId', 'team', 'codiceStatistiche']) {
-        const valori = SQUADRE_SUPERLEGA.map(s => s[campo]);
-        assert.ok(valori.every(Boolean), `manca ${campo} per qualche squadra`);
-        assert.equal(new Set(valori).size, valori.length, `${campo} ripetuto`);
-    }
-});
+const { mapRole, normalizeName, parseRoster, checkProposal } = require('../lib/listone');
 
 test('i ruoli della Lega diventano le sigle del gioco', () => {
     assert.equal(mapRole(' Palleggiatore '), 'P');
@@ -61,18 +51,19 @@ test('la tabella Roster diventa un elenco di giocatori', () => {
     }]);
 });
 
-// Proposta finta: 12 giocatori per ognuna delle 12 squadre
-const proposta = () => SQUADRE_SUPERLEGA.flatMap(({ team }, t) =>
+// Squadre della stagione (data/stagione.json) e proposta finta: 12 giocatori per ognuna
+const SQUADRE = ['Allianz Milano', 'Itas Trentino', 'Sir Susa Scai Perugia', 'Valsa Group Modena'].map((team, i) => ({ teamId: 6858 + i, team }));
+const proposta = () => SQUADRE.flatMap(({ team }, t) =>
     Array.from({ length: 12 }, (_, i) => ({ id: `T${t}-P${i}`, name: `Giocatore ${i}`, team, role: 'S' })));
 
 test('una proposta normale passa', () => {
-    const { errors } = checkProposal(proposta(), proposta());
+    const { errors } = checkProposal(proposta(), proposta(), SQUADRE);
     assert.deepEqual(errors, []);
 });
 
 test('si blocca se una squadra ha troppi pochi giocatori', () => {
     const p = proposta().filter(x => !(x.team === 'Itas Trentino' && x.id.endsWith('P0')) && !(x.team === 'Itas Trentino' && /P[1-5]$/.test(x.id)));
-    const { errors } = checkProposal(p, []);
+    const { errors } = checkProposal(p, [], SQUADRE);
     assert.equal(errors.length, 1);
     assert.match(errors[0], /Itas Trentino/);
 });
@@ -80,12 +71,12 @@ test('si blocca se una squadra ha troppi pochi giocatori', () => {
 test('si blocca se spariscono troppi giocatori tutti insieme', () => {
     const prev = proposta();
     const nuova = prev.map((p, i) => (i % 3 === 0 ? { ...p, id: `${p.id}-nuovo` } : p));
-    const { errors } = checkProposal(nuova, prev);
+    const { errors } = checkProposal(nuova, prev, SQUADRE);
     assert.ok(errors.some(e => e.includes('troppi')));
 });
 
 test('si blocca se un giocatore compare due volte', () => {
     const p = proposta();
     p.push({ ...p[0] });
-    assert.ok(checkProposal(p, []).errors.some(e => e.includes('ripetuto')));
+    assert.ok(checkProposal(p, [], SQUADRE).errors.some(e => e.includes('ripetuto')));
 });

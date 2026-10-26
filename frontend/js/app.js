@@ -27,9 +27,24 @@ const TABELLINI_INDICE = '../data/tabellini/index.json';
 const AVATAR = 'img/avatar.svg';
 const BATCH_SIZE = 400; // Firestore accetta al massimo 500 scritture per batch
 
-// La stagione nelle scritte fisse della pagina viene da stagione.js, così ogni estate si cambia in un punto solo
-document.title = `Fanta Superlega Maschile ${Stagione.nome}`;
-document.querySelectorAll('[data-stagione]').forEach(e => { e.textContent = Stagione[e.dataset.stagione]; });
+// La stagione della SuperLega non sta nel codice: la scrive il bot in data/stagione.json leggendola dal sito della
+// Lega. Da lì vengono titolo, intestazione e invito; stagioneLega resta null finché il file non arriva
+const STAGIONE_URL = '../data/stagione.json';
+let stagioneLega = null;
+const stagionePronta = fetch(`${STAGIONE_URL}?t=${Date.now()}`, { cache: 'no-store' })
+    .then(res => (res.ok ? res.json() : null))
+    .then(dati => {
+        stagioneLega = Stagione.descrivi(dati);
+        if (stagioneLega) {
+            document.title = `Fanta Superlega Maschile ${stagioneLega.nome}`;
+            document.querySelectorAll('[data-stagione]').forEach(e => { e.textContent = stagioneLega[e.dataset.stagione]; });
+        }
+        return stagioneLega;
+    })
+    .catch(() => null);
+
+// Ultima giornata del calendario nel gioco (22 con 12 squadre); null se il calendario non è ancora applicato
+const ultimaGiornata = () => state.matchdays.at(-1)?.number ?? null;
 
 document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.nav-btn[data-tab]').forEach(b => b.addEventListener('click', () => switchTab(b.dataset.tab)));
