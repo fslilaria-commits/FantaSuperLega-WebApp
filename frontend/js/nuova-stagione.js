@@ -6,20 +6,21 @@
     const Stagione = inNode ? require('./stagione.js') : root.Stagione;
     const MIN_GIOCATORI_PER_SQUADRA = 10; // come il controllo del bot sul listone
 
-    // s: annoGioco (meta/stagione), annoCodice (stagione.js), annoDati (data/stagione.json, null se manca),
-    //    giocatori e giornate nelle proposte del bot (null se manca il file), squadre e giornateAttese della stagione,
+    // s: annoGioco (meta/stagione), annoLega (data/stagione.json: la stagione che il bot ha letto dal sito della Lega,
+    //    null se manca), squadre di quella stagione, giocatori e giornate nelle proposte del bot (null se manca il file),
     //    daGiocare: giornate nel gioco con la scadenza ancora da passare.
     // stato: 'in-corso' (niente da fare), 'da-preparare' (motivi dice cosa manca) o 'pronta'.
-    // Senza la stagione del gioco non si cancella niente: la segna il pannello alla prima apertura.
+    // Il passaggio si apre solo quando la Lega è a una stagione successiva a quella del gioco. Senza la stagione
+    // del gioco non si cancella niente: la segna il pannello alla prima apertura.
     function controllaPassaggio(s) {
-        if (s.annoGioco == null || s.annoCodice <= s.annoGioco) return { stato: 'in-corso', motivi: [] };
+        if (s.annoGioco == null || s.annoLega == null || s.annoLega <= s.annoGioco) return { stato: 'in-corso', motivi: [] };
         const motivi = [];
         if (s.daGiocare > 0) motivi.push(`la stagione nel gioco non è finita: ${s.daGiocare === 1 ? 'c\'è ancora 1 giornata' : `ci sono ancora ${s.daGiocare} giornate`} da giocare`);
-        if (s.annoDati !== s.annoCodice) {
-            motivi.push(`il bot non ha ancora preparato i dati della stagione ${Stagione.nomeDi(s.annoCodice)}`);
+        if (!(s.squadre >= 2)) {
+            motivi.push(`il bot non ha ancora trovato le squadre della stagione ${Stagione.nomeDi(s.annoLega)}`);
         } else {
             if (!(s.giocatori >= s.squadre * MIN_GIOCATORI_PER_SQUADRA)) motivi.push('manca il listone nuovo (la Lega pubblica le rose in estate)');
-            if (s.giornate !== s.giornateAttese) motivi.push('manca il calendario nuovo (la Lega lo pubblica in estate)');
+            if (s.giornate !== Stagione.giornateDi(s.squadre)) motivi.push('manca il calendario nuovo (la Lega lo pubblica in estate)');
         }
         return { stato: motivi.length ? 'da-preparare' : 'pronta', motivi };
     }

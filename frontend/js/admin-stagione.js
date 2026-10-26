@@ -1,16 +1,15 @@
-// Riquadro "Nuova stagione" del pannello Admin. In estate, quando chi sviluppa ha portato frontend/js/stagione.js
-// all'anno nuovo e il bot ha scaricato listone e calendario della nuova stagione, un admin con un clic:
+// Riquadro "Nuova stagione" del pannello Admin. In estate, quando la Lega ha pubblicato la stagione nuova e il bot
+// l'ha scritta in data/stagione.json con listone e calendario nuovi (nessuno cambia il codice), un admin con un clic:
 // 1. archivia la classifica finale di ogni lega (archivio/{anno}_{lega}: la vedono i suoi partecipanti nella scheda Lega);
 // 2. cancella i dati della stagione finita: leghe con tutto quello che contengono, codici invito, "le mie leghe",
 //    giornate con statistiche e correzioni, listone e riepiloghi in meta. Restano gli admin e l'archivio;
 // 3. applica listone e calendario nuovi, con le stesse funzioni dei riquadri qui sotto;
 // 4. segna la stagione nuova in meta/stagione. È l'ultimo passo: se qualcosa si interrompe basta ripremere,
 //    l'archivio non si rifà e la pulizia riprende da quello che è rimasto.
-const STAGIONE_DATI_URL = '../data/stagione.json';
 const SOTTORACCOLTE_LEGA = ['members', 'rosters', 'lineups', 'schedule', 'trades', 'transfers', 'scores', 'standings'];
 const META_DELLA_STAGIONE = ['statistiche', 'punteggi', 'listone', 'calendario'];
 
-let passaggioStagione = null; // { annoGioco, archiviata } quando il passaggio è pronto
+let passaggioStagione = null; // { annoGioco, annoNuovo, nome, archiviata } quando il passaggio è pronto
 
 if (auth) {
     document.getElementById('stagioneCheckBtn').addEventListener('click', controllaStagione);
@@ -18,12 +17,14 @@ if (auth) {
     document.getElementById('stagioneApplyBtn').addEventListener('click', iniziaStagione);
 }
 
-// Stagione del gioco in Firestore; la prima volta si segna quella del codice, cioè la stagione in corso
+// Stagione del gioco in Firestore; la prima volta si segna quella della Lega (data/stagione.json), cioè quella in corso
 async function leggiStagioneGioco() {
     const ref = db.doc('meta/stagione');
     const snap = await ref.get();
     if (snap.exists && Number.isInteger(snap.data().anno)) return snap.data();
-    const dati = { anno: Stagione.ANNO };
+    const lega = await stagionePronta;
+    if (!lega) throw new Error('manca la stagione della Lega (data/stagione.json)');
+    const dati = { anno: lega.anno };
     await ref.set(dati);
     return dati;
 }
@@ -31,8 +32,9 @@ async function leggiStagioneGioco() {
 async function mostraStagioneGioco() {
     const info = document.getElementById('stagioneInfo');
     try {
-        const { anno } = await leggiStagioneGioco();
+        const [{ anno }, lega] = await Promise.all([leggiStagioneGioco(), stagionePronta]);
         info.textContent = `Stagione in corso nel gioco: ${Stagione.nomeDi(anno)}`;
+        if (lega && lega.anno > anno) info.textContent += ` · la Lega è già alla ${lega.nome}: premi «Controlla» per il passaggio`;
     } catch {
         info.textContent = 'Stagione in corso nel gioco: non disponibile';
     }
@@ -55,7 +57,7 @@ function mostraConfermaStagione(visibile) {
 
 function aggiornaConfermaStagione() {
     const scritto = document.getElementById('stagioneConferma').value.trim();
-    document.getElementById('stagioneApplyBtn').disabled = !passaggioStagione || scritto !== Stagione.nome;
+    document.getElementById('stagioneApplyBtn').disabled = !passaggioStagione || scritto !== passaggioStagione.nome;
 }
 
 async function controllaStagione() {
@@ -67,26 +69,25 @@ async function controllaStagione() {
     status.textContent = 'Controllo in corso…';
     try {
         const gioco = await leggiStagioneGioco();
-        const [dati, listone, calendario] = await Promise.all([
-            propostaFacoltativa(STAGIONE_DATI_URL), propostaFacoltativa(LISTONE_URL), propostaFacoltativa(CALENDARIO_URL), loadNextMatchday()]);
+        const [datiLega, listone, calendario] = await Promise.all([
+            propostaFacoltativa(STAGIONE_URL), propostaFacoltativa(LISTONE_URL), propostaFacoltativa(CALENDARIO_URL), loadNextMatchday()]);
+        const lega = Stagione.descrivi(datiLega);
         const adesso = new Date();
         const nonCalcolate = state.matchdays.filter(g => g.lockAt <= adesso && g.status !== 'scored').map(g => g.number);
         const esito = NuovaStagione.controllaPassaggio({
             daGiocare: state.matchdays.filter(g => g.lockAt > adesso).length,
             annoGioco: gioco.anno,
-            annoCodice: Stagione.ANNO,
-            annoDati: dati?.anno ?? null,
+            annoLega: lega?.anno ?? null,
+            squadre: lega?.squadre ?? 0,
             giocatori: Array.isArray(listone) ? listone.length : null,
             giornate: Array.isArray(calendario) ? calendario.length : null,
-            squadre: Stagione.SQUADRE,
-            giornateAttese: Stagione.GIORNATE,
         });
         if (esito.stato === 'in-corso') {
-            status.textContent = `La stagione ${Stagione.nomeDi(gioco.anno)} è in corso: niente da fare. Il passaggio si fa in estate, dopo che chi sviluppa ha cambiato la stagione nel codice.`;
+            status.textContent = `La stagione ${Stagione.nomeDi(gioco.anno)} è in corso: niente da fare. Il passaggio si fa in estate, quando la Lega pubblica la stagione nuova e il bot la scarica.`;
             return;
         }
         if (esito.stato === 'da-preparare') {
-            status.textContent = `La stagione ${Stagione.nome} non è ancora pronta: ${esito.motivi.join('; ')}. Riprova dopo il prossimo aggiornamento dei dati (GitHub → Actions → "Aggiorna dati SuperLega").`;
+            status.textContent = `La stagione ${lega.nome} non è ancora pronta: ${esito.motivi.join('; ')}. Il bot riprova a ogni aggiornamento dei dati: ricontrolla tra qualche giorno.`;
             return;
         }
         const leghe = await db.collection('leagues').get();
@@ -95,7 +96,8 @@ async function controllaStagione() {
             rigaRoutine('da', `Archivia la classifica finale di ${leghe.size === 1 ? '1 lega' : `${leghe.size} leghe`} della stagione ${Stagione.nomeDi(gioco.anno)}`),
             rigaRoutine('da', 'Cancella leghe, rose, formazioni, mercato, giornate, punteggi e listone della stagione finita (restano gli admin e l\'archivio)'),
             rigaRoutine('da', `Applica il listone nuovo (${listone.length} giocatori) e il calendario nuovo (${calendario.length} giornate)`)));
-        passaggioStagione = { annoGioco: gioco.anno, archiviata: gioco.archiviata === gioco.anno };
+        passaggioStagione = { annoGioco: gioco.anno, annoNuovo: lega.anno, nome: lega.nome, archiviata: gioco.archiviata === gioco.anno };
+        document.getElementById('stagioneNuovaNome').textContent = lega.nome;
         mostraConfermaStagione(true);
         status.textContent = '';
     } catch (e) {
@@ -150,7 +152,7 @@ async function cancellaDocumenti(refs, avanzamento) {
 }
 
 async function iniziaStagione() {
-    if (!passaggioStagione || document.getElementById('stagioneConferma').value.trim() !== Stagione.nome) return;
+    if (!passaggioStagione || document.getElementById('stagioneConferma').value.trim() !== passaggioStagione.nome) return;
     const status = document.getElementById('stagioneStatus');
     const applyBtn = document.getElementById('stagioneApplyBtn');
     const conferma = document.getElementById('stagioneConferma');
@@ -158,7 +160,7 @@ async function iniziaStagione() {
     applyBtn.disabled = true;
     conferma.disabled = true;
     try {
-        const { annoGioco } = passaggioStagione;
+        const { annoGioco, annoNuovo, nome } = passaggioStagione;
         const leghe = (await db.collection('leagues').get()).docs.map(d => ({ id: d.id, ...d.data() }));
         if (!passaggioStagione.archiviata) {
             passo('Archivio le classifiche finali…');
@@ -176,7 +178,7 @@ async function iniziaStagione() {
         if (!await checkCalendario() || !await applyCalendario()) throw new Error('calendario non applicato (vedi il riquadro Calendario)');
 
         await db.doc('meta/stagione').set({
-            anno: Stagione.ANNO,
+            anno: annoNuovo,
             iniziataAt: firebase.firestore.FieldValue.serverTimestamp(),
             iniziataBy: auth.currentUser.uid,
         });
@@ -188,7 +190,7 @@ async function iniziaStagione() {
         caricaArchivio();
         mostraStagioneGioco();
         loadGiornateTabellini();
-        passo(`Fatto: è cominciata la stagione ${Stagione.nome}. Le classifiche finali sono nell'archivio (scheda Lega); ora i Presidenti possono creare le nuove leghe.`);
+        passo(`Fatto: è cominciata la stagione ${nome}. Le classifiche finali sono nell'archivio (scheda Lega); ora i Presidenti possono creare le nuove leghe.`);
     } catch (e) {
         passo(`Passaggio interrotto: ${messaggioErrore(e).replace(/\.$/, '')}. Premi di nuovo "Controlla" e "Inizia la stagione": riprende da dove si è fermato.`);
     } finally {

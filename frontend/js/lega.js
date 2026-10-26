@@ -41,7 +41,7 @@ function linkInvito(codice) {
 }
 
 function testoInvito(l) {
-    return `Ti invito nella mia lega "${l.name}" del Fanta SuperLega ${Stagione.nome}, il fantavolley della SuperLega. Apri il link, entra con Google e scegli il nome della tua squadra:`;
+    return `Ti invito nella mia lega "${l.name}" del Fanta SuperLega${stagioneLega ? ` ${stagioneLega.nome}` : ''}, il fantavolley della SuperLega. Apri il link, entra con Google e scegli il nome della tua squadra:`;
 }
 
 async function copiaInvito() {

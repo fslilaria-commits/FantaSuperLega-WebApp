@@ -1,22 +1,5 @@
 const cheerio = require('cheerio');
 
-// Le squadre della stagione (frontend/js/stagione.js), da aggiornare ogni estate: id della loro pagina su
-// legavolley.it (teamId) e codice della squadra nella pagina statistiche della Lega (parametro Squadra)
-const SQUADRE_SUPERLEGA = [
-    { teamId: 6863, team: "Acqua Sant'Anna Cuneo", codiceStatistiche: 'CUNEOSPORT' },
-    { teamId: 6858, team: 'Allianz Milano', codiceStatistiche: 'MI-POWER' },
-    { teamId: 6859, team: 'Cisterna Volley', codiceStatistiche: 'CIS-VOLLEY' },
-    { teamId: 6860, team: 'Cucine Lube Civitanova', codiceStatistiche: 'MC' },
-    { teamId: 6861, team: 'Gas Sales Bluenergy Piacenza', codiceStatistiche: 'PIACENZAYOU' },
-    { teamId: 6862, team: 'Itas Trentino', codiceStatistiche: 'TN-ITAS' },
-    { teamId: 6866, team: 'Pallavolo Padova', codiceStatistiche: 'PD' },
-    { teamId: 6864, team: 'Rana Verona', codiceStatistiche: 'VRI' },
-    { teamId: 6865, team: 'Sir Susa Scai Perugia', codiceStatistiche: 'BASTIA' },
-    { teamId: 6897, team: 'Tinet Prata di Pordenone', codiceStatistiche: 'PRATA' },
-    { teamId: 6867, team: 'Valsa Group Modena', codiceStatistiche: 'MO' },
-    { teamId: 6868, team: 'Vero Volley Monza', codiceStatistiche: 'MIVER' },
-];
-
 const RUOLI = {
     palleggiatore: 'P',
     schiacciatore: 'S',
@@ -71,11 +54,12 @@ function parseRoster(html, { teamId, team }) {
 const MIN_PER_SQUADRA = 10;
 const MAX_QUOTA_USCITI = 0.25;
 
-// Controlli prima di accettare una proposta di listone: restituisce gli errori bloccanti e un riepilogo
-function checkProposal(players, previous = []) {
+// Controlli prima di accettare una proposta di listone: restituisce gli errori bloccanti e un riepilogo.
+// squadre: quelle della stagione (data/stagione.json)
+function checkProposal(players, previous, squadre) {
     const errors = [];
 
-    for (const { team } of SQUADRE_SUPERLEGA) {
+    for (const { team } of squadre) {
         const n = players.filter(p => p.team === team).length;
         if (n < MIN_PER_SQUADRA) errors.push(`${team}: solo ${n} giocatori (minimo ${MIN_PER_SQUADRA}), la pagina potrebbe essere cambiata`);
     }
@@ -96,4 +80,4 @@ function checkProposal(players, previous = []) {
     return { errors, summary: `${added} nuovi, ${removed} usciti rispetto alla versione precedente` };
 }
 
-module.exports = { SQUADRE_SUPERLEGA, mapRole, normalizeName, parseRoster, checkProposal };
+module.exports = { mapRole, normalizeName, parseRoster, checkProposal };

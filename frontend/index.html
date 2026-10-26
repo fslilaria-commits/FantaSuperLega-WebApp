@@ -380,10 +380,10 @@
                     </div>
                     <button class="btn btn-secondary" id="stagioneCheckBtn"><i class="fas fa-magnifying-glass"></i> Controlla</button>
                 </div>
-                <p class="admin-sub">Una volta all'anno, in estate: archivia le classifiche finali, cancella i dati della stagione finita e applica listone e calendario nuovi. Si può fare solo dopo che chi sviluppa ha cambiato la stagione nel codice e il bot ha scaricato i dati nuovi (guida admin, sezione 9).</p>
+                <p class="admin-sub">Una volta all'anno, in estate: archivia le classifiche finali, cancella i dati della stagione finita e applica listone e calendario nuovi. Si può fare solo quando la Lega ha pubblicato la stagione nuova e il bot ne ha scaricato listone e calendario: nessuno deve cambiare il codice (guida admin, sezione 9).</p>
                 <div id="stagioneRiepilogo"></div>
                 <div class="form-col" id="stagioneConfermaBox" hidden>
-                    <label class="admin-sub" for="stagioneConferma">Per confermare scrivi la stagione nuova, <strong data-stagione="nome"></strong>. I dati cancellati non si possono recuperare.</label>
+                    <label class="admin-sub" for="stagioneConferma">Per confermare scrivi la stagione nuova, <strong id="stagioneNuovaNome"></strong>. I dati cancellati non si possono recuperare.</label>
                     <input type="text" id="stagioneConferma" autocomplete="off" spellcheck="false">
                     <div class="admin-actions">
                         <button class="btn btn-danger" id="stagioneApplyBtn" disabled><i class="fas fa-flag-checkered"></i> Inizia la stagione</button>

@@ -3,12 +3,14 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { checkCalendario, scaricaCalendario } = require('./lib/calendario');
+const { stagioneDeiDati } = require('./lib/stagione');
 
 const OUTPUT = path.join(__dirname, '..', 'data', 'calendario.json');
 async function main() {
-    const giornate = await scaricaCalendario();
+    const stagione = stagioneDeiDati();
+    const giornate = await scaricaCalendario(stagione);
 
-    const errors = checkCalendario(giornate);
+    const errors = checkCalendario(giornate, stagione.squadre);
     if (errors.length) throw new Error(`calendario scartato, niente è stato scritto:\n- ${errors.join('\n- ')}`);
 
     // I risultati non fanno parte del calendario (li usa genera-tabellini): così il file cambia solo se cambiano date e orari

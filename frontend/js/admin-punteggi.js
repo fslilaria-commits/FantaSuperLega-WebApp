@@ -214,7 +214,7 @@ async function calendarioScontri(lega, iscritti, inizio) {
     const ref = lega.ref.collection('schedule').doc('main');
     const snap = await ref.get();
     if (snap.exists) return snap.data();
-    const calendario = Scontri.generaCalendario(iscritti.map(m => m.uid), { start: inizio });
+    const calendario = Scontri.generaCalendario(iscritti.map(m => m.uid), { start: inizio, end: ultimaGiornata() });
     await ref.set({ ...calendario, createdAt: firebase.firestore.FieldValue.serverTimestamp(), createdBy: auth.currentUser.uid });
     return calendario;
 }

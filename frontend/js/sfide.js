@@ -55,9 +55,13 @@ async function generaSfide() {
         status.textContent = 'Servono almeno 2 squadre.';
         return;
     }
+    if (!ultimaGiornata()) {
+        status.textContent = 'Manca ancora il calendario delle giornate: lo applica un admin.';
+        return;
+    }
     btn.disabled = true;
     const inizio = state.league.settings?.startMatchday ?? 1;
-    const calendario = Scontri.generaCalendario(state.members.map(m => m.uid), { start: inizio });
+    const calendario = Scontri.generaCalendario(state.members.map(m => m.uid), { start: inizio, end: ultimaGiornata() });
     try {
         await db.doc(`leagues/${state.league.id}/schedule/main`).set({
             ...calendario, createdAt: firebase.firestore.FieldValue.serverTimestamp(), createdBy: state.user.uid,
