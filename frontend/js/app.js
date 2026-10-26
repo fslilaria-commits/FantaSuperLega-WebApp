@@ -44,6 +44,20 @@ const stagionePronta = fetch(`${STAGIONE_URL}?t=${Date.now()}`, { cache: 'no-sto
     })
     .catch(() => null);
 
+// La stagione nuova della Lega quando il gioco è ancora a quella finita (in estate, prima di "Inizia la stagione");
+// altrimenti null. In quei giorni non si creano leghe (verrebbero archiviate e cancellate con la stagione vecchia)
+// e listone e calendario nuovi entrano solo dal passaggio di stagione, non dalla routine
+async function stagioneNuovaInAttesa() {
+    const lega = await stagionePronta;
+    if (!lega) return null;
+    try {
+        const anno = (await db.doc('meta/stagione').get()).data()?.anno;
+        return Number.isInteger(anno) && lega.anno > anno ? lega : null;
+    } catch {
+        return null;
+    }
+}
+
 // Ultima giornata del calendario nel gioco (22 con 12 squadre); null se il calendario non è ancora applicato
 const ultimaGiornata = () => state.matchdays.at(-1)?.number ?? null;
 
@@ -220,11 +234,12 @@ async function giornateConTabellino() {
 
 // Gli avvisi sul bot dei dati per gli admin (stato-bot.js): problema scritto dal bot e tabellini in ritardo
 async function avvisiBotDati() {
-    const [stato, conTabellino] = await Promise.all([
+    const [stato, conTabellino, nuova] = await Promise.all([
         fetch(`${STATO_BOT_URL}?t=${Date.now()}`, { cache: 'no-store' }).then(res => (res.ok ? res.json() : null)).catch(() => null),
         giornateConTabellino(),
+        stagioneNuovaInAttesa(),
     ]);
-    return StatoBot.avvisiBot({ giornate: state.matchdays, conTabellino, stato });
+    return StatoBot.avvisiBot({ giornate: state.matchdays, conTabellino, stato, stagioneNuova: nuova?.nome ?? null });
 }
 
 function giornateCalcolate() {

@@ -8,21 +8,33 @@
 
     // s: annoGioco (meta/stagione), annoLega (data/stagione.json: la stagione che il bot ha letto dal sito della Lega,
     //    null se manca), squadre di quella stagione, giocatori e giornate nelle proposte del bot (null se manca il file),
-    //    daGiocare: giornate nel gioco con la scadenza ancora da passare.
-    // stato: 'in-corso' (niente da fare), 'da-preparare' (motivi dice cosa manca) o 'pronta'.
+    //    daGiocare: giornate nel gioco con la scadenza ancora da passare; daCompletare: meta/stagione dice che il
+    //    passaggio si è interrotto dopo la cancellazione (il gioco è già alla stagione nuova, mancano listone e calendario).
+    // stato: 'in-corso' (niente da fare), 'da-preparare' (motivi dice cosa manca), 'pronta' o 'da-completare'.
     // Il passaggio si apre solo quando la Lega è a una stagione successiva a quella del gioco. Senza la stagione
     // del gioco non si cancella niente: la segna il pannello alla prima apertura.
     function controllaPassaggio(s) {
-        if (s.annoGioco == null || s.annoLega == null || s.annoLega <= s.annoGioco) return { stato: 'in-corso', motivi: [] };
+        const completa = s.daCompletare === true && s.annoGioco != null && s.annoGioco === s.annoLega;
+        if (!completa && (s.annoGioco == null || s.annoLega == null || s.annoLega <= s.annoGioco)) return { stato: 'in-corso', motivi: [] };
         const motivi = [];
-        if (s.daGiocare > 0) motivi.push(`la stagione nel gioco non è finita: ${s.daGiocare === 1 ? 'c\'è ancora 1 giornata' : `ci sono ancora ${s.daGiocare} giornate`} da giocare`);
+        // Ripresa: le giornate nel gioco possono essere già quelle nuove, quindi non contano
+        if (!completa && s.daGiocare > 0) motivi.push(`la stagione nel gioco non è finita: ${s.daGiocare === 1 ? 'c\'è ancora 1 giornata' : `ci sono ancora ${s.daGiocare} giornate`} da giocare`);
         if (!(s.squadre >= 2)) {
             motivi.push(`il bot non ha ancora trovato le squadre della stagione ${Stagione.nomeDi(s.annoLega)}`);
         } else {
             if (!(s.giocatori >= s.squadre * MIN_GIOCATORI_PER_SQUADRA)) motivi.push('manca il listone nuovo (la Lega pubblica le rose in estate)');
             if (s.giornate !== Stagione.giornateDi(s.squadre)) motivi.push('manca il calendario nuovo (la Lega lo pubblica in estate)');
         }
-        return { stato: motivi.length ? 'da-preparare' : 'pronta', motivi };
+        if (motivi.length) return { stato: 'da-preparare', motivi };
+        return { stato: completa ? 'da-completare' : 'pronta', motivi };
+    }
+
+    // L'anno della stagione di un calendario già nel gioco, dalla prima scadenza: le giornate da luglio a dicembre
+    // sono della stagione che comincia quell'anno, quelle da gennaio a giugno di quella cominciata l'anno prima
+    function annoDelCalendario(primaScadenza) {
+        const d = new Date(primaScadenza);
+        if (Number.isNaN(d.getTime())) return null;
+        return d.getUTCMonth() >= 6 ? d.getUTCFullYear() : d.getUTCFullYear() - 1;
     }
 
     // Classifica finale come la mostra la scheda Lega. members: [{ uid, teamName, joinedAt (millisecondi) }]
@@ -53,7 +65,7 @@
         };
     }
 
-    const api = { MIN_GIOCATORI_PER_SQUADRA, controllaPassaggio, classificaFinale, idArchivio, archivioLega };
+    const api = { MIN_GIOCATORI_PER_SQUADRA, controllaPassaggio, annoDelCalendario, classificaFinale, idArchivio, archivioLega };
     if (inNode) module.exports = api;
     else root.NuovaStagione = api;
 })(this);

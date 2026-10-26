@@ -17,14 +17,17 @@ if (auth) {
     document.getElementById('stagioneApplyBtn').addEventListener('click', iniziaStagione);
 }
 
-// Stagione del gioco in Firestore; la prima volta si segna quella della Lega (data/stagione.json), cioè quella in corso
+// Stagione del gioco in Firestore. La prima volta si segna quella del calendario già nel gioco, se c'è: la Lega
+// (data/stagione.json) potrebbe essere già passata alla stagione nuova, e allora il passaggio non si aprirebbe più
 async function leggiStagioneGioco() {
     const ref = db.doc('meta/stagione');
     const snap = await ref.get();
     if (snap.exists && Number.isInteger(snap.data().anno)) return snap.data();
-    const lega = await stagionePronta;
-    if (!lega) throw new Error('manca la stagione della Lega (data/stagione.json)');
-    const dati = { anno: lega.anno };
+    const prima = await db.collection('matchdays').orderBy('number').limit(1).get();
+    let anno = prima.empty ? null : NuovaStagione.annoDelCalendario(prima.docs[0].data().lockAt?.toDate?.());
+    if (anno == null) anno = (await stagionePronta)?.anno ?? null;
+    if (anno == null) throw new Error('manca la stagione della Lega (data/stagione.json)');
+    const dati = { anno };
     await ref.set(dati);
     return dati;
 }
@@ -76,6 +79,7 @@ async function controllaStagione() {
         const nonCalcolate = state.matchdays.filter(g => g.lockAt <= adesso && g.status !== 'scored').map(g => g.number);
         const esito = NuovaStagione.controllaPassaggio({
             daGiocare: state.matchdays.filter(g => g.lockAt > adesso).length,
+            daCompletare: gioco.daCompletare === true,
             annoGioco: gioco.anno,
             annoLega: lega?.anno ?? null,
             squadre: lega?.squadre ?? 0,
@@ -90,13 +94,24 @@ async function controllaStagione() {
             status.textContent = `La stagione ${lega.nome} non è ancora pronta: ${esito.motivi.join('; ')}. Il bot riprova a ogni aggiornamento dei dati: ricontrolla tra qualche giorno.`;
             return;
         }
-        const leghe = await db.collection('leagues').get();
-        riempi(riepilogo, el('ul', { class: 'routine-list' },
-            nonCalcolate.length ? rigaRoutine('errore', `Giornate giocate ma non calcolate: ${nonCalcolate.join(', ')}. La classifica archiviata non le conterrà: se servono, calcolale prima con la routine settimanale`) : null,
-            rigaRoutine('da', `Archivia la classifica finale di ${leghe.size === 1 ? '1 lega' : `${leghe.size} leghe`} della stagione ${Stagione.nomeDi(gioco.anno)}`),
-            rigaRoutine('da', 'Cancella leghe, rose, formazioni, mercato, giornate, punteggi e listone della stagione finita (restano gli admin e l\'archivio)'),
-            rigaRoutine('da', `Applica il listone nuovo (${listone.length} giocatori) e il calendario nuovo (${calendario.length} giornate)`)));
-        passaggioStagione = { annoGioco: gioco.anno, annoNuovo: lega.anno, nome: lega.nome, archiviata: gioco.archiviata === gioco.anno };
+        const applica = rigaRoutine('da', `Applica il listone nuovo (${listone.length} giocatori) e il calendario nuovo (${calendario.length} giornate)`);
+        if (esito.stato === 'da-completare') {
+            // Archivio e cancellazione sono già fatti: resta solo da applicare listone e calendario
+            riempi(riepilogo, el('ul', { class: 'routine-list' },
+                rigaRoutine('ok', 'Classifiche finali archiviate e dati della stagione finita cancellati'), applica));
+            passaggioStagione = { annoNuovo: lega.anno, nome: lega.nome, soloApplica: true };
+        } else {
+            // Le leghe per nome: una creata in estate prima del passaggio verrebbe archiviata e cancellata
+            const leghe = (await db.collection('leagues').get()).docs.map(d => d.data().name || d.id);
+            riempi(riepilogo, el('ul', { class: 'routine-list' },
+                nonCalcolate.length ? rigaRoutine('errore', `Giornate giocate ma non calcolate: ${nonCalcolate.join(', ')}. La classifica archiviata non le conterrà: se servono, calcolale prima con la routine settimanale`) : null,
+                rigaRoutine('da', leghe.length
+                    ? `Archivia la classifica finale ${leghe.length === 1 ? 'della lega' : `delle ${leghe.length} leghe`} della stagione ${Stagione.nomeDi(gioco.anno)}: ${leghe.join(', ')}`
+                    : `Nessuna lega da archiviare per la stagione ${Stagione.nomeDi(gioco.anno)}`),
+                rigaRoutine('da', 'Cancella leghe, rose, formazioni, mercato, giornate, punteggi e listone della stagione finita (restano gli admin e l\'archivio)'),
+                applica));
+            passaggioStagione = { annoGioco: gioco.anno, annoNuovo: lega.anno, nome: lega.nome, archiviata: gioco.archiviata === gioco.anno };
+        }
         document.getElementById('stagioneNuovaNome').textContent = lega.nome;
         mostraConfermaStagione(true);
         status.textContent = '';
@@ -161,16 +176,22 @@ async function iniziaStagione() {
     conferma.disabled = true;
     try {
         const { annoGioco, annoNuovo, nome } = passaggioStagione;
-        const leghe = (await db.collection('leagues').get()).docs.map(d => ({ id: d.id, ...d.data() }));
-        if (!passaggioStagione.archiviata) {
-            passo('Archivio le classifiche finali…');
-            for (const lega of leghe) await archiviaLega(annoGioco, lega);
-            await db.doc('meta/stagione').set({ archiviata: annoGioco }, { merge: true });
-            passaggioStagione.archiviata = true;
+        if (!passaggioStagione.soloApplica) {
+            const leghe = (await db.collection('leagues').get()).docs.map(d => ({ id: d.id, ...d.data() }));
+            if (!passaggioStagione.archiviata) {
+                passo('Archivio le classifiche finali…');
+                for (const lega of leghe) await archiviaLega(annoGioco, lega);
+                await db.doc('meta/stagione').set({ archiviata: annoGioco }, { merge: true });
+                passaggioStagione.archiviata = true;
+            }
+            passo('Raccolgo i dati della stagione finita…');
+            const refs = await documentiDellaStagione(leghe);
+            await cancellaDocumenti(refs, (fatti, totale) => passo(`Cancello i dati della stagione finita: ${fatti} su ${totale}…`));
+            // Da qui il gioco è già alla stagione nuova: se si interrompe, "Controlla" propone di completare il
+            // passaggio (solo listone e calendario) invece di fermarsi sulle giornate nuove "ancora da giocare"
+            await db.doc('meta/stagione').set({ anno: annoNuovo, daCompletare: true, archiviata: annoGioco });
+            passaggioStagione.soloApplica = true;
         }
-        passo('Raccolgo i dati della stagione finita…');
-        const refs = await documentiDellaStagione(leghe);
-        await cancellaDocumenti(refs, (fatti, totale) => passo(`Cancello i dati della stagione finita: ${fatti} su ${totale}…`));
 
         passo('Applico il listone nuovo…');
         if (!await checkListone() || !await applyListone()) throw new Error('listone non applicato (vedi il riquadro Listone)');

@@ -1,6 +1,6 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { haCredenziali, pulisciErrore, statoBot, descriviModifiche } = require('../lib/aggiornamento');
+const { haCredenziali, pulisciErrore, statoBot, percorsiDaStatus, descriviModifiche } = require('../lib/aggiornamento');
 
 test('un indirizzo della repo con dentro utente o chiave viene riconosciuto', () => {
     assert.equal(haCredenziali('https://github.com/fslilaria-commits/FantaSuperLega-WebApp'), false);
@@ -27,8 +27,23 @@ test('lo stato del bot cambia solo quando cambia la situazione', () => {
     const errore = statoBot(ok, ['listone: HTTP 500'], martedi);
     assert.deepEqual(errore, { esito: 'errore', dal: '2026-10-27T19:30:00.000Z', errori: ['listone: HTTP 500'] });
     assert.deepEqual(statoBot(errore, ['listone: HTTP 500'], new Date('2026-10-28T19:30:00Z')), errore, 'lo stesso errore il giorno dopo');
-    assert.equal(statoBot(errore, ['calendario: HTTP 500'], lunedi).dal, lunedi.toISOString(), 'un errore diverso riparte da adesso');
+    const altro = statoBot(errore, ['calendario: HTTP 500'], new Date('2026-10-29T19:30:00Z'));
+    assert.equal(altro.dal, errore.dal, 'un errore diverso: il bot non riesce sempre dal primo giorno');
+    assert.deepEqual(altro.errori, ['calendario: HTTP 500']);
     assert.deepEqual(statoBot(errore, [], martedi), { esito: 'ok', dal: martedi.toISOString() });
+});
+
+test('nei messaggi pubblici non finiscono i percorsi del PC né il nome dell\'utente', () => {
+    const errore = "❌ EPERM: operation not permitted, open 'C:\\Users\\mario.rossi\\FantaSuperLega-bot\\data\\players.json'";
+    assert.equal(pulisciErrore(errore, ['C:\\Users\\mario.rossi\\FantaSuperLega-bot']), "EPERM: operation not permitted, open '…\\data\\players.json'");
+    assert.equal(pulisciErrore("❌ errore in c:/users/MARIO.ROSSI/FantaSuperLega-bot/x", ['C:\\Users\\mario.rossi\\FantaSuperLega-bot']), 'errore in …/x');
+    assert.equal(pulisciErrore("❌ non trovo C:\\Users\\anna\\Desktop\\file.txt"), 'non trovo …\\Desktop\\file.txt', 'anche senza sapere la cartella');
+});
+
+test('i file toccati da git status -z, spostamenti compresi', () => {
+    const uscita = ' M data/players.json\0?? data/tabellini/2.json\0R  src/a.js\0data/a.js\0';
+    assert.deepEqual(percorsiDaStatus(uscita), ['data/players.json', 'data/tabellini/2.json', 'src/a.js', 'data/a.js']);
+    assert.deepEqual(percorsiDaStatus(''), []);
 });
 
 test('il messaggio del commit dice che cosa è cambiato', () => {

@@ -47,8 +47,20 @@ if (-not $origine -or $origine -notmatch 'github\.com[/:]fslilaria-commits/Fanta
 if ($origine -match '^[a-z+]+://[^/]*@') {
     Ferma 'l''indirizzo della repo contiene utente o chiave: rifai la copia con https://github.com/fslilaria-commits/FantaSuperLega-WebApp'
 }
-# L'accesso salvato da Git vale solo per questa repo, non per gli altri progetti dello stesso account
+# Git cerca l'accesso salvato per l'indirizzo di questa repo, non quello di altri account GitHub dello stesso PC
 & git -C $Radice config credential.useHttpPath true
+# Il bot butta via le modifiche in data/ e riallinea la cartella a GitHub: si segna come cartella del bot solo una
+# copia pulita, su main e senza commit da inviare. Senza il segno aggiorna-dati.js non parte
+if ((& git -C $Radice config --get fsl.cartellaBot) -ne 'true') {
+    $ramo = & git -C $Radice rev-parse --abbrev-ref HEAD
+    & git -C $Radice fetch --quiet origin main
+    $modifiche = & git -C $Radice status --porcelain
+    $daInviare = & git -C $Radice rev-list --count origin/main..HEAD
+    if ($ramo -ne 'main' -or $modifiche -or $daInviare -ne '0') {
+        Ferma 'questa cartella ha modifiche, commit da inviare o non è su main: per il bot serve una copia nuova della repo, che userà solo lui (docs/bot-pc.md, passo 2).'
+    }
+    & git -C $Radice config fsl.cartellaBot true
+}
 Write-Host $Radice
 
 Passo 'Chi firma i commit dei dati'
@@ -76,12 +88,14 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 if ($SoloControlli) {
-    Write-Host "`nControlli finiti: non è stato installato niente." -ForegroundColor Green
+    Write-Host "`nControlli finiti: l'attività pianificata non è stata creata." -ForegroundColor Green
     exit 0
 }
 
 Passo "Attività pianificata «$Attivita»: ogni giorno alle $Ora"
-$comando = "& '$($node.Replace("'", "''"))' '$($Script.Replace("'", "''"))'"
+# Tra apici singoli: PowerShell tratta come apici anche ‘ ’ ‚ ‛, che si raddoppiano come '
+function TraApici($testo) { "'" + ($testo -replace "(['‘’‚‛])", '$1$1') + "'" }
+$comando = "& $(TraApici $node) $(TraApici $Script)"
 $azione = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument "-NoProfile -WindowStyle Hidden -Command `"$comando`"" -WorkingDirectory $Radice
 $quando = New-ScheduledTaskTrigger -Daily -At $Ora
 $regole = New-ScheduledTaskSettingsSet -StartWhenAvailable -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries `

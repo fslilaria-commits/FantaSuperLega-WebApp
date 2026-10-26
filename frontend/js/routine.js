@@ -30,6 +30,12 @@ async function controllaRoutine() {
     status.textContent = 'Controllo in corso…';
     const righe = [];
     try {
+        const nuova = await stagioneNuovaInAttesa();
+        if (nuova) {
+            riempi(lista, rigaRoutine('errore', messaggioStagioneNuova(nuova)));
+            status.textContent = '';
+            return;
+        }
         if (!await checkListone()) throw new Error('controllo del listone non riuscito (vedi il riquadro Listone)');
         const modificheListone = listoneDiff ? ListoneDiff.totaleModifiche(listoneDiff) : 0;
         righe.push(rigaRoutine(modificheListone ? 'da' : 'ok', modificheListone ? `Listone: ${modificheListone} modifiche da applicare` : 'Listone aggiornato'));
@@ -44,7 +50,7 @@ async function controllaRoutine() {
         righe.push(rigaRoutine(giornate.length ? 'da' : 'ok', giornate.length ? `Punteggi: giornate da calcolare ${giornate.join(', ')}` : 'Punteggi: tutte le giornate scaricate sono già calcolate'));
         // Se il bot dei dati si è fermato, "tutto aggiornato" vorrebbe dire solo che non è arrivato niente
         const avvisiBot = await avvisiBotDati().catch(() => []);
-        for (const avviso of avvisiBot) righe.push(rigaRoutine('errore', `Bot dei dati: ${avviso} (guida admin, punto 7)`));
+        for (const avviso of avvisiBot) righe.push(rigaRoutine('errore', `Bot dei dati: ${avviso}`));
 
         routine = { listone: modificheListone > 0, calendario: modificheCalendario > 0, giornate };
         riempi(lista, righe);

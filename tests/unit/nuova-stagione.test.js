@@ -1,6 +1,6 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { controllaPassaggio, classificaFinale, archivioLega, idArchivio } = require('../../frontend/js/nuova-stagione.js');
+const { controllaPassaggio, annoDelCalendario, classificaFinale, archivioLega, idArchivio } = require('../../frontend/js/nuova-stagione.js');
 
 // Estate 2027: la Lega è già alla stagione nuova (data/stagione.json del bot), il gioco ancora alla 2026
 const estate = (cambi = {}) => ({
@@ -47,6 +47,24 @@ test('la Lega non ha ancora pubblicato rose o calendario', () => {
     assert.match(controllaPassaggio(estate({ giornate: 11 })).motivi.join(), /calendario/);
     assert.match(controllaPassaggio(estate({ squadre: 14, giornate: 22, giocatori: 200 })).motivi.join(), /calendario/);
     assert.equal(controllaPassaggio(estate({ giocatori: null, giornate: null })).motivi.length, 2);
+});
+
+test('passaggio interrotto dopo la cancellazione: si completa anche con le giornate nuove già nel gioco', () => {
+    // meta/stagione è già alla 2027 con daCompletare; il calendario nuovo può essere già applicato (22 da giocare)
+    const ripresa = estate({ annoGioco: 2027, daCompletare: true, daGiocare: 22 });
+    assert.deepEqual(controllaPassaggio(ripresa), { stato: 'da-completare', motivi: [] });
+    assert.match(controllaPassaggio({ ...ripresa, giocatori: null }).motivi.join(), /listone/);
+    // senza il segno, la stessa situazione è una stagione in corso
+    assert.equal(controllaPassaggio(estate({ annoGioco: 2027, daGiocare: 22 })).stato, 'in-corso');
+    // il segno vale solo per la stagione della Lega
+    assert.equal(controllaPassaggio(estate({ annoGioco: 2026, daCompletare: true, daGiocare: 3 })).stato, 'da-preparare');
+});
+
+test('l\'anno della stagione di un calendario dalla prima scadenza', () => {
+    assert.equal(annoDelCalendario(new Date('2026-10-17T15:59:00Z')), 2026);
+    assert.equal(annoDelCalendario(new Date('2027-01-10T15:59:00Z')), 2026);
+    assert.equal(annoDelCalendario(new Date('2027-09-01T00:00:00Z')), 2027);
+    assert.equal(annoDelCalendario(undefined), null);
 });
 
 const members = [
