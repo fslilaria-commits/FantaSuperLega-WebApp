@@ -31,12 +31,17 @@ if ($Rimuovi) {
 }
 
 Passo 'Programmi'
+$pacchetti = @{ git = 'Git.Git'; node = 'OpenJS.NodeJS.LTS'; npm = 'OpenJS.NodeJS.LTS' }
 foreach ($p in 'git', 'node', 'npm') {
-    if (-not (Get-Command $p -ErrorAction SilentlyContinue)) { Ferma "manca ${p}: installalo (docs/bot-pc.md, passo 1) e riapri PowerShell." }
+    if (-not (Get-Command $p -ErrorAction SilentlyContinue)) {
+        Ferma "manca ${p}: installalo con «winget install --id $($pacchetti[$p]) --exact --source winget» (docs/bot-pc.md, passo 1) e riapri PowerShell."
+    }
 }
 $node = (Get-Command node).Source
 $versione = & $node -v
-if ([int]($versione.TrimStart('v').Split('.')[0]) -lt 20) { Ferma "serve Node.js 20 o più recente, c'è il $versione." }
+if ([int]($versione.TrimStart('v').Split('.')[0]) -lt 20) {
+    Ferma "serve Node.js 20 o più recente, c'è il ${versione}: aggiornalo con «winget install --id OpenJS.NodeJS.LTS --exact --source winget» e riapri PowerShell."
+}
 Write-Host "$(& git --version), Node.js $versione"
 
 Passo 'Cartella della repo'

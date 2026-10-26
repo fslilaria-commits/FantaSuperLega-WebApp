@@ -16,7 +16,37 @@ Basta un PC, ed è meglio uno solo: con due, se un giorno uno dei due non riesce
 
 ## Installazione
 
-1. **Programmi.** Installa [Git per Windows](https://git-scm.com/download/win) e [Node.js](https://nodejs.org) (versione LTS, almeno la 20), lasciando le opzioni predefinite. Poi chiudi e riapri PowerShell.
+Il modo più veloce: apri **PowerShell** (Start → scrivi «PowerShell» → Invio; non serve come amministratore) e incolla tutto questo blocco. Fa da solo i quattro passi descritti sotto.
+
+```powershell
+winget install --id Git.Git --exact --source winget --accept-source-agreements --accept-package-agreements
+winget install --id OpenJS.NodeJS.LTS --exact --source winget --accept-source-agreements --accept-package-agreements
+$env:Path = [Environment]::GetEnvironmentVariable('Path', 'Machine') + ';' + [Environment]::GetEnvironmentVariable('Path', 'User')
+cd $HOME
+git clone https://github.com/fslilaria-commits/FantaSuperLega-WebApp FantaSuperLega-bot
+cd FantaSuperLega-bot
+powershell -ExecutionPolicy Bypass -File backend-bot\installa-bot.ps1 -Email 338878559+fslilaria-commits@users.noreply.github.com
+```
+
+Se Windows chiede il permesso di fare modifiche, conferma. Con un altro account GitHub cambia l'indirizzo dopo `-Email` (passo 3).
+
+### Passo per passo
+
+1. **Programmi.** Git per Windows e Node.js (versione LTS, almeno la 20) si installano con winget, il gestore di programmi di Windows:
+
+   ```powershell
+   winget install --id Git.Git --exact --source winget --accept-source-agreements --accept-package-agreements
+   winget install --id OpenJS.NodeJS.LTS --exact --source winget --accept-source-agreements --accept-package-agreements
+   ```
+
+   Le due opzioni `--accept-…` accettano i termini del catalogo di winget e dei due programmi, così i comandi non si fermano a chiedere. Se un programma c'è già, winget lo dice e va avanti. Poi chiudi e riapri PowerShell, così trova i programmi nuovi (oppure lancia la riga `$env:Path = …` del blocco sopra), e controlla:
+
+   ```powershell
+   git --version
+   node --version
+   ```
+
+   Node.js deve essere almeno la v20. Git non va configurato a mano: chi firma i commit e l'accesso a GitHub li imposta l'installatore al passo 4. Se winget non c'è o è bloccato (Windows vecchio o PC aziendale), installa [Git per Windows](https://git-scm.com/download/win) e [Node.js](https://nodejs.org) dai loro siti, con le opzioni predefinite.
 2. **Una copia della repo solo per il bot.** In PowerShell:
 
    ```powershell
