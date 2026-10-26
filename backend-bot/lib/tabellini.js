@@ -1,51 +1,65 @@
 const cheerio = require('cheerio');
 const { romeToUtc } = require('./calendario');
 
-// Pagina statistiche della Lega di una squadra in una giornata. stagione: data/stagione.json, con l'anno e il
-// codice della squadra nelle statistiche (parametro Squadra)
-function urlStatistiche(stagione, legaId, teamId) {
-    const squadra = stagione.squadre.find(s => s.teamId === teamId);
-    if (!squadra?.codiceStatistiche) {
-        throw new Error(`${squadra?.team ?? `squadra ${teamId}`}: manca il codice delle statistiche della Lega in data/stagione.json (prepara-stagione lo cerca a ogni aggiornamento nella pagina della squadra)`);
-    }
-    return `https://www.legavolley.it/statistiche/?TipoStat=1.1&Serie=1&AnnoInizio=${stagione.anno}&Fase=1&Giornata=${legaId}&Squadra=${encodeURIComponent(squadra.codiceStatistiche)}`;
-}
+// Pagina di una partita sul sito della Lega: il robots.txt la permette (le pagine /statistiche/ no) e ha il
+// tabellino di tutte e due le squadre, giocatore per giocatore, con i totali di squadra
+const urlPartita = matchId => `https://www.legavolley.it/match/${matchId}`;
 
-// "45,2" -> 45.2, "" -> 0
+// "45,2" -> 45.2, "50%" -> 50, "." o "" -> 0
 function num(text) {
     const n = parseFloat(String(text).replace(/\./g, '').replace(',', '.'));
     return Number.isFinite(n) ? n : 0;
 }
 
-// Le 24 colonne della vista "Team - Player by Player"
-function riga(cells) {
-    const c = cells.map(x => x.trim());
+// Come la Lega: i valori esattamente a metà vanno verso lo zero (18,75 -> 18,7; 0,375 -> 0,37)
+const arrotonda = (x, cifre) => Math.sign(x) * Math.ceil(Math.abs(x) * 10 ** cifre - 0.5 - 1e-9) / 10 ** cifre || 0;
+const quota = (parte, totale, cifre) => (totale ? arrotonda(parte / totale * (cifre === 1 ? 100 : 1), cifre) : 0);
+
+// Le colonne della pagina partita da PUNTI in poi: Tot, BP, VP | battuta Tot, Err, Pt | ricezione Tot, Err, Pos%,
+// Prf% | attacco Tot, Err, Mur, Pt, Pt% | muro Pt. La ricezione ha le percentuali: positive (+ e #) e perfette (#)
+// tornano conteggi, e le "negative" sono le altre ricezioni non sbagliate, come nel resto del gioco.
+// Efficienze e percentuali sono calcolate come le arrotonda la Lega (eff a 2 cifre, percentuali a 1)
+function statistiche(c) {
+    const [punti, , , batTot, batErr, ace, ricTot, ricErr, ricPos, ricPrf, attTot, attErr, murati, vincenti, , muri] = c.map(num);
+    const positive = Math.round(ricTot * ricPos / 100);
+    const perfette = Math.round(ricTot * ricPrf / 100);
     return {
-        name: c[0],
-        set: num(c[2]),
-        points: num(c[3]),
-        serve: { tot: num(c[5]), ace: num(c[6]), err: num(c[7]) },
-        rec: { tot: num(c[10]), err: num(c[11]), neg: num(c[12]), perf: num(c[13]), perfPct: num(c[14]), eff: num(c[15]) },
-        att: { tot: num(c[16]), err: num(c[17]), blocked: num(c[18]), kills: num(c[19]), killPct: num(c[20]), eff: num(c[21]) },
-        block: { pts: num(c[22]) },
+        points: punti,
+        serve: { tot: batTot, ace, err: batErr },
+        rec: { tot: ricTot, err: ricErr, neg: Math.max(0, ricTot - ricErr - positive), perf: perfette, perfPct: quota(perfette, ricTot, 1), eff: quota(perfette - ricErr, ricTot, 2) },
+        att: { tot: attTot, err: attErr, blocked: murati, kills: vincenti, killPct: quota(vincenti, attTot, 1), eff: quota(vincenti - attErr, attTot, 2) },
+        block: { pts: muri },
     };
 }
 
-// Giocatori e totali di squadra di una partita; null se la Lega non ha ancora dati
-function parseStatistiche(html) {
+// I tabellini delle due squadre di una partita: [{ team, players, totals }], nell'ordine della pagina (casa, poi
+// ospiti); null se la pagina non ha ancora il tabellino. Ci sono solo i giocatori entrati in campo
+function parsePartita(html) {
     const $ = cheerio.load(html);
-    const players = [];
-    let totals = null;
-    $('tr').each((_, tr) => {
-        // La riga "Team Totals" ha l'etichetta in una cella di intestazione (th)
-        const cells = $(tr).find('td, th').map((__, td) => $(td).text().replace(/ /g, ' ')).get();
-        if (cells.length !== 24) return;
-        const r = riga(cells);
-        if (!r.name || r.name === 'Player') return;
-        if (/^(team totals|totali di squadra)$/i.test(r.name)) totals = r; // pagina in inglese o in italiano
-        else players.push(r);
+    const cella = el => $(el).text().replace(/\s+/g, ' ').trim();
+    const squadre = [];
+    $('table').filter((_, t) => $(t).find('table').length === 0 && /Voto/.test($(t).find('tr').first().text())).each((_, t) => {
+        const righe = $(t).find('tr').map((__, tr) => [$(tr).find('td, th').map((___, c) => cella(c)).get()]).get();
+        const team = righe[0]?.[0];
+        const players = [];
+        let totals = null;
+        let set = 0;
+        for (const c of righe.slice(2)) {
+            if (c.length === 24 && /^\d+$/.test(c[0])) {
+                // numero, nome, voto, i 5 set (posizione di partenza o * se è entrato), poi le statistiche
+                const giocati = c.slice(3, 8).filter(v => v && v !== '.').length;
+                if (giocati) players.push({ name: c[1].replace(/\s*\([A-Z]\)\s*$/, ''), set: giocati, ...statistiche(c.slice(8)) });
+            } else if (c.length === 17 && /^totali squadra$/i.test(c[0])) {
+                totals = statistiche(c.slice(1));
+            } else if (/^\d° Set$/.test(c[0])) {
+                set++;
+            }
+        }
+        // Stessa forma dei tabellini già salvati (giocatori in ordine alfabetico), così riscaricarli non cambia i file
+        players.sort((a, b) => a.name.localeCompare(b.name, 'it'));
+        if (team && totals) squadre.push({ team, players, totals: { name: 'Totali di Squadra', set, ...totals } });
     });
-    return totals ? { players, totals } : null;
+    return squadre.length === 2 ? squadre : null;
 }
 
 // Il risultato "3-1" letto dal calendario; null se la partita non è ancora giocata
@@ -80,4 +94,4 @@ function checkTabellino(t) {
     return errors;
 }
 
-module.exports = { urlStatistiche, num, parseStatistiche, parseRisultato, validiDal, checkTabellino };
+module.exports = { urlPartita, num, parsePartita, parseRisultato, validiDal, checkTabellino };

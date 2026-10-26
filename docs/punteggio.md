@@ -4,9 +4,9 @@ Il punteggio segue le regole del [FantaLVF](https://fantaking.gitbook.io/fantalv
 
 ## Da dove arrivano i dati
 
-Pagina statistiche della Lega, vista **"Team – Player by Player"**, una richiesta per squadra e giornata (`backend-bot/genera-tabellini.js`). I dati sono verificati dalla Lega dalle 19 del giorno dopo l'ultima partita; il workflow settimanale li salva in `data/tabellini/<giornata>.json` e un admin li applica dal pannello Admin.
+La pagina di ogni partita sul sito della Lega (`legavolley.it/match/…`), con il tabellino di tutte e due le squadre (`backend-bot/genera-tabellini.js`). Le pagine statistiche della Lega hanno gli stessi numeri, ma il `robots.txt` del sito chiede ai programmi di non leggerle. I dati sono verificati dalla Lega dalle 19 del giorno dopo l'ultima partita; il bot li salva in `data/tabellini/<giornata>.json` e un admin li applica dal pannello Admin.
 
-Per ogni giocatore: set giocati, punti, battute (totali, ace, errori), ricezioni (totali, errori, negative, perfette, efficienza), attacchi (totali, errori, murati, vincenti, % vincenti, efficienza), muri punto. Per ogni squadra la riga dei totali.
+Per ogni giocatore: set giocati (quelli con la posizione di partenza o l'asterisco di chi è entrato), punti, battute (totali, ace, errori), ricezioni (totali, errori, % positive, % perfette), attacchi (totali, errori, murati, vincenti), muri punto. Per ogni squadra la riga dei totali. Dalle percentuali tornano i conteggi: perfette = totali × % perfette; le **negative** sono le ricezioni né sbagliate né positive (totali − errori − positive), come la colonna «Neg.» delle pagine statistiche. Efficienze e percentuali si calcolano come le arrotonda la Lega. Sulla 1ª giornata 2026/27 i tabellini rifatti dalle pagine partita sono identici a quelli presi dalle pagine statistiche, giocatore per giocatore.
 
 ### Correzioni manuali
 
@@ -57,7 +57,7 @@ Il regolamento FantaLVF usa alcuni termini che i tabellini della Lega maschile n
 | Efficienza attacco ("Eff. Attacco", "%Eff att") | Efficienza della Lega: (vincenti − errori) / totali |
 | % positività attacco | % attacchi vincenti |
 | Ricezioni perfette | Ricezioni "Exc." della Lega |
-| Efficienza ricezione ("Eff. Ric", soglia 65%) | **Positività**: (ricezioni − errori − negative) / ricezioni. La Lega non dà le ricezioni positive separate dalle perfette |
+| Efficienza ricezione ("Eff. Ric", soglia 65%) | **Positività**: ricezioni positive e perfette (+ e #) / ricezioni, la «Pos%» del tabellino della Lega. Non la colonna «Effic.» delle pagine statistiche, (perfette − errori) / ricezioni: con quella la soglia del 65% non la supera quasi nessuno, nemmeno tra le migliori libere della Serie A1 femminile (al massimo circa il 40%) |
 | % attacco di squadra | % attacchi vincenti della squadra |
 
 ## Fanta-squadra

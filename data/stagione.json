@@ -4,63 +4,51 @@
   "squadre": [
     {
       "teamId": 6863,
-      "team": "Acqua Sant'Anna Cuneo",
-      "codiceStatistiche": "CUNEOSPORT"
+      "team": "Acqua Sant'Anna Cuneo"
     },
     {
       "teamId": 6858,
-      "team": "Allianz Milano",
-      "codiceStatistiche": "MI-POWER"
+      "team": "Allianz Milano"
     },
     {
       "teamId": 6859,
-      "team": "Cisterna Volley",
-      "codiceStatistiche": "CIS-VOLLEY"
+      "team": "Cisterna Volley"
     },
     {
       "teamId": 6860,
-      "team": "Cucine Lube Civitanova",
-      "codiceStatistiche": "MC"
+      "team": "Cucine Lube Civitanova"
     },
     {
       "teamId": 6861,
-      "team": "Gas Sales Bluenergy Piacenza",
-      "codiceStatistiche": "PIACENZAYOU"
+      "team": "Gas Sales Bluenergy Piacenza"
     },
     {
       "teamId": 6862,
-      "team": "Itas Trentino",
-      "codiceStatistiche": "TN-ITAS"
+      "team": "Itas Trentino"
     },
     {
       "teamId": 6866,
-      "team": "Pallavolo Padova",
-      "codiceStatistiche": "PD"
+      "team": "Pallavolo Padova"
     },
     {
       "teamId": 6864,
-      "team": "Rana Verona",
-      "codiceStatistiche": "VRI"
+      "team": "Rana Verona"
     },
     {
       "teamId": 6865,
-      "team": "Sir Susa Scai Perugia",
-      "codiceStatistiche": "BASTIA"
+      "team": "Sir Susa Scai Perugia"
     },
     {
       "teamId": 6897,
-      "team": "Tinet Prata di Pordenone",
-      "codiceStatistiche": "PRATA"
+      "team": "Tinet Prata di Pordenone"
     },
     {
       "teamId": 6867,
-      "team": "Valsa Group Modena",
-      "codiceStatistiche": "MO"
+      "team": "Valsa Group Modena"
     },
     {
       "teamId": 6868,
-      "team": "Vero Volley Monza",
-      "codiceStatistiche": "MIVER"
+      "team": "Vero Volley Monza"
     }
   ]
 }

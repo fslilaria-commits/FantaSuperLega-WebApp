@@ -3,7 +3,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { scaricaCalendario } = require('./lib/calendario');
-const { urlStatistiche, parseStatistiche, parseRisultato, validiDal, checkTabellino } = require('./lib/tabellini');
+const { urlPartita, parsePartita, parseRisultato, validiDal, checkTabellino } = require('./lib/tabellini');
 const { scaricaPagina } = require('./lib/rete');
 const { stagioneDeiDati } = require('./lib/stagione');
 
@@ -35,11 +35,23 @@ async function main() {
             })),
             teams: {},
         };
+        // Una pagina per partita, con il tabellino di tutte e due le squadre (prima quella di casa)
+        const mancaId = [];
         for (const m of g.matches.filter(x => !x.moved)) {
-            for (const [teamId, team] of [[m.homeId, m.home], [m.awayId, m.away]]) {
-                const stats = parseStatistiche(await scaricaPagina(urlStatistiche(stagione, g.legaId, teamId)));
-                if (stats) tabellino.teams[teamId] = { team, ...stats };
+            if (!m.matchId) {
+                mancaId.push(`${m.home} – ${m.away}`);
+                continue;
             }
+            const squadre = parsePartita(await scaricaPagina(urlPartita(m.matchId)));
+            if (!squadre) continue; // la Lega non ha ancora il tabellino: lo dice checkTabellino
+            for (const [teamId, team, i] of [[m.homeId, m.home, 0], [m.awayId, m.away, 1]]) {
+                const s = squadre.find(x => x.team === team) || squadre[i];
+                tabellino.teams[teamId] = { team, players: s.players, totals: s.totals };
+            }
+        }
+        if (mancaId.length) {
+            problemi.push(`${g.label}: nel calendario manca il collegamento alla pagina della partita (${mancaId.join(', ')})`);
+            continue;
         }
 
         const errors = checkTabellino(tabellino);
