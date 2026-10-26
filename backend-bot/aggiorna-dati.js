@@ -33,9 +33,13 @@ function scrivi(testo) {
     fs.appendFileSync(REGISTRO, righe.split(/\r?\n/).map(r => `${ora}  ${r}`).join('\n') + '\n');
 }
 
-// Lancia un programma e ne mette l'uscita nel registro; npm su Windows è uno script e va lanciato con la shell
+// Lancia un programma e ne mette l'uscita nel registro. npm su Windows è uno script e va lanciato con la shell,
+// come comando unico (argomenti fissi, scritti qui)
 function esegui(comando, argomenti, { cwd = RADICE, silenzioso = false } = {}) {
-    const r = spawnSync(comando, argomenti, { cwd, encoding: 'utf8', shell: comando === 'npm', windowsHide: true });
+    const opzioni = { cwd, encoding: 'utf8', windowsHide: true };
+    const r = comando === 'npm'
+        ? spawnSync(['npm', ...argomenti].join(' '), { ...opzioni, shell: true })
+        : spawnSync(comando, argomenti, opzioni);
     const uscita = `${r.stdout || ''}${r.stderr || ''}${r.error ? r.error.message : ''}`;
     if (!silenzioso) scrivi(uscita);
     return { ok: r.status === 0, uscita };
@@ -111,12 +115,16 @@ function aggiornaStato(errori) {
 
 // 5. Commit della sola data/ e invio a GitHub; se nel frattempo è arrivato altro, si rimette in coda e si riprova
 function salvaSuGitHub() {
-    const cambiati = git('status', '--porcelain', '-uall', '--', 'data/').uscita.split('\n')
-        .filter(r => r.trim()).map(r => r.slice(3).split(' -> ').pop());
+    // Si guarda che cosa entrerebbe davvero nel commit: con gli a capo di Windows git status può segnare come
+    // cambiati file che hanno lo stesso contenuto
+    git('add', '--', 'data/');
+    const cambiati = git('diff', '--cached', '--name-only', '--', 'data/').uscita.split('\n').map(r => r.trim()).filter(Boolean);
     if (!cambiati.length) return scrivi('Nessuna novità nei dati della Lega.');
     const messaggio = descriviModifiche(cambiati);
-    if (PROVA) return scrivi(`Prova: ${cambiati.length} file cambiati in data/, non salvo su GitHub («${messaggio}»)`);
-    git('add', '--', 'data/');
+    if (PROVA) {
+        git('reset', '--quiet');
+        return scrivi(`Prova: ${cambiati.length} file cambiati in data/, non salvo su GitHub («${messaggio}»)`);
+    }
     if (!git('commit', '--quiet', '-m', messaggio).ok) ferma('commit dei dati non riuscito');
     let invio = git('push', '--quiet', 'origin', 'HEAD:main');
     if (!invio.ok && git('pull', '--quiet', '--rebase', 'origin', 'main').ok) invio = git('push', '--quiet', 'origin', 'HEAD:main');

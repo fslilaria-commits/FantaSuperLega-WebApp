@@ -135,6 +135,13 @@ test('stessa stagione già completa: niente cambia e le pagine delle squadre non
     assert.equal(sito.richieste.length, 2, 'solo le due pagine calendario');
 });
 
+test('stagione.json con gli a capo di Windows ma stesso contenuto: niente cambia', async () => {
+    const dir = cartellaDati(null);
+    fs.writeFileSync(path.join(dir, 'stagione.json'), JSON.stringify(datiCompleti(2026, STAGIONE_2026), null, 2).replace(/\n/g, '\r\n') + '\r\n');
+    const { cambiata } = await preparaStagione(dir, sitoLega(2026, { 2026: STAGIONE_2026 }).scarica);
+    assert.equal(cambiata, false);
+});
+
 test('la Lega passa alla stagione nuova: via le proposte di quella finita, squadre e codici nuovi', async () => {
     const dir = cartellaDati(datiCompleti(2026, STAGIONE_2026));
     const { esito } = await preparaStagione(dir, sitoLega(2027, { 2026: STAGIONE_2026, 2027: STAGIONE_2027 }).scarica);
