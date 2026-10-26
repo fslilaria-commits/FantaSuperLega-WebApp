@@ -156,6 +156,6 @@ Se **Controlla** non mostra il pulsante, dice il motivo:
 | «Il bot non ha ancora trovato le squadre» | La Lega ha la stagione nuova ma non ancora l'elenco delle squadre: il bot riprova da solo |
 | «Manca il listone nuovo» o «Manca il calendario nuovo» | La Lega non li ha ancora pubblicati: il bot riprova a ogni aggiornamento |
 
-Se il riepilogo segnala **giornate giocate ma non calcolate**, calcolale prima con la routine settimanale: altrimenti i loro punti non entrano nella classifica archiviata. Meglio ancora, calcola tutte le giornate appena finisce la regular season: quando la Lega passa alla stagione nuova il bot toglie i tabellini di quella finita, e dal pannello non si possono più calcolare.
+**Calcola tutte le giornate appena finisce la regular season.** Quando la Lega passa alla stagione nuova il bot toglie i tabellini di quella finita, e il pannello non calcola più niente sopra la stagione vecchia: se il riepilogo segnala **giornate giocate ma non calcolate**, i loro punti non entreranno nella classifica archiviata. Se due admin aprono il passaggio insieme, il pulsante ricontrolla la stagione prima di partire e si ferma se l'altro l'ha già fatto.
 
 Se la SuperLega cambia numero di squadre (per esempio 14), il bot lo vede dal calendario e il gioco si adatta da solo (26 giornate). Serve chi sviluppa solo se la Lega cambia il proprio sito: in quel caso il bot si ferma con un messaggio chiaro invece di scaricare dati sbagliati.

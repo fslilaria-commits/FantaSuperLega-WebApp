@@ -9,8 +9,11 @@ let calcolo = null; // { numero, punti, originale, righe, nonAbbinate }
 let rigaScelta = null; // la riga del tabellino aperta nell'editor delle correzioni
 
 if (auth) {
-    document.getElementById('punteggiCheckBtn').addEventListener('click', checkPunteggi);
-    document.getElementById('punteggiApplyBtn').addEventListener('click', applyPunteggi);
+    // Con la Lega già alla stagione nuova i tabellini scaricati sono di quella nuova: calcolarli sopra le giornate
+    // della stagione finita ne cambierebbe la classifica prima dell'archivio
+    const stagioneNuova = nuova => `La Lega è già alla stagione ${nuova.nome}: i tabellini scaricati adesso sono della stagione nuova e non si calcolano sopra quella finita. Si calcolano dopo «Inizia la stagione».`;
+    document.getElementById('punteggiCheckBtn').addEventListener('click', soloStessaStagione(checkPunteggi, 'punteggiStatus', stagioneNuova));
+    document.getElementById('punteggiApplyBtn').addEventListener('click', soloStessaStagione(applyPunteggi, 'punteggiStatus', stagioneNuova));
 }
 
 // Le giornate con il tabellino scaricato (admin.js la chiama solo per gli admin)

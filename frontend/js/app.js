@@ -47,15 +47,15 @@ const stagionePronta = fetch(`${STAGIONE_URL}?t=${Date.now()}`, { cache: 'no-sto
 // La stagione nuova della Lega quando il gioco è ancora a quella finita (in estate, prima di "Inizia la stagione");
 // altrimenti null. In quei giorni non si creano leghe (verrebbero archiviate e cancellate con la stagione vecchia)
 // e listone e calendario nuovi entrano solo dal passaggio di stagione, non dalla routine
+// Si rilegge ogni volta (una pagina aperta da giorni non deve usare la stagione di quando è stata aperta) e, se non
+// si riesce a leggere, dà errore: chi la usa per bloccare qualcosa si ferma invece di lasciar passare
 async function stagioneNuovaInAttesa() {
-    const lega = await stagionePronta;
-    if (!lega) return null;
-    try {
-        const anno = (await db.doc('meta/stagione').get()).data()?.anno;
-        return Number.isInteger(anno) && lega.anno > anno ? lega : null;
-    } catch {
-        return null;
-    }
+    const res = await fetch(`${STAGIONE_URL}?t=${Date.now()}`, { cache: 'no-store' });
+    if (!res.ok) throw new Error(`la stagione della Lega non si legge (HTTP ${res.status})`);
+    const lega = Stagione.descrivi(await res.json());
+    if (!lega) throw new Error('la stagione della Lega non è valida');
+    const anno = (await db.doc('meta/stagione').get()).data()?.anno;
+    return Number.isInteger(anno) && lega.anno > anno ? lega : null;
 }
 
 // Ultima giornata del calendario nel gioco (22 con 12 squadre); null se il calendario non è ancora applicato
@@ -237,7 +237,7 @@ async function avvisiBotDati() {
     const [stato, conTabellino, nuova] = await Promise.all([
         fetch(`${STATO_BOT_URL}?t=${Date.now()}`, { cache: 'no-store' }).then(res => (res.ok ? res.json() : null)).catch(() => null),
         giornateConTabellino(),
-        stagioneNuovaInAttesa(),
+        stagioneNuovaInAttesa().catch(() => null), // solo per gli avvisi: se non si legge, niente avviso di stagione
     ]);
     return StatoBot.avvisiBot({ giornate: state.matchdays, conTabellino, stato, stagioneNuova: nuova?.nome ?? null });
 }

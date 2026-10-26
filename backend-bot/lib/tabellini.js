@@ -41,6 +41,10 @@ function parsePartita(html) {
     $('table').filter((_, t) => $(t).find('table').length === 0 && /Voto/.test($(t).find('tr').first().text())).each((_, t) => {
         const righe = $(t).find('tr').map((__, tr) => [$(tr).find('td, th').map((___, c) => cella(c)).get()]).get();
         const team = righe[0]?.[0];
+        // Le colonne si leggono per posizione: se la Lega cambia la pagina ci si ferma invece di leggere numeri sbagliati
+        if (JSON.stringify(righe[1]?.slice(1)) !== JSON.stringify(INTESTAZIONE)) {
+            throw new Error(`${team || 'una squadra'}: le colonne della pagina partita non sono quelle attese (la Lega ha cambiato la pagina?)`);
+        }
         const players = [];
         let totals = null;
         let set = 0;
@@ -60,6 +64,42 @@ function parsePartita(html) {
         if (team && totals) squadre.push({ team, players, totals: { name: 'Totali di Squadra', set, ...totals } });
     });
     return squadre.length === 2 ? squadre : null;
+}
+
+// La seconda riga di ogni tabella di squadra, dopo il nome dell'allenatore
+const INTESTAZIONE = ['1', '2', '3', '4', '5', 'Tot', 'BP', 'VP', '', 'Err', 'Pt', '', 'Err', 'Pos%', 'Prf%', '', 'Err', 'Mur', 'Pt', 'Pt%', 'Pt'];
+
+const nomeSquadra = s => String(s).normalize('NFKC').replace(/[’‘`´]/g, "'").replace(/\s+/g, ' ').trim().toLowerCase();
+
+// Le tabelle della pagina per la squadra di casa e quella ospite del calendario, abbinate per nome. Se un nome non
+// torna (la Lega può scriverlo un po' diverso) vale l'altro; se non torna nessuno dei due, o tutti e due indicano
+// la stessa tabella, la pagina non è di questa partita e ci si ferma
+function abbinaSquadre(squadre, casa, ospite) {
+    let iCasa = squadre.findIndex(s => nomeSquadra(s.team) === nomeSquadra(casa));
+    let iOspite = squadre.findIndex(s => nomeSquadra(s.team) === nomeSquadra(ospite));
+    if (iCasa < 0 && iOspite >= 0) iCasa = 1 - iOspite;
+    if (iOspite < 0 && iCasa >= 0) iOspite = 1 - iCasa;
+    if (iCasa < 0 || iOspite < 0 || iCasa === iOspite || nomeSquadra(squadre[iCasa].team) === nomeSquadra(squadre[iOspite].team)) {
+        throw new Error(`la pagina della partita ha ${squadre.map(s => s.team).join(' e ')}, non ${casa} e ${ospite}`);
+    }
+    return [squadre[iCasa], squadre[iOspite]];
+}
+
+// Controlli che la pagina sia letta bene: le statistiche dei giocatori sommate danno i totali di squadra, e i set
+// della pagina sono quelli del risultato. result: { home, away } dal calendario (null se manca)
+const VOCI_SOMMATE = [['points'], ['serve', 'tot'], ['serve', 'ace'], ['serve', 'err'], ['rec', 'tot'], ['rec', 'err'],
+    ['att', 'tot'], ['att', 'err'], ['att', 'blocked'], ['att', 'kills'], ['block', 'pts']];
+function controllaPartita(squadre, result) {
+    const errori = [];
+    const valore = (o, voce) => voce.reduce((x, k) => x?.[k], o) ?? 0;
+    for (const s of squadre) {
+        const diverse = VOCI_SOMMATE.filter(v => s.players.reduce((somma, p) => somma + valore(p, v), 0) !== valore(s.totals, v));
+        if (diverse.length) errori.push(`${s.team}: i giocatori non tornano con i totali di squadra (${diverse.map(v => v.join('.')).join(', ')})`);
+    }
+    if (result && squadre.some(s => s.totals.set !== result.home + result.away)) {
+        errori.push(`i set del tabellino non tornano con il risultato ${result.home}-${result.away}`);
+    }
+    return errori;
 }
 
 // Il risultato "3-1" letto dal calendario; null se la partita non è ancora giocata
@@ -94,4 +134,4 @@ function checkTabellino(t) {
     return errors;
 }
 
-module.exports = { urlPartita, num, parsePartita, parseRisultato, validiDal, checkTabellino };
+module.exports = { urlPartita, num, parsePartita, abbinaSquadre, controllaPartita, parseRisultato, validiDal, checkTabellino };

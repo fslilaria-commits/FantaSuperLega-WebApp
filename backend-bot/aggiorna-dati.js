@@ -44,33 +44,46 @@ function scrivi(testo) {
     fs.appendFileSync(REGISTRO, righe.split(/\r?\n/).map(r => `${ora}  ${r}`).join('\n') + '\n');
 }
 
-// Lancia un programma e ne mette l'uscita nel registro. npm su Windows è uno script e va lanciato con la shell,
-// come comando unico (argomenti fissi, scritti qui)
+// npm lanciato con lo stesso Node, senza la shell in mezzo: così, se va oltre il tempo massimo, si ferma davvero
+// (con la shell si fermerebbe solo la shell). Se npm non è accanto a Node si usa quello del PATH, con la shell
+const NPM_CLI = path.join(path.dirname(process.execPath), 'node_modules', 'npm', 'bin', 'npm-cli.js');
+
+// Lancia un programma e ne mette l'uscita nel registro (argomenti fissi, scritti qui)
 function esegui(comando, argomenti, { cwd = RADICE, silenzioso = false, tempo = TEMPO.passo, env = process.env } = {}) {
     const opzioni = { cwd, encoding: 'utf8', windowsHide: true, timeout: tempo, env, maxBuffer: 64 * 1024 * 1024 };
-    const r = comando === 'npm'
-        ? spawnSync(['npm', ...argomenti].join(' '), { ...opzioni, shell: true })
-        : spawnSync(comando, argomenti, opzioni);
-    const scaduto = r.error?.code === 'ETIMEDOUT' ? `\nfermato dopo ${Math.round(tempo / MINUTO)} minuti senza risposta` : '';
-    const uscita = `${r.stdout || ''}${r.stderr || ''}${r.error && !scaduto ? r.error.message : ''}${scaduto}`;
+    let r;
+    if (comando === 'npm' && fs.existsSync(NPM_CLI)) r = spawnSync(process.execPath, [NPM_CLI, ...argomenti], opzioni);
+    else if (comando === 'npm') r = spawnSync(['npm', ...argomenti].join(' '), { ...opzioni, shell: true });
+    else r = spawnSync(comando, argomenti, opzioni);
+    const scaduto = r.error?.code === 'ETIMEDOUT';
+    const uscita = `${r.stdout || ''}${r.stderr || ''}${r.error && !scaduto ? r.error.message : ''}${scaduto ? `\nfermato dopo ${Math.round(tempo / MINUTO)} minuti senza risposta` : ''}`;
     if (!silenzioso) scrivi(uscita);
-    return { ok: r.status === 0, uscita };
+    return { ok: r.status === 0, uscita, scaduto };
 }
 
-const git = (...argomenti) => esegui('git', argomenti, { silenzioso: true, tempo: TEMPO.git, env: AMBIENTE_GIT });
+// git non chiede mai niente e lascia perdere un trasferimento fermo da un minuto invece di restare appeso
+const git = (...argomenti) => esegui('git', ['-c', 'http.lowSpeedLimit=1000', '-c', 'http.lowSpeedTime=60', ...argomenti],
+    { silenzioso: true, tempo: TEMPO.git, env: AMBIENTE_GIT });
 
 function ferma(motivo) {
     throw new Error(motivo);
 }
 
 // Un comando git che deve riuscire. Se lo blocca un index.lock rimasto da un'esecuzione interrotta (PC spento a
-// metà, attività fermata), lo toglie e riprova: nessun altro aggiornamento è in corso, lo garantisce IN_CORSO
+// metà, attività fermata), lo toglie e riprova: solo se git dice proprio quello e il blocco ha più di 10 minuti, così
+// non si toglie a un git ancora al lavoro (un altro aggiornamento non c'è, lo garantisce IN_CORSO). Dopo un comando
+// scaduto non si tocca niente: il git vero potrebbe essere ancora acceso
+const BLOCCO_VECCHIO = 10 * MINUTO;
 function gitObbligatorio(...argomenti) {
     let r = git(...argomenti);
-    if (!r.ok && fs.existsSync(BLOCCO_GIT)) {
+    if (r.scaduto) ferma(`git ${argomenti[0]} non ha finito in tempo: si riprova al prossimo giro`);
+    const bloccoVecchio = () => fs.existsSync(BLOCCO_GIT) && Date.now() - fs.statSync(BLOCCO_GIT).mtimeMs > BLOCCO_VECCHIO;
+    if (!r.ok && /index\.lock/.test(r.uscita) && bloccoVecchio()) {
         scrivi('Trovato un blocco di git rimasto da un\'esecuzione interrotta (.git/index.lock): lo tolgo e riprovo.');
         fs.rmSync(BLOCCO_GIT, { force: true });
         r = git(...argomenti);
+    } else if (!r.ok && /index\.lock/.test(r.uscita)) {
+        ferma('git è bloccato da un altro programma che sta usando la cartella del bot (.git/index.lock recente): si riprova al prossimo giro, e se il blocco resta più di 10 minuti il bot lo toglie da solo');
     }
     if (!r.ok) ferma(`git ${argomenti[0]} non riuscito: ${errore(r.uscita)}`);
     return r;
@@ -98,7 +111,8 @@ let cartellaDelBot = false; // solo nella cartella segnata da installa-bot.ps1 s
 
 // 1. La cartella com'è su GitHub
 function allineaAGitHub() {
-    if (git('config', '--get', 'fsl.cartellaBot').uscita.trim() !== 'true') {
+    // Solo la configurazione di questa cartella: un segno messo per sbaglio nella configurazione generale non vale
+    if (git('config', '--local', '--get', 'fsl.cartellaBot').uscita.trim() !== 'true') {
         ferma('questa non è la cartella del bot: il bot butta via le modifiche in data/, quindi gira solo in una copia della repo preparata da installa-bot.ps1 (docs/bot-pc.md)');
     }
     cartellaDelBot = true;
@@ -117,10 +131,14 @@ function allineaAGitHub() {
         fetch = git('fetch', '--quiet', 'origin', 'main');
     }
     if (!fetch.ok) ferma(`GitHub non risponde: ${errore(fetch.uscita)}`);
-    // Commit non ancora su GitHub: quelli del bot (solo data/) si buttano e si rifanno adesso, gli altri fermano tutto
+    // Commit non ancora su GitHub: quelli del bot (solo data/, firmati dal bot) si buttano e si rifanno adesso;
+    // quelli di qualcun altro, o che toccano altro, fermano tutto
     const nonInviati = git('log', 'origin/main..HEAD', '--name-only', '--format=').uscita.split('\n').map(r => r.trim()).filter(Boolean);
     const estranei = [...new Set(nonInviati.filter(f => !f.startsWith('data/')))];
     if (estranei.length) ferma(`nella cartella del bot ci sono commit non inviati che toccano altro oltre data/ (${estranei.join(', ')})`);
+    const firmaBot = git('config', 'user.email').uscita.trim().toLowerCase();
+    const altriAutori = [...new Set(git('log', 'origin/main..HEAD', '--format=%ae').uscita.split('\n').map(r => r.trim().toLowerCase()).filter(a => a && a !== firmaBot))];
+    if (altriAutori.length) ferma(`nella cartella del bot ci sono commit non inviati fatti da altri (${altriAutori.join(', ')}): non si buttano`);
     gitObbligatorio('reset', '--quiet', '--hard', 'origin/main');
     gitObbligatorio('clean', '-fdq', '--', 'data/');
     scrivi(`Cartella allineata a GitHub (${git('log', '-1', '--format=%h %s').uscita.trim()})`);
@@ -211,7 +229,8 @@ function main() {
     } finally {
         // La prova non lascia niente: data/ torna com'è su GitHub
         if (PROVA && cartellaDelBot) {
-            git('checkout', '--', 'data/');
+            git('reset', '--quiet', '--', 'data/');
+            git('checkout', 'HEAD', '--', 'data/');
             git('clean', '-fdq', '--', 'data/');
         }
         if (turno) fs.rmSync(IN_CORSO, { force: true });

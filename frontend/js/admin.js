@@ -33,11 +33,19 @@ function messaggioStagioneNuova(nuova) {
     return `La Lega è già alla stagione ${nuova.nome}: listone e calendario nuovi entrano con «Inizia la stagione» (riquadro Nuova stagione), non da qui.`;
 }
 
-function soloStessaStagione(azione, idStato) {
+// Se la stagione non si riesce a controllare non si applica niente: meglio riprovare che mescolare due stagioni
+function soloStessaStagione(azione, idStato, messaggio = messaggioStagioneNuova) {
     return async () => {
-        const nuova = await stagioneNuovaInAttesa();
+        const stato = document.getElementById(idStato);
+        let nuova;
+        try {
+            nuova = await stagioneNuovaInAttesa();
+        } catch (e) {
+            stato.textContent = `Non riesco a controllare la stagione: ${messaggioErrore(e).replace(/\.$/, '')}. Riprova tra poco.`;
+            return;
+        }
         if (nuova) {
-            document.getElementById(idStato).textContent = messaggioStagioneNuova(nuova);
+            stato.textContent = messaggio(nuova);
             return;
         }
         await azione();

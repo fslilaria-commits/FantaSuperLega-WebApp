@@ -104,7 +104,7 @@ async function controllaStagione() {
             // Le leghe per nome: una creata in estate prima del passaggio verrebbe archiviata e cancellata
             const leghe = (await db.collection('leagues').get()).docs.map(d => d.data().name || d.id);
             riempi(riepilogo, el('ul', { class: 'routine-list' },
-                nonCalcolate.length ? rigaRoutine('errore', `Giornate giocate ma non calcolate: ${nonCalcolate.join(', ')}. La classifica archiviata non le conterrà: se servono, calcolale prima con la routine settimanale`) : null,
+                nonCalcolate.length ? rigaRoutine('errore', `Giornate giocate ma non calcolate: ${nonCalcolate.join(', ')}. La classifica archiviata non le conterrà: ormai il bot ha tolto i tabellini della stagione finita, quindi non si possono più calcolare`) : null,
                 rigaRoutine('da', leghe.length
                     ? `Archivia la classifica finale ${leghe.length === 1 ? 'della lega' : `delle ${leghe.length} leghe`} della stagione ${Stagione.nomeDi(gioco.anno)}: ${leghe.join(', ')}`
                     : `Nessuna lega da archiviare per la stagione ${Stagione.nomeDi(gioco.anno)}`),
@@ -176,6 +176,13 @@ async function iniziaStagione() {
     conferma.disabled = true;
     try {
         const { annoGioco, annoNuovo, nome } = passaggioStagione;
+        // Dopo "Controlla" lo stato può essere cambiato (un altro admin, un'altra scheda aperta): si ricontrolla prima
+        // di toccare niente, così non si cancellano leghe di una stagione già cominciata
+        const ora = (await db.doc('meta/stagione').get()).data() || {};
+        const valido = passaggioStagione.soloApplica
+            ? ora.anno === annoNuovo && ora.daCompletare === true
+            : ora.anno === annoGioco && ora.daCompletare !== true;
+        if (!valido) throw new Error('la stagione nel gioco è cambiata dopo il controllo (forse un altro admin ha già fatto il passaggio)');
         if (!passaggioStagione.soloApplica) {
             const leghe = (await db.collection('leagues').get()).docs.map(d => ({ id: d.id, ...d.data() }));
             if (!passaggioStagione.archiviata) {
