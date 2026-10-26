@@ -146,7 +146,7 @@ function main() {
         const errori = scaricaDati();
         aggiornaStato(errori);
         salvaSuGitHub();
-        scrivi(errori.length ? `❌ Finito con ${errori.length} problemi:\n- ${errori.join('\n- ')}` : '✅ Finito, tutto a posto.');
+        scrivi(errori.length ? `❌ Finito con ${errori.length === 1 ? '1 problema' : `${errori.length} problemi`}:\n- ${errori.join('\n- ')}` : '✅ Finito, tutto a posto.');
         process.exitCode = errori.length ? 1 : 0;
     } catch (e) {
         scrivi(`❌ Fermato: ${e.message}`);

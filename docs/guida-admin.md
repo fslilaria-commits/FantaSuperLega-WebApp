@@ -4,7 +4,7 @@ Questa guida spiega cosa fare ogni settimana per far girare il Fanta SuperLega e
 
 - **Sito:** https://fslilaria-commits.github.io/FantaSuperLega-WebApp/frontend/
 - **Console Firebase:** https://console.firebase.google.com/project/fanta-superlega-734b1
-- **Aggiornamento dati su GitHub:** https://github.com/fslilaria-commits/FantaSuperLega-WebApp/actions/workflows/aggiorna-dati.yaml
+- **Bot dei dati:** gira ogni giorno su un PC, istruzioni in [`docs/bot-pc.md`](bot-pc.md)
 
 ## Chi fa cosa
 
@@ -14,10 +14,11 @@ Questa guida spiega cosa fare ogni settimana per far girare il Fanta SuperLega e
 | **Presidente** | Chi ha creato una lega | Inserisce le rose dopo l'asta, genera il calendario degli scontri diretti, applica il mercato della sua lega |
 | **Partecipante** | Chi è entrato in una lega con il codice | Schiera la formazione, fa offerte e scambi |
 | **Visitatore** | Chi non ha fatto l'accesso | Vede solo la pagina di benvenuto |
+| **Bot dei dati** | Un'attività pianificata su un PC ([`docs/bot-pc.md`](bot-pc.md)) | Ogni sera scarica dal sito della Lega listone, calendario e tabellini e li salva su GitHub |
 
 ## La cosa più importante: l'app non ha un server
 
-Niente succede da solo dentro il gioco. Un programma su GitHub scarica ogni settimana i dati dal sito della Lega, ma **nel gioco entrano solo quando un admin li applica**. Allo stesso modo, il mercato non si chiude da solo: **il Presidente di ogni lega deve cliccare** per assegnare gli svincolati e per applicare gli scambi.
+Niente succede da solo dentro il gioco. Il bot dei dati, un programma su un PC, scarica ogni sera i dati dal sito della Lega e li salva su GitHub, ma **nel gioco entrano solo quando un admin li applica**. Allo stesso modo, il mercato non si chiude da solo: **il Presidente di ogni lega deve cliccare** per assegnare gli svincolati e per applicare gli scambi.
 
 La scheda **La mia giornata** ricorda ad admin e Presidenti cosa c'è da fare (riquadro **Da fare**).
 
@@ -26,15 +27,15 @@ La scheda **La mia giornata** ricorda ad admin e Presidenti cosa c'è da fare (r
 | Quando | Cosa succede | Chi |
 |---|---|---|
 | Fine giornata (3 ore dopo l'inizio dell'ultima partita) | Si apre il mercato per la giornata successiva | da solo |
-| **Martedì mattina** (dalle 7 circa) | GitHub scarica dal sito della Lega listone, calendario e tabellini | da solo |
-| **Martedì, dopo lo scaricamento** | **Routine settimanale**: listone, calendario e punteggi nel gioco | **Admin** |
+| **Ogni sera** (alle 20:30) | Il bot sul PC scarica dal sito della Lega listone, calendario e tabellini: quelli della domenica arrivano il lunedì sera | da solo |
+| **Martedì** | **Routine settimanale**: listone, calendario e punteggi nel gioco | **Admin** |
 | Fino a 3 ore prima della scadenza | Offerte segrete per gli svincolati | Partecipanti |
 | **Tra la chiusura delle offerte e la scadenza** | **"Assegna gli svincolati"** e **"Applica gli scambi accettati"** | **Presidente** |
 | 1 minuto prima della prima partita | Le formazioni si bloccano (scadenza) | da solo |
 
 ## 1. Routine settimanale (admin)
 
-Da fare ogni martedì, dopo lo scaricamento dei dati. Ci vogliono un paio di minuti.
+Da fare ogni martedì: i tabellini della domenica sono già arrivati il lunedì sera. Ci vogliono un paio di minuti.
 
 1. Apri il sito ed entra con Google: compare la scheda **Admin**.
 2. **Admin → Routine settimanale → Controlla tutto**. Compare un elenco:
@@ -50,7 +51,7 @@ Da fare ogni martedì, dopo lo scaricamento dei dati. Ci vogliono un paio di min
 - **"giornate già bloccate con orari diversi"**: è solo un avviso. La Lega ha spostato l'orario di una giornata già iniziata, ma la scadenza non viene mai spostata dopo il blocco, per non cambiare le regole a gioco in corso: basta prenderne nota.
 - **"permessi da admin mancanti (regole aggiornate?)"**, nel riquadro indicato: le regole Firestore non sono aggiornate. Vedi "Pubblicare le regole" nel punto 6.
 
-**Giornate infrasettimanali o dati urgenti.** Lo scaricamento automatico è solo il martedì. Per scaricare subito (per esempio il giorno dopo un turno del mercoledì), su GitHub apri **Actions → "Aggiorna dati SuperLega" → Run workflow**, aspetta qualche minuto che diventi verde, poi fai la routine. I tabellini sono verificati dalla Lega dalle 19 del giorno dopo l'ultima partita.
+**Giornate infrasettimanali.** Il bot scarica ogni sera, quindi anche i tabellini di un turno del mercoledì arrivano da soli (la Lega li verifica dalle 19 del giorno dopo l'ultima partita): quando **La mia giornata** li segnala in **Da fare**, fai la routine anche a metà settimana. Per scaricare subito, sul PC del bot vedi «Aggiornare subito» in [`docs/bot-pc.md`](bot-pc.md).
 
 **Correzioni della Lega.** Per due settimane dopo una giornata il tabellino viene riscaricato. Se la Lega corregge qualcosa, la routine propone di nuovo quella giornata: riapplicarla sovrascrive il calcolo precedente e aggiorna le classifiche.
 
@@ -115,9 +116,10 @@ Si fanno da https://console.firebase.google.com/project/fanta-superlega-734b1 co
 
 | Problema | Cosa fare |
 |---|---|
-| La routine dice "Tutto aggiornato" ma l'ultima giornata manca | Lo scaricamento non è ancora passato, o la Lega non ha ancora verificato i dati. Su GitHub → Actions controlla l'ultima esecuzione di "Aggiorna dati SuperLega", o lanciala a mano (**Run workflow**) |
-| Su GitHub l'aggiornamento è rosso | Il programma si ferma apposta se i dati della Lega sembrano sbagliati (squadre quasi vuote, giocatori spariti, gare mancanti). Riprova il giorno dopo con **Run workflow**; se resta rosso, avvisa chi sviluppa il progetto |
-| Su GitHub l'errore dice «Cloudflare ha rifiutato la richiesta» | Il sito della Lega sta bloccando i server di GitHub: non dipende dai dati. Avvisa chi sviluppa il progetto, che può scaricare i dati dal proprio computer |
+| La routine dice "Tutto aggiornato" ma l'ultima giornata manca | La Lega verifica i tabellini dalle 19 del giorno dopo l'ultima partita e il bot passa la sera: aspetta il giorno dopo. Se dopo 3 giorni non c'è ancora, compare l'avviso del tabellino in ritardo |
+| «Il bot dei dati ha un problema» (in **La mia giornata** o nella routine) | Il messaggio dice quale. Se dipende dal sito della Lega (pagina cambiata, dati che sembrano sbagliati) il bot si ferma apposta e riprova ogni sera; se dura qualche giorno, avvisa chi sviluppa. Tabella dei messaggi in [`docs/bot-pc.md`](bot-pc.md) |
+| «Il tabellino … non è ancora arrivato: controlla che il PC del bot sia acceso» | Il bot non sta girando: PC spento da giorni o problema sul PC. Accendilo, o lancia l'aggiornamento a mano e guarda il registro ([`docs/bot-pc.md`](bot-pc.md)) |
+| Su GitHub «Aggiorna dati SuperLega» è rosso | Lanciato a mano da GitHub si ferma quasi sempre, perché il sito della Lega blocca i server di GitHub: non serve, ci pensa il bot sul PC |
 | Nomi non trovati nel tabellino | Prima applica il listone; se restano, abbinali a mano (punto 2) |
 | Un punteggio è sbagliato | Correggi il numero (punto 2), poi **Calcola e applica**. Il ricalcolo sovrascrive il precedente e aggiorna tutte le classifiche |
 | "Permessi da admin mancanti" | Pubblica le regole (punto 6) e ricarica il sito |
