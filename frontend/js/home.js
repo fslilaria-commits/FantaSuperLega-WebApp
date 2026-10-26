@@ -141,6 +141,7 @@ async function promemoria(f) {
             const calcolate = giornateCalcolate();
             const mancanti = (await giornateConTabellino()).filter(n => !calcolate.has(n));
             if (mancanti.length) voci.push(`Admin: tabellini da applicare (giornate ${mancanti.join(', ')}): Admin → Routine settimanale`);
+            for (const avviso of await avvisiBotDati()) voci.push(`Admin: ${avviso} (guida admin, punto 7)`);
         } catch { /* solo un promemoria */ }
     }
     return voci;

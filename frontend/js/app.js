@@ -24,6 +24,7 @@ const STATO_VUOTO = {
 
 const ROLE_NAMES = { P: 'Palleggiatore', S: 'Schiacciatore', C: 'Centrale', O: 'Opposto', L: 'Libero' };
 const TABELLINI_INDICE = '../data/tabellini/index.json';
+const STATO_BOT_URL = '../data/bot.json';
 const AVATAR = 'img/avatar.svg';
 const BATCH_SIZE = 400; // Firestore accetta al massimo 500 scritture per batch
 
@@ -215,6 +216,15 @@ function iscrittiConData() {
 async function giornateConTabellino() {
     const res = await fetch(`${TABELLINI_INDICE}?t=${Date.now()}`, { cache: 'no-store' });
     return res.ok ? (await res.json()).giornate || [] : [];
+}
+
+// Gli avvisi sul bot dei dati per gli admin (stato-bot.js): problema scritto dal bot e tabellini in ritardo
+async function avvisiBotDati() {
+    const [stato, conTabellino] = await Promise.all([
+        fetch(`${STATO_BOT_URL}?t=${Date.now()}`, { cache: 'no-store' }).then(res => (res.ok ? res.json() : null)).catch(() => null),
+        giornateConTabellino(),
+    ]);
+    return StatoBot.avvisiBot({ giornate: state.matchdays, conTabellino, stato });
 }
 
 function giornateCalcolate() {

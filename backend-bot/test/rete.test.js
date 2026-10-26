@@ -21,8 +21,10 @@ test('un errore del sito senza Cloudflare resta un errore normale', () => {
     assert.equal(descriviErrore('u', risposta(404, {}), 'niente titolo'), 'HTTP 404 per u.');
 });
 
-test('le richieste si presentano come un browser in italiano', () => {
-    assert.match(INTESTAZIONI['User-Agent'], /Chrome\/\d+/);
+test('il bot si presenta per quello che è, in italiano', () => {
+    assert.match(INTESTAZIONI['User-Agent'], /^FantaSuperLega-bot\/\d/);
+    assert.match(INTESTAZIONI['User-Agent'], /github\.com\/fslilaria-commits\/FantaSuperLega-WebApp/);
+    assert.doesNotMatch(INTESTAZIONI['User-Agent'], /Chrome|Mozilla/);
     assert.match(INTESTAZIONI['Accept-Language'], /^it-IT/);
     assert.ok(INTESTAZIONI.Accept.startsWith('text/html'));
 });

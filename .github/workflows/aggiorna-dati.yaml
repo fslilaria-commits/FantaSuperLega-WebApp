@@ -1,11 +1,11 @@
 name: Aggiorna dati SuperLega
 
-# Ogni settimana scarica dal sito della Lega le proposte di listone, calendario e tabellini e le salva in data/.
+# Scarica dal sito della Lega le proposte di listone, calendario e tabellini e le salva in data/.
 # Non tocca il gioco: gli admin le applicano dal pannello Admin dell'app.
 # La stagione la decide la Lega: il primo passo la legge dal sito e, quando cambia, prepara data/ da solo.
+# Solo a mano: il sito della Lega blocca i server di GitHub (Cloudflare), quindi ogni giorno lo stesso lavoro lo fa
+# un PC con un'attività pianificata (backend-bot/aggiorna-dati.js, docs/bot-pc.md). Resta qui per quando servisse.
 on:
-  schedule:
-    - cron: '0 5 * * 2' # martedì alle 5:00 UTC, dopo la giornata del weekend
   workflow_dispatch:
 
 permissions:
