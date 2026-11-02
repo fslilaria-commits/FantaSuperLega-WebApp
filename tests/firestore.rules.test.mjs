@@ -566,6 +566,8 @@ describe('nuova stagione: cancellazioni e archivio', () => {
         await assertFails(setDoc(doc(as('boss'), 'archivio/2026_lega2'), archivio({ archiviatoBy: 'anna' })), 'a nome di un altro');
         await assertFails(setDoc(doc(as('boss'), 'archivio/2026_lega3'), archivio({ extra: 1 })), 'campi in più');
         await assertFails(setDoc(doc(as('boss'), 'archivio/2026_lega4'), archivio({ modalita: 'coppa' })));
+        await assertSucceeds(setDoc(doc(as('boss'), 'archivio/2026_lega6'), archivio({ tipo: 'quotazioni' })), 'lega a quotazioni');
+        await assertFails(setDoc(doc(as('boss'), 'archivio/2026_lega7'), archivio({ tipo: 'altro' })));
         await assertFails(setDoc(doc(as('pres'), 'archivio/2026_lega5'), archivio({ archiviatoBy: 'pres' })), 'il Presidente no');
     });
 
@@ -624,5 +626,143 @@ describe('punteggi e classifica', () => {
     test('nessun utente scrive punteggi o classifica', async () => {
         await assertFails(setDoc(doc(as('pres'), `leagues/${LEAGUE}/scores/1_pres`), { total: 999 }));
         await assertFails(setDoc(doc(as('anna'), `leagues/${LEAGUE}/standings/anna`), { total: 999 }));
+    });
+});
+
+describe('leghe a quotazioni', () => {
+    const QL = 'quot';
+    const QCODE = '222222';
+    const ruoli = { P: ['qp1', 'qp2'], S: ['qs1', 'qs2', 'qs3', 'qs4'], C: ['qc1', 'qc2', 'qc3', 'qc4'], O: ['qo1', 'qo2'], L: ['ql1', 'ql2'] };
+    // Ogni ruolo ha qualche giocatore in più per i cambi; qo3 costa troppo per il budget di 110
+    const quotazioni = {
+        P: { qp1: 7, qp2: 7, qp3: 7 },
+        S: { qs1: 7, qs2: 7, qs3: 7, qs4: 7, qs5: 7, qs6: 7, qs7: 7 },
+        C: { qc1: 7, qc2: 7, qc3: 7, qc4: 7, qc5: 7 },
+        O: { qo1: 7, qo2: 7, qo3: 30 },
+        L: { ql1: 7, ql2: 7, ql3: 7 },
+    };
+    const prezzoDi = id => Object.values(quotazioni).find(m => id in m)?.[id] ?? 7;
+    const squadra = (r = ruoli, { giornata = 6, dalla = giornata, cambi = 0, prezzi = {} } = {}) => {
+        const all = [...r.P, ...r.S, ...r.C, ...r.O, ...r.L];
+        const prices = Object.fromEntries(all.map(id => [id, prezzi[id] ?? prezzoDi(id)]));
+        return { ...r, all, prices, creditsLeft: 110 - Object.values(prices).reduce((a, b) => a + b, 0), giornata, dalla, cambi };
+    };
+    const formazione = (s, uid, n) => ({
+        uid,
+        matchday: n,
+        starters: { P: s.P[0], S1: s.S[0], S2: s.S[1], C1: s.C[0], C2: s.C[1], O: s.O[0], L: s.L[0] },
+        bench: [s.P[1], s.S[2], s.S[3], s.C[2], s.C[3], s.O[1], s.L[1]].filter(Boolean),
+        captain: s.S[0],
+        savedAt: serverTimestamp(),
+    });
+    // Squadra e formazione della sua giornata nello stesso salvataggio, come fa l'app
+    const salva = (uid, s, { conFormazione = true, perChi = uid } = {}) => {
+        const db = as(uid);
+        const batch = writeBatch(db);
+        batch.set(doc(db, `leagues/${QL}/rosters/${perChi}`), s);
+        if (conFormazione) batch.set(doc(db, `leagues/${QL}/lineups/${s.giornata}_${uid}`), formazione(s, uid, s.giornata));
+        return batch.commit();
+    };
+    const cambia = (r, ruolo, fuori, dentro) => ({ ...r, [ruolo]: r[ruolo].map(id => (id === fuori ? dentro : id)) });
+    const giaSalvata = (uid, s) => env.withSecurityRulesDisabled(ctx => setDoc(doc(ctx.firestore(), `leagues/${QL}/rosters/${uid}`), s));
+
+    beforeEach(async () => {
+        await env.withSecurityRulesDisabled(async ctx => {
+            const db = ctx.firestore();
+            await setDoc(doc(db, 'matchdays/5'), { number: 5, lockAt: past, status: 'scored' });
+            await setDoc(doc(db, 'matchdays/6'), { number: 6, lockAt: future, status: 'open' });
+            await setDoc(doc(db, 'meta/quotazioni'), { prezzi: quotazioni });
+            await setDoc(doc(db, `leagues/${QL}`), {
+                name: 'Lega F1', code: QCODE, presidentUid: 'pres',
+                settings: { budget: 110, mode: 'classifica', startMatchday: 5, tipo: 'quotazioni' },
+                createdAt: Timestamp.now(),
+            });
+            for (const uid of ['pres', 'anna', 'marco']) {
+                await setDoc(doc(db, `leagues/${QL}/members/${uid}`), { teamName: uid, code: QCODE, joinedAt: serverTimestamp() });
+            }
+        });
+    });
+
+    test('ognuno si fa la propria squadra insieme alla formazione, e lo stesso giocatore sta in più squadre', async () => {
+        await assertSucceeds(salva('anna', squadra()));
+        await assertSucceeds(salva('marco', squadra()));
+    });
+
+    test('non senza formazione, non per un altro, non dal Presidente né da chi è fuori dalla lega', async () => {
+        await assertFails(salva('anna', squadra(), { conFormazione: false }));
+        await assertFails(salva('anna', squadra(), { perChi: 'marco' }));
+        await assertFails(setDoc(doc(as('pres'), `leagues/${QL}/rosters/anna`), squadra()), 'il Presidente non scrive le squadre');
+        await assertFails(salva('estraneo', squadra()));
+    });
+
+    test('ruoli, prezzi, budget e giornata li controllano le regole', async () => {
+        await assertFails(salva('anna', squadra(ruoli, { prezzi: { qp1: 1 } })), 'prezzo diverso dalla quotazione');
+        await assertFails(salva('anna', squadra(cambia(ruoli, 'O', 'qo1', 'qo3'))), 'budget superato');
+        await assertFails(salva('anna', { ...squadra(), creditsLeft: 50 }), 'crediti che non tornano');
+        await assertFails(salva('anna', squadra(cambia(ruoli, 'P', 'qp1', 'qs5'))), 'uno schiacciatore tra i palleggiatori');
+        await assertFails(salva('anna', squadra(cambia(ruoli, 'S', 'qs1', 'senzaprezzo'))), 'un giocatore senza quotazione');
+        await assertFails(salva('anna', squadra({ ...ruoli, L: ['ql1'] })), 'squadra incompleta');
+        await assertFails(salva('anna', squadra(ruoli, { giornata: 5 })), 'giornata già bloccata');
+        await assertFails(salva('anna', { ...squadra(), extra: 1 }), 'campi in più');
+    });
+
+    test('chi resta tiene il prezzo pagato, chi arriva paga la quotazione', async () => {
+        await giaSalvata('anna', squadra(ruoli, { giornata: 5, prezzi: { qp1: 3 } }));
+        const conCambio = cambia(ruoli, 'S', 'qs1', 'qs5');
+        await assertFails(salva('anna', squadra(conCambio, { dalla: 5, cambi: 1 })), 'qp1 alla quotazione di oggi');
+        await assertSucceeds(salva('anna', squadra(conCambio, { dalla: 5, cambi: 1, prezzi: { qp1: 3 } })));
+    });
+
+    test('fino a 5 cambi per giornata, contati anche su più salvataggi', async () => {
+        await giaSalvata('anna', squadra(ruoli, { giornata: 5 }));
+        const due = cambia(cambia(ruoli, 'P', 'qp1', 'qp3'), 'S', 'qs1', 'qs5');
+        await assertFails(salva('anna', squadra(due, { dalla: 5, cambi: 0 })), 'i cambi vanno contati');
+        await assertSucceeds(salva('anna', squadra(due, { dalla: 5, cambi: 2 })));
+        const tre = cambia(due, 'C', 'qc1', 'qc5');
+        await assertFails(salva('anna', squadra(tre, { dalla: 5, cambi: 1 })), 'si sommano a quelli già fatti');
+        await assertSucceeds(salva('anna', squadra(tre, { dalla: 5, cambi: 3 })));
+        const sei = cambia(cambia(cambia(tre, 'S', 'qs2', 'qs6'), 'S', 'qs3', 'qs7'), 'L', 'ql1', 'ql3');
+        await assertFails(salva('anna', squadra(sei, { dalla: 5, cambi: 6 })), 'più di 5');
+        await assertFails(salva('anna', squadra(sei, { dalla: 5, cambi: 5 })));
+    });
+
+    test('nella prima giornata della squadra i cambi sono liberi', async () => {
+        await giaSalvata('marco', squadra(ruoli, { giornata: 6 }));
+        const tante = cambia(cambia(cambia(cambia(cambia(cambia(ruoli, 'P', 'qp1', 'qp3'), 'S', 'qs1', 'qs5'), 'S', 'qs2', 'qs6'), 'S', 'qs3', 'qs7'), 'C', 'qc1', 'qc5'), 'L', 'ql1', 'ql3');
+        await assertSucceeds(salva('marco', squadra(tante, { dalla: 6, cambi: 0 })));
+        await assertFails(salva('marco', squadra(tante, { dalla: 5, cambi: 0 })), 'la prima giornata non si sposta');
+    });
+
+    test('la formazione da sola si salva con i giocatori della propria squadra', async () => {
+        await giaSalvata('anna', squadra());
+        await assertSucceeds(setDoc(doc(as('anna'), `leagues/${QL}/lineups/6_anna`), formazione(squadra(), 'anna', 6)));
+        const altra = squadra(cambia(ruoli, 'S', 'qs1', 'qs5'));
+        await assertFails(setDoc(doc(as('anna'), `leagues/${QL}/lineups/6_anna`), formazione(altra, 'anna', 6)));
+    });
+
+    test('niente offerte, scambi né movimenti del Presidente', async () => {
+        await giaSalvata('anna', squadra());
+        await giaSalvata('pres', squadra());
+        const now = serverTimestamp();
+        await assertFails(setDoc(doc(as('anna'), `leagues/${QL}/markets/6/offers/anna_qs5`),
+            { uid: 'anna', playerIn: 'qs5', playerOut: 'qs1', role: 'S', extra: 0, status: 'active', createdAt: now, updatedAt: now }));
+        await assertFails(setDoc(doc(as('pres'), `leagues/${QL}/trades/t1`),
+            { from: 'pres', to: 'anna', give: 'qs2', take: 'qs3', role: 'S', extra: 0, status: 'proposed', matchday: 6, createdAt: now, updatedAt: now }));
+        await assertFails(setDoc(doc(as('pres'), `leagues/${QL}/transfers/m1`),
+            { tipo: 'svincolato', uid: 'anna', playerIn: 'qs5', playerOut: 'qs1', valore: 7, extra: 0, matchday: 6, at: now }));
+    });
+
+    test("tipo di gioco fisso; a quotazioni il budget non cambia dopo l'inizio e va da 1 credito in su", async () => {
+        await assertFails(updateDoc(doc(as('pres'), `leagues/${QL}`), { 'settings.tipo': 'asta' }));
+        await assertFails(updateDoc(doc(as('pres'), `leagues/${LEAGUE}`), { 'settings.tipo': 'quotazioni' }));
+        await assertFails(updateDoc(doc(as('pres'), `leagues/${QL}`), { 'settings.budget': 200 }), 'giornata di inizio già bloccata');
+        await assertSucceeds(updateDoc(doc(as('pres'), `leagues/${QL}`), { name: 'Lega F1 bis' }));
+        const nuova = (budget, tipo = 'quotazioni') => setDoc(doc(as('marco'), 'leagues/lega9'), {
+            name: 'Nuova', code: '777777', presidentUid: 'marco', settings: { budget, mode: 'classifica', startMatchday: 1, tipo }, createdAt: serverTimestamp(),
+        });
+        await assertFails(nuova(0));
+        await assertFails(nuova(99.5));
+        await assertFails(nuova(100, 'altro'));
+        await assertSucceeds(nuova(100));
     });
 });

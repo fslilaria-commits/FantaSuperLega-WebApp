@@ -66,7 +66,11 @@ async function renderHome() {
     // Prossima giornata e formazione
     if (state.matchday) {
         let formazione;
-        if (!FormazioneCheck.isRosterComplete(rosa)) formazione = el('p', { class: 'msg-warning' }, `Rosa incompleta (${rosa?.all?.length || 0}/${RoseCheck.TOTALE}): il Presidente deve completarla.`);
+        if (!FormazioneCheck.isRosterComplete(rosa)) {
+            formazione = el('p', { class: 'msg-warning' }, legaAQuotazioni()
+                ? 'Non hai ancora la squadra: falla nella scheda Mercato.'
+                : `Rosa incompleta (${rosa?.all?.length || 0}/${RoseCheck.TOTALE}): il Presidente deve completarla.`);
+        }
         else if (state.lineupSalvata) formazione = el('p', { class: 'ok-text' }, el('i', { class: 'fas fa-circle-check' }), ' Formazione salvata');
         else formazione = el('p', { class: 'msg-error' }, el('i', { class: 'fas fa-circle-exclamation' }), " Formazione non ancora salvata: se non la salvi vale l'ultima.");
         lista.push(homeCard('fa-stopwatch', state.matchday.label, [
@@ -99,12 +103,23 @@ async function renderHome() {
         }
     }
 
-    // Mercato
+    // Mercato (a quotazioni: la squadra e i cambi della prossima giornata)
+    if (legaAQuotazioni()) {
+        const fc = finestraCambi();
+        const c = rosa && fc ? Quotazioni.controllaSquadra({
+            picks: Quotazioni.picksDa(rosa), vecchia: rosa, quotazioni: state.quotazioni,
+            budget: state.league.settings.budget, playersById: state.playersById, giornata: fc.matchday,
+        }) : null;
+        lista.push(homeCard('fa-store', 'Squadra e cambi', [
+            el('p', {}, !fc ? 'Stagione finita' : !rosa ? 'Squadra ancora da fare' : c.liberi ? `Cambi liberi fino a ${formatDateTime(fc.chiude)}` : `Cambi: ${c.cambi} su ${Quotazioni.MAX_CAMBI} per la ${fc.label}`),
+            rosa ? el('p', { class: 'admin-sub' }, `${rosa.creditsLeft} crediti da spendere`) : null,
+        ], vaiA('market', rosa ? 'Vai al mercato' : 'Fai la squadra')));
+    }
     const f = finestraCorrente();
-    await caricaMercatoPersonale(f);
+    if (!legaAQuotazioni()) await caricaMercatoPersonale(f);
     const offerteAttive = mercatoDati.offerte.filter(o => o.status === 'active').length;
     const daRispondere = mercatoDati.scambiRicevuti.filter(t => t.status === 'proposed' && !scaduto(t)).length;
-    lista.push(homeCard('fa-store', 'Mercato', [
+    if (!legaAQuotazioni()) lista.push(homeCard('fa-store', 'Mercato', [
         el('p', {}, f.sospeso ? 'Sospeso dal Presidente' : f.offerteAperte ? `Aperto: offerte fino a ${formatDateTime(f.offerteFino)}` : f.aperto ? `Solo scambi fino a ${formatDateTime(f.chiude)}` : f.matchday ? `Chiuso: riapre ${formatDateTime(f.apre)}` : 'Chiuso'),
         el('p', { class: 'admin-sub' }, `${offerteAttive} offerte in corso`),
         daRispondere ? el('p', { class: 'msg-warning' }, `${daRispondere} proposte di scambio da guardare`) : null,
@@ -126,15 +141,19 @@ async function renderHome() {
 
 async function promemoria(f) {
     const voci = [];
+    // A quotazioni il Presidente non inserisce rose e non applica il mercato: resta solo il calendario delle sfide
+    const asta = !legaAQuotazioni();
     if (isPresident()) {
         const incomplete = state.members.filter(m => (state.rosters[m.uid]?.all?.length || 0) < RoseCheck.TOTALE).length;
-        if (incomplete) voci.push(`Presidente: ${incomplete} rose da completare (scheda Lega)`);
+        if (asta && incomplete) voci.push(`Presidente: ${incomplete} rose da completare (scheda Lega)`);
         if (state.league.settings?.mode === 'scontri' && !state.schedule) voci.push('Presidente: genera il calendario delle sfide prima della giornata di inizio');
-        if (f.matchday && !f.offerteAperte && f.aperto) voci.push('Presidente: le offerte sono chiuse, assegna gli svincolati (scheda Lega → Mercato)');
-        try {
-            const accettati = await db.collection(`leagues/${state.league.id}/trades`).where('status', '==', 'accepted').get();
-            if (!accettati.empty) voci.push(`Presidente: ${accettati.size} scambi accettati da applicare (scheda Lega → Mercato)`);
-        } catch { /* solo un promemoria */ }
+        if (asta && f.matchday && !f.offerteAperte && f.aperto) voci.push('Presidente: le offerte sono chiuse, assegna gli svincolati (scheda Lega → Mercato)');
+        if (asta) {
+            try {
+                const accettati = await db.collection(`leagues/${state.league.id}/trades`).where('status', '==', 'accepted').get();
+                if (!accettati.empty) voci.push(`Presidente: ${accettati.size} scambi accettati da applicare (scheda Lega → Mercato)`);
+            } catch { /* solo un promemoria */ }
+        }
     }
     if (!document.getElementById('adminNavBtn').hidden) {
         try {
@@ -142,6 +161,8 @@ async function promemoria(f) {
             const mancanti = (await giornateConTabellino()).filter(n => !calcolate.has(n));
             if (mancanti.length) voci.push(`Admin: tabellini da applicare (giornate ${mancanti.join(', ')}): Admin → Routine settimanale`);
             for (const avviso of await avvisiBotDati()) voci.push(`Admin: ${avviso}`);
+            const quotazioni = await avvisoQuotazioni();
+            if (quotazioni) voci.push(`Admin: ${quotazioni}`);
         } catch { /* solo un promemoria */ }
     }
     return voci;

@@ -11,14 +11,23 @@ Questa guida spiega cosa fare ogni settimana per far girare il Fanta SuperLega e
 | Ruolo | Chi è | Cosa fa |
 |---|---|---|
 | **Admin** | Chi è nella collezione `admins` di Firebase (chi gestisce il progetto) | Ogni settimana applica listone, calendario e punteggi dal **pannello Admin**; in estate fa partire la stagione nuova (punto 9). Vale per tutte le leghe |
-| **Presidente** | Chi ha creato una lega | Inserisce le rose dopo l'asta, genera il calendario degli scontri diretti, applica il mercato della sua lega |
-| **Partecipante** | Chi è entrato in una lega con il codice | Schiera la formazione, fa offerte e scambi |
+| **Presidente** | Chi ha creato una lega | Nelle leghe ad asta inserisce le rose e applica il mercato; in tutte genera il calendario degli scontri diretti |
+| **Partecipante** | Chi è entrato in una lega con il codice | Schiera la formazione; ad asta fa offerte e scambi, a quotazioni si fa la squadra e i cambi da solo |
 | **Visitatore** | Chi non ha fatto l'accesso | Vede solo la pagina di benvenuto |
 | **Bot dei dati** | Un'attività pianificata su un PC ([`docs/bot-pc.md`](bot-pc.md)) | Ogni sera scarica dal sito della Lega listone, calendario e tabellini e li salva su GitHub |
 
 ## La cosa più importante: l'app non ha un server
 
-Niente succede da solo dentro il gioco. Il bot dei dati, un programma su un PC, scarica ogni sera i dati dal sito della Lega e li salva su GitHub, ma **nel gioco entrano solo quando un admin li applica**. Allo stesso modo, il mercato non si chiude da solo: **il Presidente di ogni lega deve cliccare** per assegnare gli svincolati e per applicare gli scambi.
+Niente succede da solo dentro il gioco. Il bot dei dati, un programma su un PC, scarica ogni sera i dati dal sito della Lega e li salva su GitHub, ma **nel gioco entrano solo quando un admin li applica**. Allo stesso modo, nelle leghe ad asta il mercato non si chiude da solo: **il Presidente di ogni lega deve cliccare** per assegnare gli svincolati e per applicare gli scambi.
+
+## Due modi di giocare
+
+Chi crea una lega sceglie il **gioco**, e non si cambia più:
+
+- **Asta** (Modalità Leghe del FantaLVF): l'asta si fa fuori dall'app, ogni giocatore sta in una sola squadra e le rose le inserisce il Presidente; poi mercato con offerte segrete per gli svincolati e scambi tra squadre. Le leghe create prima che ci fosse la scelta sono tutte ad asta.
+- **Quotazioni** (come il Fanta F1 e il Fantasy del FantaLVF): niente asta. Ogni giocatore ha un **prezzo fisso** deciso dall'admin (punto 1, **Quotazioni**) e lo possono prendere **più squadre della stessa lega**, quindi non c'è un limite di squadre. Ognuno si fa la squadra da solo nella scheda **Mercato**, dentro i crediti della lega (consigliati 100), e tra una giornata e l'altra fa **fino a 5 cambi**.
+
+Formazione, punteggi, classifica e scontri diretti sono uguali nei due giochi.
 
 La scheda **La mia giornata** ricorda ad admin e Presidenti cosa c'è da fare (riquadro **Da fare**).
 
@@ -26,11 +35,12 @@ La scheda **La mia giornata** ricorda ad admin e Presidenti cosa c'è da fare (r
 
 | Quando | Cosa succede | Chi |
 |---|---|---|
-| Fine giornata (3 ore dopo l'inizio dell'ultima partita) | Si apre il mercato per la giornata successiva | da solo |
+| Fine giornata (3 ore dopo l'inizio dell'ultima partita) | Si apre il mercato per la giornata successiva (leghe ad asta) | da solo |
 | **Ogni sera** (alle 20:30) | Il bot sul PC scarica dal sito della Lega listone, calendario e tabellini: quelli della domenica arrivano il lunedì sera | da solo |
 | **Martedì** | **Routine settimanale**: listone, calendario e punteggi nel gioco | **Admin** |
-| Fino a 3 ore prima della scadenza | Offerte segrete per gli svincolati | Partecipanti |
-| **Tra la chiusura delle offerte e la scadenza** | **"Assegna gli svincolati"** e **"Applica gli scambi accettati"** | **Presidente** |
+| Fino a 3 ore prima della scadenza | Offerte segrete per gli svincolati (leghe ad asta) | Partecipanti |
+| **Tra la chiusura delle offerte e la scadenza** | **"Assegna gli svincolati"** e **"Applica gli scambi accettati"** (leghe ad asta) | **Presidente** |
+| Fino alla scadenza | Cambi di squadra, fino a 5 (leghe a quotazioni) | Partecipanti |
 | 1 minuto prima della prima partita | Le formazioni si bloccano (scadenza) | da solo |
 
 ## 1. Routine settimanale (admin)
@@ -44,6 +54,10 @@ Da fare ogni martedì: i tabellini della domenica sono già arrivati il lunedì 
    - **Punteggi**: giornate con il tabellino pronto e non ancora calcolate.
 3. Se è tutto a posto premi **Applica tutto**. La routine applica nell'ordine giusto: prima il listone, poi il calendario, poi le giornate.
 4. Alla fine compare "Fatto: routine completata".
+
+Se c'è almeno una lega a quotazioni, la routine segnala anche i **giocatori senza prezzo** (per esempio i nuovi arrivati nel listone): non si applicano da qui, vanno messi nel riquadro **Quotazioni**.
+
+**Quotazioni** (solo per le leghe a quotazioni): **Admin → Quotazioni → Apri i prezzi**. La prima volta premi **Proponi i prezzi mancanti**: ogni giocatore riceve un prezzo da 2 a 15 crediti in base alla sua media di fanta-punti, confrontata con quelle del suo ruolo (il miglior libero vale come il miglior opposto); chi non ha ancora giocato vale 2. Poi ritocca a mano quello che vuoi e premi **Salva quotazioni**. Con **Ricalcola tutti dalle medie** rifai la proposta per tutti, anche per quelli già sistemati a mano. Un prezzo cambiato vale per chi prende il giocatore dopo: chi lo ha già tiene il prezzo che ha pagato. Quando arrivano giocatori nuovi nel listone, ripremi **Proponi i prezzi mancanti** e salva: senza prezzo un giocatore non si può prendere.
 
 **Se la routine si ferma o segnala qualcosa**, indica il riquadro da guardare più in basso nella stessa pagina:
 
@@ -74,13 +88,16 @@ Se un giocatore nuovo non è ancora nel listone, prima applica il listone (lo fa
 
 ## 3. Presidente: creare e preparare la lega
 
-1. **Creare la lega**: scheda **Lega → Crea una lega o unisciti con un codice → Crea una lega**. Servono il nome della lega, il nome della tua squadra, i crediti per l'asta (0 = senza crediti) e il tipo di competizione (**Classifica generale** o **Scontri diretti**). La lega parte dalla prima giornata non ancora bloccata.
+1. **Creare la lega**: scheda **Lega → Crea una lega o unisciti con un codice → Crea una lega**. Servono il nome della lega, il nome della tua squadra, il **gioco** (**Asta** o **Quotazioni**, vedi «Due modi di giocare»: non si cambia più), i crediti (ad asta quelli per l'asta, 0 = senza crediti; a quotazioni quelli di ogni squadra, consigliati 100) e il tipo di competizione (**Classifica generale** o **Scontri diretti**). La lega parte dalla prima giornata non ancora bloccata. A quotazioni i crediti non si cambiano più dopo la scadenza della prima giornata.
 2. **Invitare gli amici**: nella scheda Lega, sotto il codice, premi **Invita su WhatsApp**: si apre WhatsApp con il messaggio e il link già pronti, scegli il gruppo e invia. Con **Copia link** lo mandi su qualsiasi altra chat. Chi apre il link entra con Google e trova il modulo **Unisciti** già compilato: scrive solo il nome della sua squadra. In alternativa gli amici possono entrare da **Unisciti** con il **codice a 6 cifre**. Link e codice valgono come invito: condividili solo nel gruppo.
-   - **Posti**: le rose sono esclusive, quindi in una lega ci stanno al massimo tante squadre quante ne permette il listone (oggi **11**: gli opposti sono 22 e ne servono 2 per rosa). La scheda Lega mostra per esempio "squadre 7/11". Quando la lega è al completo i pulsanti di invito spariscono e chi prova a entrare riceve un messaggio. Il limite lo controlla l'app, non le regole di Firestore: se per un problema di connessione qualcuno resta dentro in più, il Presidente lo vede nella classifica e può farlo togliere (vedi il punto 6).
-3. **Asta**: si fa fuori dall'app. Poi **Lega → Rose della lega (Presidente)**: scegli la squadra, aggiungi i giocatori con il prezzo pagato e premi **Salva rosa**. Puoi salvare anche a rosa incompleta. Regole: 14 giocatori (2 palleggiatori, 4 schiacciatori, 4 centrali, 2 opposti, 2 liberi: rispetto ai 12 del FantaLVF un centrale e un libero in più), al massimo 4 dello stesso club, ogni giocatore in una sola squadra. Finché la rosa non è completa, quella squadra non può schierare la formazione. Se dopo l'asta sposti un giocatore da una squadra all'altra, nella formazione già salvata della squadra di prima quel giocatore prende 0 punti finché la formazione non viene cambiata.
+   - **Posti** (leghe ad asta; a quotazioni non c'è limite): le rose sono esclusive, quindi in una lega ci stanno al massimo tante squadre quante ne permette il listone (oggi **11**: gli opposti sono 22 e ne servono 2 per rosa). La scheda Lega mostra per esempio "squadre 7/11". Quando la lega è al completo i pulsanti di invito spariscono e chi prova a entrare riceve un messaggio. Il limite lo controlla l'app, non le regole di Firestore: se per un problema di connessione qualcuno resta dentro in più, il Presidente lo vede nella classifica e può farlo togliere (vedi il punto 6).
+3. **Asta** (leghe ad asta): si fa fuori dall'app. Poi **Lega → Rose della lega (Presidente)**: scegli la squadra, aggiungi i giocatori con il prezzo pagato e premi **Salva rosa**. Puoi salvare anche a rosa incompleta. Regole: 14 giocatori (2 palleggiatori, 4 schiacciatori, 4 centrali, 2 opposti, 2 liberi: rispetto ai 12 del FantaLVF un centrale e un libero in più), al massimo 4 dello stesso club, ogni giocatore in una sola squadra. Finché la rosa non è completa, quella squadra non può schierare la formazione. Se dopo l'asta sposti un giocatore da una squadra all'altra, nella formazione già salvata della squadra di prima quel giocatore prende 0 punti finché la formazione non viene cambiata.
+   **Quotazioni** (leghe a quotazioni): il Presidente non inserisce rose. Ognuno fa la sua squadra nella scheda **Mercato** (vedi il punto 5); serve che l'admin abbia messo i prezzi (punto 1, **Quotazioni**).
 4. **Solo per gli scontri diretti: il calendario delle sfide lo genera il Presidente.** Quando sono entrati tutti, prima della giornata di inizio: **Lega → Scontri diretti → Genera il calendario delle sfide**. Dopo la generazione nella lega non può più entrare nessuno. Con un numero dispari di squadre entra la "Squadra media". Se il Presidente se ne dimentica, il calendario lo genera l'admin in automatico al primo calcolo dei punteggi.
 
 ## 4. Presidente: il mercato (due clic da non dimenticare)
+
+Solo nelle leghe ad asta: a quotazioni non ci sono svincolati né scambi, e il Presidente non ha niente da applicare.
 
 Il mercato segue il FantaLVF:
 
@@ -100,7 +117,9 @@ Con **Mercato sospeso** il Presidente ferma offerte e scambi della sua lega, per
 
 - **Formazione**: scheda **Campo**. Scegli i 7 titolari (P, S1, S2, C1, C2, O, L) e il capitano, poi **Salva formazione**. Si blocca 1 minuto prima della prima partita della giornata. **Se non la salvi vale l'ultima salvata.** Titolari al 100%, capitano ×2, panchina al 50%. Per decidere chi schierare, nella lista del ruolo c'è **Statistiche** (la stessa scheda del Mercato, con i punti di ogni giornata); in panchina basta toccare il giocatore.
 - **Gare spostate**: se una partita viene giocata lontano dalla sua giornata, i giocatori di quelle squadre prendono la loro media stagionale.
-- **Mercato**: scheda **Mercato**. Accanto agli svincolati c'è "Fai un'offerta", accanto ai giocatori delle altre squadre "Proponi scambio".
+- **Mercato** (leghe ad asta): scheda **Mercato**. Accanto agli svincolati c'è "Fai un'offerta", accanto ai giocatori delle altre squadre "Proponi scambio".
+- **Squadra** (leghe a quotazioni): scheda **Mercato → La mia squadra**. Nel listone accanto a ogni giocatore c'è il prezzo e il pulsante **Prendi**; servono 14 giocatori (2 P, 4 S, 4 C, 2 O, 2 L), al massimo 4 dello stesso club, dentro i crediti della lega. Gli stessi giocatori li possono avere anche gli altri. Poi **Salva squadra**: insieme alla squadra si aggiorna la formazione della prossima giornata (la prima volta titolari i più cari di ogni ruolo e capitano il più caro; dopo, chi arriva prende il posto di chi parte): conviene controllarla nella scheda **Campo**.
+- **Cambi** (leghe a quotazioni): fino alla scadenza di ogni giornata si possono cambiare **fino a 5 giocatori** (togli e prendi, sempre dentro i crediti); quelli non usati non si accumulano. Nella prima giornata della squadra i cambi sono liberi. Chi resta tiene il prezzo pagato; chi arriva paga il prezzo di oggi. Per i punti conta la squadra salvata prima della scadenza.
 - **Installare l'app**: su Android menu ⋮ → "Installa app"; su iPhone, in Safari, Condividi → "Aggiungi alla schermata Home".
 
 ## 6. Operazioni rare dalla console Firebase
@@ -124,6 +143,7 @@ Si fanno da https://console.firebase.google.com/project/fanta-superlega-734b1 co
 | Un punteggio è sbagliato | Correggi il numero (punto 2), poi **Calcola e applica**. Il ricalcolo sovrascrive il precedente e aggiorna tutte le classifiche |
 | "Permessi da admin mancanti" | Pubblica le regole (punto 6) e ricarica il sito |
 | Un amico non riesce a salvare la formazione | La giornata è già bloccata, oppure la sua rosa non è completa (lo dice la scheda Campo) |
+| Un amico non riesce a salvare la squadra (lega a quotazioni) | Il messaggio sotto la squadra dice perché: crediti finiti, più di 4 dello stesso club, più di 5 cambi, giocatore senza prezzo (lo mette l'admin nel riquadro **Quotazioni**). Se dice «rifiutato», la giornata si è appena bloccata o l'admin ha cambiato un prezzo: ricaricare la pagina |
 | Un amico non riesce a entrare nella lega | Codice sbagliato, lega al completo (vedi i posti nella scheda Lega), oppure (scontri diretti) il calendario delle sfide è già stato generato |
 | Il mercato non assegna niente | Le offerte chiudono 3 ore prima della scadenza: prima di allora "Assegna gli svincolati" non trova niente da assegnare |
 | Il sito non carica più i dati per nessuno, dopo aver attivato App Check | Firebase → **App Check → API → Cloud Firestore → Non applicare** (vedi `docs/sicurezza.md`) |
@@ -142,7 +162,7 @@ A ogni stagione il gioco riparte da zero, come nel FantaLVF: nuovo listone, nuov
 1. **Il bot fa da solo.** A ogni aggiornamento dei dati guarda quale stagione mostra il calendario sul sito della Lega e la scrive in `data/stagione.json`: anno, codice della regular season e squadre, con il loro numero sul sito (cambiano a ogni stagione, anche per le squadre che restano). Quando la Lega passa alla stagione nuova, il bot toglie da `data/` listone, calendario e tabellini della stagione finita e scarica quelli nuovi; finché la Lega non ha pubblicato tutto, riprova a ogni aggiornamento. Se la Lega annuncia la stagione nuova ma non ha ancora la regular season o le squadre, il bot resta a quella di prima. Anche il sito prende la stagione da lì: la scritta in alto e quella dell'invito WhatsApp cambiano da sole. Finché un admin non preme **Inizia la stagione**, il sito non lascia creare leghe nuove (verrebbero cancellate con la stagione finita) e la routine settimanale non applica listone e calendario nuovi sopra la stagione vecchia; **La mia giornata** ricorda agli admin che la stagione nuova è cominciata.
 2. **Un admin**, nel **pannello Admin → Nuova stagione**, preme **Controlla** (quando il bot ha trovato la stagione nuova, in cima al riquadro compare «la Lega è già alla …»). Se tutto è pronto compare il riepilogo: per confermare si scrive la stagione nuova (per esempio `2027/28`) e si preme **Inizia la stagione**. In un colpo il pulsante:
    - salva la classifica finale di ogni lega nell'**archivio**: ogni partecipante la ritrova nella scheda **Lega → Stagioni passate**;
-   - cancella i dati della stagione finita: leghe con rose, formazioni, mercato e punteggi, codici invito, giornate con statistiche e correzioni, listone. Restano gli admin e l'archivio;
+   - cancella i dati della stagione finita: leghe con rose, formazioni, mercato e punteggi, codici invito, giornate con statistiche e correzioni, listone. Restano gli admin, l'archivio e le **quotazioni**, come punto di partenza per la stagione nuova (si aggiornano con **Ricalcola tutti dalle medie** quando ci sono le prime giornate);
    - applica listone e calendario nuovi.
 
    Ci vuole circa un minuto: lascia la pagina aperta finché non compare «Fatto». Se si interrompe (connessione persa, pagina chiusa), premi di nuovo **Controlla** e **Inizia la stagione**: riprende da dove si era fermato. Se si era fermato dopo la cancellazione, il riepilogo dice che restano solo listone e calendario. Il riepilogo elenca le leghe per nome: controlla che non ci sia una lega nuova creata per sbaglio. Poi i Presidenti creano le nuove leghe e mandano gli inviti (punto 3).

@@ -60,6 +60,7 @@
             stagione: Stagione.nomeDi(anno),
             lega: lega.name,
             modalita,
+            ...(lega.settings?.tipo === 'quotazioni' ? { tipo: 'quotazioni' } : {}),
             uids: members.map(m => m.uid),
             classifica: classificaFinale({ members, standings, mode: modalita, presidentUid: lega.presidentUid }),
         };

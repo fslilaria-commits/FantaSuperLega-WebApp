@@ -216,7 +216,16 @@
             .sort((a, b) => b.matchday - a.matchday)[0] || null;
     }
 
-    const api = { calcolaPunteggio, abbinaGiocatori, punteggiGiornata, punteggioSquadra, formazionePer };
+    // Leghe a quotazioni: ogni cambio di squadra salva anche la formazione della prossima giornata, quindi vale
+    // l'ultima formazione salvata (savedAt, ms) tra quelle delle giornate fino a questa: è la squadra di quel momento,
+    // anche se qualcuno avesse salvato prima una formazione per una giornata più avanti
+    function formazionePiuRecente(giornata, formazioni) {
+        return formazioni
+            .filter(f => f.matchday <= giornata)
+            .sort((a, b) => (b.savedAt ?? 0) - (a.savedAt ?? 0) || b.matchday - a.matchday)[0] || null;
+    }
+
+    const api = { calcolaPunteggio, abbinaGiocatori, punteggiGiornata, punteggioSquadra, formazionePer, formazionePiuRecente };
     if (typeof module !== 'undefined' && module.exports) module.exports = api;
     else root.Punteggi = api;
 })(this);

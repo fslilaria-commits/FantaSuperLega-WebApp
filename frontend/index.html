@@ -49,7 +49,7 @@
             <div class="welcome">
                 <i class="fas fa-volleyball welcome-icon"></i>
                 <h2>Il fantavolley della SuperLega <span data-stagione="nome"></span></h2>
-                <p>Crea una lega con i tuoi amici, fate l'asta e schierate ogni giornata la vostra formazione: i punti arrivano dai tabellini ufficiali della Lega.</p>
+                <p>Crea una lega con i tuoi amici, fate l'asta o sceglietevi i giocatori a prezzo fisso, e schierate ogni giornata la vostra formazione: i punti arrivano dai tabellini ufficiali della Lega.</p>
                 <p class="invito-avviso" id="welcomeInvite" hidden><i class="fas fa-envelope-open-text"></i> Ti hanno invitato in una lega: accedi con Google per entrare.</p>
                 <button class="btn btn-primary" id="welcomeLoginBtn"><i class="fab fa-google"></i> Accedi con Google</button>
             </div>
@@ -108,6 +108,21 @@
         <section id="tab-market" class="tab-content">
             <p class="notice market-status" id="marketStatus"></p>
 
+            <div class="admin-card" id="squadraBox" hidden>
+                <div class="admin-card-head">
+                    <div>
+                        <h3><i class="fas fa-users"></i> La mia squadra</h3>
+                        <p class="admin-sub" id="squadraInfo"></p>
+                    </div>
+                </div>
+                <div id="squadraEditor"></div>
+                <div class="admin-actions">
+                    <button class="btn btn-primary" id="saveSquadraBtn"><i class="fas fa-floppy-disk"></i> Salva squadra</button>
+                    <button class="btn btn-secondary" id="resetSquadraBtn" type="button">Annulla le modifiche</button>
+                    <span class="admin-sub" id="squadraStatus"></span>
+                </div>
+            </div>
+
             <div class="market-panels" id="marketPanels" hidden>
                 <div class="admin-card">
                     <h3><i class="fas fa-envelope"></i> Le mie offerte</h3>
@@ -129,11 +144,12 @@
                     <button class="filter-chip" data-role="O">O</button>
                     <button class="filter-chip" data-role="L">L</button>
                 </div>
-                <label class="check-inline"><input type="checkbox" id="freeOnly"> Solo svincolati</label>
+                <label class="check-inline" id="freeOnlyBox"><input type="checkbox" id="freeOnly"> Solo svincolati</label>
                 <select id="marketSort" aria-label="Ordina il listone">
                     <option value="nome">Ordina per nome</option>
                     <option value="media">Ordina per media</option>
                     <option value="ultima">Ordina per ultima giornata</option>
+                    <option value="prezzo">Ordina per prezzo</option>
                 </select>
             </div>
             <div class="market-table-wrapper">
@@ -145,7 +161,7 @@
                             <th>Ruolo</th>
                             <th title="Media dei fanta-punti nelle giornate giocate">Media</th>
                             <th title="Fanta-punti dell'ultima giornata calcolata">Ultima</th>
-                            <th>Fanta-squadra</th>
+                            <th id="marketOwnerHead">Fanta-squadra</th>
                             <th class="col-mercato">Mercato</th>
                         </tr>
                     </thead>
@@ -233,7 +249,12 @@
                         <h3>Crea una lega</h3>
                         <input type="text" id="newLeagueName" placeholder="Nome della lega" maxlength="60" required>
                         <input type="text" id="newLeagueTeam" placeholder="Nome della tua squadra" maxlength="40" required>
-                        <label class="admin-sub" for="newLeagueBudget">Crediti per l'asta (0 = senza crediti)</label>
+                        <label class="admin-sub" for="newLeagueTipo">Gioco</label>
+                        <select id="newLeagueTipo">
+                            <option value="asta">Asta: rose esclusive, le inserisce il Presidente</option>
+                            <option value="quotazioni">Quotazioni: prezzi fissi, ognuno si fa la squadra (come il Fanta F1)</option>
+                        </select>
+                        <label class="admin-sub" for="newLeagueBudget" id="newLeagueBudgetLabel">Crediti per l'asta (0 = senza crediti)</label>
                         <input type="number" id="newLeagueBudget" min="0" max="10000" value="300" required>
                         <label class="admin-sub" for="newLeagueMode">Tipo di competizione</label>
                         <select id="newLeagueMode">
@@ -339,6 +360,22 @@
             <div class="admin-card">
                 <div class="admin-card-head">
                     <div>
+                        <h3><i class="fas fa-tags"></i> Quotazioni</h3>
+                        <p class="admin-sub" id="quotazioniInfo">Prezzi per le leghe a quotazioni: —</p>
+                    </div>
+                    <button class="btn btn-secondary" id="quotazioniApriBtn"><i class="fas fa-pen"></i> Apri i prezzi</button>
+                </div>
+                <p class="admin-sub">Servono solo alle leghe a quotazioni (come il Fanta F1): ogni giocatore ha un prezzo e lo possono prendere più squadre della stessa lega. Chi ha già un giocatore tiene il prezzo che ha pagato: un prezzo cambiato vale per chi lo prende dopo. I prezzi restano anche alla stagione nuova, come punto di partenza.</p>
+                <div id="quotazioniEditor" hidden></div>
+                <div class="admin-actions">
+                    <button class="btn btn-primary" id="quotazioniSalvaBtn" hidden><i class="fas fa-floppy-disk"></i> Salva quotazioni</button>
+                    <span class="admin-sub" id="quotazioniStatus"></span>
+                </div>
+            </div>
+
+            <div class="admin-card">
+                <div class="admin-card-head">
+                    <div>
                         <h3>Calendario e scadenze</h3>
                         <p class="admin-sub" id="calendarioInfo">Ultimo aggiornamento applicato: —</p>
                     </div>
@@ -421,6 +458,7 @@
     <script src="js/calendario-diff.js"></script>
     <script src="js/rose-check.js"></script>
     <script src="js/formazione-check.js"></script>
+    <script src="js/quotazioni.js"></script>
     <script src="js/punteggi.js"></script>
     <script src="js/correzioni.js"></script>
     <script src="js/scontri.js"></script>
@@ -436,9 +474,11 @@
     <script src="js/formazione.js"></script>
     <script src="js/risultati.js"></script>
     <script src="js/mercato-ui.js"></script>
+    <script src="js/squadra-ui.js"></script>
     <script src="js/presidente-mercato.js"></script>
     <script src="js/admin.js"></script>
     <script src="js/admin-punteggi.js"></script>
+    <script src="js/admin-quotazioni.js"></script>
     <script src="js/home.js"></script>
     <script src="js/giocatore.js"></script>
     <script src="js/routine.js"></script>

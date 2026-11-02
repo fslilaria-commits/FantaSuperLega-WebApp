@@ -13,13 +13,14 @@ const state = {
     transfers: [],      // registro dei movimenti di mercato della lega
     matchdays: [],      // tutte le giornate del calendario
     statistiche: {},    // playerId -> { g: { giornata: fp }, media, presenze, ultima }
+    quotazioni: {},     // playerId -> prezzo, per le leghe a quotazioni (meta/quotazioni, li decide l'admin)
     lineupSalvata: null, // la formazione della prossima giornata è salvata?
     matchday: null,     // prossima giornata da schierare: { id, number, label, lockAt: Date, provisional }
 };
 
 const STATO_VUOTO = {
     players: [], playersById: {}, leagues: [], league: null, members: [], rosters: {}, standings: {}, scores: [],
-    schedule: null, transfers: [], matchdays: [], matchday: null, statistiche: {}, lineupSalvata: null,
+    schedule: null, transfers: [], matchdays: [], matchday: null, statistiche: {}, quotazioni: {}, lineupSalvata: null,
 };
 
 const ROLE_NAMES = { P: 'Palleggiatore', S: 'Schiacciatore', C: 'Centrale', O: 'Opposto', L: 'Libero' };
@@ -107,7 +108,7 @@ function initAuth() {
         }
         if (currentTab() === 'welcome') switchTab('home');
         try {
-            await Promise.all([loadPlayers(), loadNextMatchday(), loadStatistiche()]);
+            await Promise.all([loadPlayers(), loadNextMatchday(), loadStatistiche(), loadQuotazioni()]);
             await loadMyLeagues();
             caricaArchivio();
             await gestisciInvito();
@@ -130,6 +131,11 @@ async function loadPlayers() {
 async function loadStatistiche() {
     const snap = await db.doc('meta/statistiche').get();
     state.statistiche = snap.exists ? snap.data().players || {} : {};
+}
+
+async function loadQuotazioni() {
+    const snap = await db.doc('meta/quotazioni').get();
+    state.quotazioni = Quotazioni.prezziPerId(snap.exists ? snap.data() : null);
 }
 
 // Tutte le giornate (servono anche per la finestra di mercato) e la prossima non ancora bloccata.
@@ -219,6 +225,11 @@ function myTeamName() {
 
 function myRoster() {
     return state.rosters[state.user?.uid];
+}
+
+// Lega a quotazioni (come il Fanta F1): prezzi fissi, ognuno si fa la squadra. Le leghe senza tipo sono ad asta
+function legaAQuotazioni(lega = state.league) {
+    return lega?.settings?.tipo === 'quotazioni';
 }
 
 // Partecipanti con la data di iscrizione in millisecondi (criterio di parità in classifica)

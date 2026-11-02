@@ -24,7 +24,8 @@ function openRoster(uid) {
 
 function renderRosterEditor() {
     const box = document.getElementById('presidentBox');
-    box.hidden = !isPresident();
+    // A quotazioni le squadre se le fa ognuno (squadra-ui.js): il Presidente non le inserisce
+    box.hidden = !isPresident() || legaAQuotazioni();
     if (box.hidden) return;
 
     const select = document.getElementById('rosterMemberSelect');

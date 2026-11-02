@@ -1,4 +1,4 @@
-// Scheda giocatore: dati, fanta-punti di ogni giornata e media, fanta-squadra nella lega
+// Scheda giocatore: dati, fanta-punti di ogni giornata e media, fanta-squadra nella lega (a quotazioni il prezzo)
 document.getElementById('playerDialog').addEventListener('click', e => {
     if (e.target.id === 'playerDialog') chiudiGiocatore();
 });
@@ -36,7 +36,11 @@ function apriGiocatore(id) {
             el('div', {}, el('strong', {}, s ? String(s.presenze) : '0'), el('span', {}, 'presenze')),
             el('div', {}, el('strong', {}, s ? s.ultima.fp.toFixed(2) : '—'), el('span', {}, s ? `ultima (G${s.ultima.matchday})` : 'ultima'))),
         barre,
-        state.league ? el('p', {}, 'Fanta-squadra: ', owner ? el('strong', {}, owner.nome) : el('span', { class: 'free' }, 'svincolato')) : null,
-        el('div', { class: 'admin-actions' }, azioneMercato(p, owner?.uid), el('button', { class: 'btn btn-secondary', onclick: chiudiGiocatore }, 'Chiudi')));
+        !state.league ? null
+            : legaAQuotazioni() ? el('p', {}, 'Prezzo: ', prezzoInListone(id), ` · in ${squadreCon(id)} squadre della lega`)
+                : el('p', {}, 'Fanta-squadra: ', owner ? el('strong', {}, owner.nome) : el('span', { class: 'free' }, 'svincolato')),
+        el('div', { class: 'admin-actions' },
+            legaAQuotazioni() ? azioneSquadra(p, true) : azioneMercato(p, owner?.uid),
+            el('button', { class: 'btn btn-secondary', onclick: chiudiGiocatore }, 'Chiudi')));
     document.getElementById('playerDialog').hidden = false;
 }

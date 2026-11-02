@@ -167,14 +167,25 @@ async function calcolaLega(lega, numero, punti, scadenza) {
     const perUtente = perPartecipante(formazioni, 'savedAt');
     const movimenti = perPartecipante(trasferimenti, 'at');
     const rosaDi = Object.fromEntries(rose.docs.map(d => [d.id, d.data()]));
+    const quotazioni = lega.data().settings?.tipo === 'quotazioni';
 
     const batch = db.batch();
     for (const m of membri.docs) {
-        // Chi non ha salvato la formazione per questa giornata gioca con la sua ultima formazione;
-        // chi è arrivato col mercato dopo il salvataggio e prima della scadenza prende il posto di chi è partito
-        // Contano la rosa alla scadenza e solo i trasferimenti che l'hanno davvero cambiata
-        const { rosa, movimenti: validi } = Mercato.rosaAllaScadenza(rosaDi[m.id], movimenti[m.id] || [], scadenza);
-        const formazione = Mercato.applicaSostituzioni(Punteggi.formazionePer(numero, perUtente[m.id] || []), validi, scadenza);
+        let formazione;
+        let rosa = null;
+        if (quotazioni) {
+            // A quotazioni ogni cambio di squadra salva anche la formazione della giornata: conta l'ultima
+            // formazione salvata fino a questa giornata, che è la squadra di quel momento (niente mercato né rose da
+            // ricostruire, e lo stesso giocatore può essere in più squadre)
+            formazione = Punteggi.formazionePiuRecente(numero, perUtente[m.id] || []);
+        } else {
+            // Chi non ha salvato la formazione per questa giornata gioca con la sua ultima formazione;
+            // chi è arrivato col mercato dopo il salvataggio e prima della scadenza prende il posto di chi è partito
+            // Contano la rosa alla scadenza e solo i trasferimenti che l'hanno davvero cambiata
+            const allaScadenza = Mercato.rosaAllaScadenza(rosaDi[m.id], movimenti[m.id] || [], scadenza);
+            rosa = allaScadenza.rosa;
+            formazione = Mercato.applicaSostituzioni(Punteggi.formazionePer(numero, perUtente[m.id] || []), allaScadenza.movimenti, scadenza);
+        }
         const risultato = formazione ? Punteggi.punteggioSquadra(formazione, punti, rosa) : { totale: 0, dettaglio: [] };
         batch.set(lega.ref.collection('scores').doc(`${numero}_${m.id}`), {
             uid: m.id, matchday: numero, total: risultato.totale, dettaglio: risultato.dettaglio,
@@ -223,7 +234,8 @@ async function calendarioScontri(lega, iscritti, inizio) {
 }
 
 // Riepilogo stagionale dei giocatori (meta/statistiche): si aggiorna con la sola giornata calcolata;
-// se non c'è ancora viene ricostruito da tutte le giornate calcolate
+// se non c'è ancora viene ricostruito da tutte le giornate calcolate, più questa (che è segnata come calcolata
+// solo dopo: senza, al primo calcolo della stagione il riepilogo restava vuoto)
 async function aggiornaStatistiche(numero, punti) {
     const ref = db.doc('meta/statistiche');
     const snap = await ref.get();
@@ -239,8 +251,8 @@ async function aggiornaStatistiche(numero, punti) {
             const stats = await g.ref.collection('stats').get();
             tutte.push({ number: g.data().number, stats: Object.fromEntries(stats.docs.map(d => [d.id, d.data()])) });
         }
-        players = Statistiche.costruisciRiepilogo(tutte);
-        giornate = tutte.map(g => g.number);
+        players = Statistiche.aggiornaRiepilogo(Statistiche.costruisciRiepilogo(tutte), numero, punti);
+        giornate = [...new Set([...tutte.map(g => g.number), numero])];
     }
     await ref.set({ players, giornate: giornate.sort((a, b) => a - b), updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
     state.statistiche = players;

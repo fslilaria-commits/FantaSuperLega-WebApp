@@ -1,6 +1,11 @@
 # Modello dati Firestore
 
-Le regole del gioco seguono la Modalità Leghe del [FantaLVF](https://fantaking.gitbook.io/fantalvf/regolamento-leghe): asta offline, rose esclusive inserite dal **Presidente** della lega, valori dei giocatori fissi.
+Ogni lega sceglie il gioco quando nasce (`settings.tipo`, non si cambia più):
+
+- **asta** (anche le leghe senza `tipo`, create prima che ci fosse la scelta): le regole della Modalità Leghe del [FantaLVF](https://fantaking.gitbook.io/fantalvf/regolamento-leghe), con asta offline, rose esclusive inserite dal **Presidente** della lega e valori dei giocatori fissi;
+- **quotazioni**: come il Fanta F1 e il [Fantasy del FantaLVF](https://fantaking.gitbook.io/fantalvf/regolamento-fantasy). Niente asta: ogni giocatore ha un prezzo deciso dagli admin (`meta/quotazioni`) e lo stesso giocatore può stare in più squadre della lega. Ognuno si fa la squadra da solo dentro il budget della lega (stessa rosa da 14, massimo 4 per club) e fa fino a 5 cambi per giornata, liberi nella prima giornata della squadra. La logica è in `frontend/js/quotazioni.js`.
+
+Formazioni, punteggi, classifiche e scontri diretti sono gli stessi nei due giochi.
 
 ## Ruoli
 
@@ -30,6 +35,9 @@ Un documento per admin, con id uguale all'uid di Firebase Authentication. Si cre
 ### `meta/listone`
 `appliedAt`, `appliedBy`, `changes`: quando e da chi è stato applicato l'ultimo aggiornamento del listone. Scrittura solo admin.
 
+### `meta/quotazioni`
+I prezzi per le leghe a quotazioni: `prezzi` divisi per ruolo (`{ P: { playerId: crediti }, S: …, C: …, O: …, L: … }`, interi da 1 in su), così le regole controllano insieme ruolo e prezzo di chi arriva in una squadra; `aggiornateAt`, `aggiornateBy`. Li scrive un admin dal riquadro **Quotazioni** del pannello, partendo da una proposta dalle medie di `meta/statistiche` (da 2 a 15 crediti in ordine di media dentro ogni ruolo, 2 a chi non ha ancora giocato) e ritoccandoli a mano. Un prezzo cambiato vale per chi prende il giocatore dopo: chi lo ha già tiene il prezzo pagato. Il passaggio di stagione non li cancella: restano come punto di partenza per la stagione nuova.
+
 ### `meta/stagione`
 `anno` (anno di inizio della stagione in corso nel gioco, per esempio `2026` per il 2026/27), `iniziataAt`, `iniziataBy`. Lo crea il pannello Admin alla prima apertura, con l'anno del calendario già nel gioco (o, senza calendario, con quello di `data/stagione.json`). Durante il passaggio di stagione `archiviata` (anno) segna che le classifiche sono già state archiviate; dopo la cancellazione `anno` passa subito alla stagione nuova con `daCompletare: true`, così se il passaggio si interrompe «Controlla» propone di applicare solo listone e calendario. Alla fine restano `anno`, `iniziataAt` e `iniziataBy`. Finché `data/stagione.json` è più avanti di `anno` (in estate) l'app non crea leghe e listone e calendario nuovi entrano solo dal passaggio.
 
@@ -40,6 +48,7 @@ La classifica finale di una lega, salvata dal pulsante «Inizia la stagione» pr
 |---|---|---|
 | `anno`, `stagione` | number, string | Es. `2026`, `2026/27` |
 | `lega`, `modalita` | string | Nome della lega, `classifica` o `scontri` |
+| `tipo` | string | `quotazioni` per le leghe a quotazioni; assente per quelle ad asta |
 | `uids` | list | Partecipanti: solo loro (e gli admin) leggono il documento |
 | `classifica` | list | `{ pos, squadra, total, presidente? }`, negli scontri diretti anche `points, won, tbWon, tbLost, lost` |
 | `archiviatoAt`, `archiviatoBy` | | Data del server e admin che l'ha salvato |
@@ -95,13 +104,14 @@ Il codice a 6 cifre è l'id del documento. Si legge un codice alla volta (niente
 | `name` | string | |
 | `code` | string | Codice invito a 6 cifre |
 | `presidentUid` | string | Chi ha creato la lega |
-| `settings.budget` | number | Crediti per l'asta |
+| `settings.tipo` | string | `asta` o `quotazioni`; assente nelle leghe create prima (= `asta`). Non si cambia più |
+| `settings.budget` | number | Crediti per l'asta; a quotazioni i crediti di ogni squadra (intero da 1 in su, consigliati 100) |
 | `settings.mode` | string | `classifica` o `scontri` |
 | `settings.startMatchday` | number | Prima giornata valida |
 | `settings.marketSuspended` | bool | Mercato sospeso dal Presidente (facoltativo) |
 | `createdAt` | timestamp | Data del server |
 
-Leggibile dai membri, modificabile solo dal Presidente (che non può cedere la presidenza). Giornata di inizio e tipo di lega si cambiano solo prima della scadenza della giornata di inizio e prima che esista il calendario delle sfide.
+Leggibile dai membri, modificabile solo dal Presidente (che non può cedere la presidenza). Giornata di inizio e tipo di competizione (e a quotazioni il budget) si cambiano solo prima della scadenza della giornata di inizio e prima che esista il calendario delle sfide.
 
 ### `leagues/{leagueId}/members/{uid}` — partecipanti
 | Campo | Tipo | Note |
@@ -110,7 +120,7 @@ Leggibile dai membri, modificabile solo dal Presidente (che non può cedere la p
 | `code` | string | Il codice usato per entrare: deve coincidere con quello della lega |
 | `joinedAt` | timestamp | Data del server: a parità in classifica vince chi si è iscritto prima |
 
-Ognuno crea e modifica solo il proprio documento. Posti: le rose sono esclusive, quindi una lega ha al massimo le squadre che il listone permette (`RoseCheck.maxSquadre`: il ruolo con meno giocatori attivi rispetto a quanti ne servono per rosa, oggi gli opposti, 11 squadre; 0, cioè nessun limite, se il listone non basta per una rosa intera). Le regole non sanno contare i partecipanti: lo controlla l'app, e chi entra oltre i posti (in ordine di `joinedAt`) esce subito da solo. Si entra anche da un link di invito (`?invito=<codice>`), che compila il modulo "Unisciti" dopo l'accesso. Le regole permettono al Presidente di togliere un partecipante e a ognuno di uscire, ma l'app non ha ancora il pulsante: per ora si fa dalla console Firebase, cancellando il documento del partecipante e la sua rosa. Chi è stato tolto non può rientrare dall'app, perché il suo `users/{uid}/leagues/{leagueId}` esiste ancora: per farlo rientrare l'admin lo cancella dalla console (vedi `docs/sicurezza.md`).
+Ognuno crea e modifica solo il proprio documento. Posti: nelle leghe a quotazioni nessun limite; ad asta le rose sono esclusive, quindi una lega ha al massimo le squadre che il listone permette (`RoseCheck.maxSquadre`: il ruolo con meno giocatori attivi rispetto a quanti ne servono per rosa, oggi gli opposti, 11 squadre; 0, cioè nessun limite, se il listone non basta per una rosa intera). Le regole non sanno contare i partecipanti: lo controlla l'app, e chi entra oltre i posti (in ordine di `joinedAt`) esce subito da solo. Si entra anche da un link di invito (`?invito=<codice>`), che compila il modulo "Unisciti" dopo l'accesso. Le regole permettono al Presidente di togliere un partecipante e a ognuno di uscire, ma l'app non ha ancora il pulsante: per ora si fa dalla console Firebase, cancellando il documento del partecipante e la sua rosa. Chi è stato tolto non può rientrare dall'app, perché il suo `users/{uid}/leagues/{leagueId}` esiste ancora: per farlo rientrare l'admin lo cancella dalla console (vedi `docs/sicurezza.md`).
 
 ### `leagues/{leagueId}/rosters/{uid}` — rose
 | Campo | Tipo | Note |
@@ -120,7 +130,20 @@ Ognuno crea e modifica solo il proprio documento. Posti: le rose sono esclusive,
 | `prices` | map | `playerId → crediti pagati all'asta` |
 | `creditsLeft` | number | Crediti avanzati per il mercato |
 
-Scrive solo il Presidente. Durante l'asta la rosa si può salvare anche incompleta: le regole controllano i massimi per ruolo (2, 4, 4, 2, 2), l'assenza di doppioni e la coerenza dei prezzi. Esclusività tra squadre, massimo 4 per club e budget li controlla il pannello del Presidente (`frontend/js/rose-check.js`), perché le regole non possono confrontare tutte le rose.
+Ad asta scrive solo il Presidente. Durante l'asta la rosa si può salvare anche incompleta: le regole controllano i massimi per ruolo (2, 4, 4, 2, 2), l'assenza di doppioni e la coerenza dei prezzi. Esclusività tra squadre, massimo 4 per club e budget li controlla il pannello del Presidente (`frontend/js/rose-check.js`), perché le regole non possono confrontare tutte le rose.
+
+**Leghe a quotazioni.** La squadra la scrive solo il suo proprietario, sempre completa, con in più:
+
+| Campo | Tipo | Note |
+|---|---|---|
+| `all` | list | I 14 nell'ordine dei ruoli (P, S, C, O, L) |
+| `prices` | map | `playerId → crediti pagati`: chi resta tiene il prezzo pagato, chi arriva paga la quotazione di `meta/quotazioni` nel suo ruolo |
+| `creditsLeft` | number | Budget della lega meno la somma dei prezzi, da 0 in su |
+| `giornata` | number | La giornata per cui vale l'ultimo salvataggio: la prossima da schierare (dopo la scadenza della precedente, prima della sua) |
+| `dalla` | number | La prima giornata della squadra: lì i cambi sono liberi. Non cambia più |
+| `cambi` | number | Cambi fatti per `giornata` (giocatori arrivati rispetto alla squadra salvata, sommati nella stessa giornata): al massimo 5, 0 nella giornata `dalla` |
+
+Le regole rifanno tutti questi conti; il massimo per club lo controlla l'app (`frontend/js/quotazioni.js`). Insieme alla squadra, nello stesso salvataggio, va scritta la formazione di `giornata` (le regole lo pretendono): chi arriva prende il posto e la fascia di chi parte, e la prima volta titolari sono i più cari di ogni ruolo e capitano il più caro. Per i punti di una giornata conta l'ultima formazione salvata tra quelle delle giornate fino a quella (`Punteggi.formazionePiuRecente`): è la squadra di quel momento, quindi non serve il registro dei movimenti.
 
 ### `leagues/{leagueId}/lineups/{matchday}_{uid}` — formazioni
 | Campo | Tipo | Note |
@@ -132,7 +155,7 @@ Scrive solo il Presidente. Durante l'asta la rosa si può salvare anche incomple
 | `captain` | string | Uno dei titolari |
 | `savedAt` | timestamp | Data del server del salvataggio |
 
-Ognuno scrive solo la propria, e solo prima di `lockAt`. I trasferimenti di mercato registrati dopo `savedAt` e prima della scadenza sostituiscono nella formazione i giocatori partiti. I giocatori devono essere della propria rosa (completa), nel ruolo giusto, senza doppioni; la panchina sono gli altri 7. Le formazioni degli altri si vedono solo dopo la scadenza. Per una nuova giornata l'app riparte dalla formazione precedente.
+Ognuno scrive solo la propria, e solo prima di `lockAt`. Nelle leghe ad asta i trasferimenti di mercato registrati dopo `savedAt` e prima della scadenza sostituiscono nella formazione i giocatori partiti; a quotazioni ogni cambio di squadra riscrive la formazione (vedi le rose). I giocatori devono essere della propria rosa (completa), nel ruolo giusto, senza doppioni; la panchina sono gli altri 7. Le formazioni degli altri si vedono solo dopo la scadenza. Per una nuova giornata l'app riparte dalla formazione precedente.
 
 ### `leagues/{leagueId}/schedule/main` — calendario degli scontri diretti
 | Campo | Tipo | Note |
@@ -145,7 +168,7 @@ Solo per le leghe `scontri`. Lo genera il Presidente una sola volta prima della 
 
 ## Mercato (Modalità Leghe FantaLVF)
 
-La logica è in `frontend/js/mercato.js`. **Senza server le assegnazioni non scattano da sole: le applica il Presidente con un clic** dalla scheda Lega ("Assegna gli svincolati", "Applica gli scambi accettati").
+Solo nelle leghe ad asta: a quotazioni le regole non accettano offerte, scambi né movimenti, perché ognuno cambia da sé la propria squadra. La logica è in `frontend/js/mercato.js`. **Senza server le assegnazioni non scattano da sole: le applica il Presidente con un clic** dalla scheda Lega ("Assegna gli svincolati", "Applica gli scambi accettati").
 
 **Finestra** per la giornata *n*: apre a fine giornata *n−1* (3 ore dopo l'inizio dell'ultima partita), offerte per gli svincolati fino a 3 ore prima della scadenza di *n*, scambi fino alla scadenza. Le regole controllano che si sia dopo l'inizio della giornata *n−1* e prima delle chiusure; il Presidente può sospendere il mercato. Un giocatore lasciato in un'assegnazione torna svincolato dalla finestra successiva. Una proposta di scambio vale solo nella sua finestra: dopo risulta "scaduta" e non si può più accettare.
 
