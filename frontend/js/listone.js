@@ -1,4 +1,5 @@
 // Scheda Mercato: listone con ricerca, filtro per ruolo e fanta-squadra proprietaria nella lega selezionata
+// (nelle leghe a quotazioni, al posto della proprietaria, il prezzo e il pulsante per prenderlo in squadra)
 const marketFilter = { q: '', role: 'ALL', freeOnly: false, sort: 'nome' };
 
 document.getElementById('searchPlayer').addEventListener('input', e => {
@@ -32,18 +33,34 @@ function ownersInLeague() {
 }
 
 function renderMarket() {
+    const quotazioni = legaAQuotazioni();
     const owners = ownersInLeague();
+    // A quotazioni non ci sono svincolati: tutti si possono prendere, ognuno al suo prezzo
+    document.getElementById('freeOnlyBox').hidden = quotazioni;
+    document.getElementById('marketOwnerHead').textContent = quotazioni ? 'Prezzo' : 'Fanta-squadra';
+    const perPrezzo = document.querySelector('#marketSort option[value="prezzo"]');
+    perPrezzo.hidden = perPrezzo.disabled = !quotazioni;
+    if (!quotazioni && marketFilter.sort === 'prezzo') {
+        marketFilter.sort = 'nome';
+        document.getElementById('marketSort').value = 'nome';
+    }
     const visibili = state.players.filter(p =>
         (marketFilter.role === 'ALL' || p.role === marketFilter.role)
         && (!marketFilter.q || p.name.toLowerCase().includes(marketFilter.q) || p.team.toLowerCase().includes(marketFilter.q))
-        && (!marketFilter.freeOnly || !owners[p.id]));
+        && (quotazioni || !marketFilter.freeOnly || !owners[p.id]));
     const stat = id => state.statistiche[id];
     if (marketFilter.sort === 'media') visibili.sort((a, b) => (stat(b.id)?.media ?? -999) - (stat(a.id)?.media ?? -999));
     if (marketFilter.sort === 'ultima') visibili.sort((a, b) => (stat(b.id)?.ultima.fp ?? -999) - (stat(a.id)?.ultima.fp ?? -999));
+    if (marketFilter.sort === 'prezzo') visibili.sort((a, b) => (state.quotazioni[b.id] ?? -1) - (state.quotazioni[a.id] ?? -1));
 
     // Il pulsante di mercato compare due volte: nella sua colonna (computer) e sotto il nome (telefono, dove
     // la colonna è nascosta): il CSS ne mostra uno solo
-    const azione = p => azioneMercato(p, owners[p.id]?.uid);
+    const azione = p => (quotazioni ? azioneSquadra(p) : azioneMercato(p, owners[p.id]?.uid));
+    const proprietario = p => {
+        if (!state.league) return '—';
+        if (quotazioni) return prezzoInListone(p.id);
+        return owners[p.id] ? el('span', { class: 'owner' }, owners[p.id].nome) : el('span', { class: 'free' }, 'Svincolato');
+    };
     riempi(document.getElementById('marketTableBody'), visibili.map(p => el('tr', {},
         el('td', {}, el('div', { class: 'player-row' },
             fotoGiocatore(p),
@@ -54,7 +71,7 @@ function renderMarket() {
         el('td', {}, el('span', { class: 'role-tag', title: ROLE_NAMES[p.role] }, p.role)),
         el('td', { class: 'num' }, stat(p.id) ? stat(p.id).media.toFixed(2) : '—'),
         el('td', { class: 'num' }, stat(p.id) ? stat(p.id).ultima.fp.toFixed(2) : '—'),
-        el('td', {}, state.league ? (owners[p.id] ? el('span', { class: 'owner' }, owners[p.id].nome) : el('span', { class: 'free' }, 'Svincolato')) : '—'),
+        el('td', {}, proprietario(p)),
         el('td', { class: 'col-mercato' }, azione(p)),
     )));
 

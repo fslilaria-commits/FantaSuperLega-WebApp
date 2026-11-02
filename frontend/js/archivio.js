@@ -22,7 +22,7 @@ function disegnaArchivio(a) {
     const scontri = a.modalita === 'scontri';
     return el('div', { class: 'archivio-lega' },
         el('h3', {}, `${a.stagione} · ${a.lega}`),
-        el('p', { class: 'admin-sub' }, scontri ? 'Scontri diretti' : 'Classifica generale'),
+        el('p', { class: 'admin-sub' }, `${scontri ? 'Scontri diretti' : 'Classifica generale'}${a.tipo === 'quotazioni' ? ' · a quotazioni' : ''}`),
         el('div', { class: 'market-table-wrapper' }, el('table', { class: 'market-table' },
             el('thead', {}, el('tr', {},
                 el('th', {}, 'Pos'), el('th', {}, 'Squadra'),

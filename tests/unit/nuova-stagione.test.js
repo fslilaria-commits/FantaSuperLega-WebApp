@@ -105,4 +105,7 @@ test('documento d\'archivio di una lega', () => {
     assert.equal(doc.classifica.length, 3);
     assert.equal(idArchivio(2026, 'xyz'), '2026_xyz');
     assert.equal(archivioLega({ anno: 2026, lega: { ...lega, settings: {} }, members, standings: {} }).modalita, 'classifica');
+    assert.equal('tipo' in doc, false, 'le leghe ad asta restano come prima');
+    const quotazioni = archivioLega({ anno: 2026, lega: { ...lega, settings: { mode: 'classifica', tipo: 'quotazioni' } }, members, standings: {} });
+    assert.equal(quotazioni.tipo, 'quotazioni');
 });

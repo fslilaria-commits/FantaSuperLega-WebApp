@@ -1,6 +1,6 @@
 # Fanta SuperLega
 
-Fantavolley sulla SuperLega maschile, per leghe private tra amici. Le regole seguono la Modalità Leghe del [FantaLVF](https://fantaking.gitbook.io/fantalvf): asta offline, rose esclusive inserite dal Presidente della lega, punteggio calcolato dai tabellini ufficiali.
+Fantavolley sulla SuperLega maschile, per leghe private tra amici, con il punteggio calcolato dai tabellini ufficiali. Chi crea una lega sceglie il gioco: **asta** (Modalità Leghe del [FantaLVF](https://fantaking.gitbook.io/fantalvf): asta offline, rose esclusive inserite dal Presidente della lega) oppure **quotazioni** (come il Fanta F1 e il Fantasy del FantaLVF: prezzi fissi decisi dall'admin, lo stesso giocatore in più squadre, ognuno si fa la squadra con fino a 5 cambi per giornata).
 
 ## Struttura
 

@@ -51,6 +51,9 @@ async function controllaRoutine() {
         // Se il bot dei dati si è fermato, "tutto aggiornato" vorrebbe dire solo che non è arrivato niente
         const avvisiBot = await avvisiBotDati().catch(() => []);
         for (const avviso of avvisiBot) righe.push(rigaRoutine('errore', `Bot dei dati: ${avviso}`));
+        // Le quotazioni non si applicano da qui: è solo un promemoria per le leghe a quotazioni
+        const quotazioni = await avvisoQuotazioni().catch(() => null);
+        if (quotazioni) righe.push(rigaRoutine('da', `Quotazioni: ${quotazioni}`));
 
         routine = { listone: modificheListone > 0, calendario: modificheCalendario > 0, giornate };
         riempi(lista, righe);

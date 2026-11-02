@@ -38,6 +38,12 @@ service cloud.firestore {
       return get(/databases/$(database)/documents/matchdays/$(string(numero))).data.lockAt;
     }
 
+    // Tipo di gioco della lega: 'asta' (rose esclusive inserite dal Presidente; anche le leghe create prima che ci
+    // fosse la scelta) o 'quotazioni' (prezzi fissi dell'admin, ognuno si fa la squadra, come il Fanta F1)
+    function tipoLega(leagueId) {
+      return league(leagueId).settings.get('tipo', 'asta');
+    }
+
     // Elenco admin: ognuno può solo verificare se è admin; nessuna scrittura dall'app
     match /admins/{uid} {
       allow get: if signedIn() && uid == request.auth.uid;
@@ -120,10 +126,13 @@ service cloud.firestore {
 
     match /leagues/{leagueId} {
 
+      // A quotazioni il budget è quello di ogni squadra: un intero da 1 in su
       function validSettings(s) {
-        return s.keys().hasOnly(['budget', 'mode', 'startMatchday', 'marketSuspended'])
+        return s.keys().hasOnly(['budget', 'mode', 'startMatchday', 'marketSuspended', 'tipo'])
           && (!('marketSuspended' in s) || s.marketSuspended is bool)
+          && (!('tipo' in s) || s.tipo in ['asta', 'quotazioni'])
           && s.budget is number && s.budget >= 0 && s.budget <= 10000
+          && (s.get('tipo', 'asta') == 'asta' || (s.budget is int && s.budget >= 1))
           && s.mode in ['classifica', 'scontri']
           && s.startMatchday is int && s.startMatchday >= 1;
       }
@@ -141,13 +150,17 @@ service cloud.firestore {
         && request.resource.data.presidentUid == request.auth.uid
         && validLeague(request.resource.data)
         && request.resource.data.createdAt == request.time;
-      // Il Presidente cambia nome e impostazioni, non codice, presidenza o data di creazione.
-      // Giornata di inizio e tipo di lega si cambiano solo prima dell'inizio e prima del calendario delle sfide
+      // Il Presidente cambia nome e impostazioni, non codice, presidenza, data di creazione o tipo di gioco.
+      // Giornata di inizio e tipo di competizione (e a quotazioni il budget delle squadre) si cambiano solo prima
+      // dell'inizio e prima del calendario delle sfide
       allow update: if isPresident(leagueId)
         && validLeague(request.resource.data)
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'settings'])
+        && request.resource.data.settings.get('tipo', 'asta') == resource.data.settings.get('tipo', 'asta')
         && ((request.resource.data.settings.startMatchday == resource.data.settings.startMatchday
-             && request.resource.data.settings.mode == resource.data.settings.mode)
+             && request.resource.data.settings.mode == resource.data.settings.mode
+             && (resource.data.settings.get('tipo', 'asta') == 'asta'
+                 || request.resource.data.settings.budget == resource.data.settings.budget))
             || (request.time < scadenzaGiornata(resource.data.settings.startMatchday)
                 && !exists(/databases/$(database)/documents/leagues/$(leagueId)/schedule/main)));
       allow delete: if isAdmin();
@@ -191,16 +204,84 @@ service cloud.firestore {
             && d.creditsLeft is number && d.creditsLeft >= 0;
         }
 
+        // --- Leghe a quotazioni: la squadra se la fa ognuno, sempre completa, con i prezzi di meta/quotazioni ---
+
+        // Chi arriva in un ruolo (non c'era in quel ruolo nella squadra salvata) deve avere una quotazione in quel
+        // ruolo e pagarla. Si lavora per insiemi perché le regole hanno un limite di espressioni per richiesta
+        function arriviGiusti(d, old, q, ruolo) {
+          let arrivi = d[ruolo].toSet().difference(old[ruolo].toSet());
+          return q[ruolo].keys().toSet().hasAll(arrivi)
+            && q[ruolo].diff(d.prices).changedKeys().intersection(arrivi).size() == 0;
+        }
+
+        // Chi resta tiene il prezzo pagato; chi arriva paga la quotazione del suo ruolo
+        function prezziGiusti(d, old) {
+          let q = get(/databases/$(database)/documents/meta/quotazioni).data.prezzi;
+          return old.prices.diff(d.prices).changedKeys().size() == 0
+            && arriviGiusti(d, old, q, 'P') && arriviGiusti(d, old, q, 'S') && arriviGiusti(d, old, q, 'C')
+            && arriviGiusti(d, old, q, 'O') && arriviGiusti(d, old, q, 'L');
+        }
+
+        // Le regole non hanno cicli: i 14 prezzi si sommano uno per uno
+        function spesa(d) {
+          let p = d.prices;
+          return p[d.P[0]] + p[d.P[1]] + p[d.S[0]] + p[d.S[1]] + p[d.S[2]] + p[d.S[3]]
+            + p[d.C[0]] + p[d.C[1]] + p[d.C[2]] + p[d.C[3]] + p[d.O[0]] + p[d.O[1]] + p[d.L[0]] + p[d.L[1]];
+        }
+
+        // Al massimo 5 cambi (giocatori che arrivano) per giornata, liberi nella prima giornata della squadra (dalla);
+        // nella stessa giornata si sommano a quelli già fatti
+        function cambiGiusti(d, old, nuova) {
+          return d.cambi is int && d.cambi <= 5
+            && (nuova
+              ? d.dalla == d.giornata && d.cambi == 0
+              : d.dalla == old.dalla
+                && d.cambi == (d.giornata == old.dalla ? 0
+                  : (old.giornata == d.giornata ? old.cambi : 0) + d.all.toSet().difference(old.all.toSet()).size()));
+        }
+
+        // giornata: la prossima da schierare (dopo la scadenza della precedente, prima della sua). Nello stesso
+        // salvataggio va scritta la formazione di quella giornata, che per i punti è la squadra di quel momento.
+        // all: i 14 nell'ordine dei ruoli (P, S, C, O, L), senza ripetizioni
+        function validSquadra(d, old, nuova) {
+          let n = d.giornata;
+          return d.keys().hasOnly(['P', 'S', 'C', 'O', 'L', 'all', 'prices', 'creditsLeft', 'giornata', 'dalla', 'cambi'])
+            && d.P.size() == 2 && d.S.size() == 4 && d.C.size() == 4 && d.O.size() == 2 && d.L.size() == 2
+            && d.all == d.P.concat(d.S).concat(d.C).concat(d.O).concat(d.L)
+            && d.all.toSet().size() == 14
+            && d.prices.keys().toSet() == d.all.toSet()
+            && n is int
+            && request.time < scadenzaGiornata(n)
+            && (n == 1 || request.time >= scadenzaGiornata(n - 1))
+            && prezziGiusti(d, old)
+            && d.creditsLeft == league(leagueId).settings.budget - spesa(d)
+            && d.creditsLeft >= 0
+            && cambiGiusti(d, old, nuova)
+            && getAfter(/databases/$(database)/documents/leagues/$(leagueId)/lineups/$(string(n) + '_' + request.auth.uid)).data.savedAt == request.time;
+        }
+
         allow read: if isMember(leagueId) || isAdmin();
+        // Asta: le rose le inserisce il Presidente
         allow create, update: if isPresident(leagueId)
+          && tipoLega(leagueId) == 'asta'
           && exists(/databases/$(database)/documents/leagues/$(leagueId)/members/$(uid))
           && validRoster(request.resource.data);
+        // Quotazioni: ognuno la propria
+        allow create: if signedIn() && uid == request.auth.uid
+          && isMember(leagueId)
+          && tipoLega(leagueId) == 'quotazioni'
+          && validSquadra(request.resource.data, {'P': [], 'S': [], 'C': [], 'O': [], 'L': [], 'prices': {}}, true);
+        allow update: if signedIn() && uid == request.auth.uid
+          && isMember(leagueId)
+          && tipoLega(leagueId) == 'quotazioni'
+          && validSquadra(request.resource.data, resource.data, false);
         allow delete: if isAdmin() || isPresident(leagueId);
       }
 
       match /lineups/{lineupId} {
+        // La rosa dopo il salvataggio: a quotazioni squadra e formazione si salvano insieme
         function roster(uid) {
-          return get(/databases/$(database)/documents/leagues/$(leagueId)/rosters/$(uid)).data;
+          return getAfter(/databases/$(database)/documents/leagues/$(leagueId)/rosters/$(uid)).data;
         }
 
         function validLineup(d) {
@@ -261,9 +342,11 @@ service cloud.firestore {
       }
 
       // Finestra per la giornata numero: dopo l'inizio della giornata prima, prima della sua scadenza,
-      // mercato non sospeso dal Presidente (l'app apre il mercato solo a giornata precedente finita)
+      // mercato non sospeso dal Presidente (l'app apre il mercato solo a giornata precedente finita).
+      // Offerte e scambi ci sono solo nelle leghe ad asta: a quotazioni ognuno cambia da sé la propria squadra
       function finestra(numero, fino) {
-        return !league(leagueId).settings.get('marketSuspended', false)
+        return tipoLega(leagueId) == 'asta'
+          && !league(leagueId).settings.get('marketSuspended', false)
           && request.time < fino
           && (numero == 1 || request.time >= scadenzaGiornata(numero - 1));
       }
@@ -359,6 +442,7 @@ service cloud.firestore {
       match /transfers/{transferId} {
         allow read: if isMember(leagueId) || isAdmin();
         allow create: if isPresident(leagueId)
+          && tipoLega(leagueId) == 'asta'
           && request.resource.data.keys().hasOnly(['tipo', 'uid', 'playerIn', 'playerOut', 'valore', 'extra', 'matchday', 'at'])
           && request.resource.data.tipo in ['svincolato', 'scambio']
           && request.resource.data.uid is string
@@ -386,11 +470,12 @@ service cloud.firestore {
     // La vede solo chi era nella lega; resta anche quando i dati della stagione vengono cancellati
     match /archivio/{docId} {
       function validArchivio(d) {
-        return d.keys().hasOnly(['anno', 'stagione', 'lega', 'modalita', 'uids', 'classifica', 'archiviatoAt', 'archiviatoBy'])
+        return d.keys().hasOnly(['anno', 'stagione', 'lega', 'modalita', 'tipo', 'uids', 'classifica', 'archiviatoAt', 'archiviatoBy'])
           && d.anno is int
           && isString(d.stagione, 10)
           && isString(d.lega, 60)
           && d.modalita in ['classifica', 'scontri']
+          && (!('tipo' in d) || d.tipo in ['asta', 'quotazioni'])
           && d.uids is list && d.uids.size() <= 60
           && d.classifica is list && d.classifica.size() <= 60
           && d.archiviatoAt == request.time

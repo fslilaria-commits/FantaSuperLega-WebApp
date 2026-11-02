@@ -74,6 +74,16 @@ async function leggiMercatoPersonale(f, key) {
 async function renderMercato() {
     const status = document.getElementById('marketStatus');
     const panels = document.getElementById('marketPanels');
+    renderSquadra();
+    // A quotazioni niente offerte, scambi né movimenti: ognuno cambia da sé la propria squadra (squadra-ui.js)
+    if (legaAQuotazioni()) {
+        const f = finestraCambi();
+        status.textContent = f ? `Squadra e cambi per la ${f.label} fino a ${formatDateTime(f.chiude)}.` : 'Stagione finita: niente più cambi.';
+        status.classList.toggle('aperto', !!f);
+        panels.hidden = true;
+        document.getElementById('transfersBox').hidden = true;
+        return;
+    }
     if (!state.league) {
         status.textContent = 'Entra in una lega per fare offerte e scambi.';
         panels.hidden = true;

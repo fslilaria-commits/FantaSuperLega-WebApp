@@ -16,6 +16,7 @@ if (auth) {
             loadMetaInfo('calendario', 'calendarioInfo');
             loadGiornateTabellini();
             mostraStagioneGioco();
+            mostraInfoQuotazioni();
         } else if (document.getElementById('tab-admin').classList.contains('active')) {
             switchTab('home');
         }

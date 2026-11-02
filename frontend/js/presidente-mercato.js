@@ -16,7 +16,8 @@ document.getElementById('marketSuspendToggle').addEventListener('change', async 
 
 function renderPresidenteMercato() {
     const box = document.getElementById('presidentMarketBox');
-    box.hidden = !isPresident();
+    // A quotazioni non ci sono svincolati da assegnare né scambi
+    box.hidden = !isPresident() || legaAQuotazioni();
     if (box.hidden) return;
     document.getElementById('marketSuspendToggle').checked = !!state.league.settings?.marketSuspended;
     if (anteprimaMercato?.leagueId !== state.league.id) anteprimaMercato = null;

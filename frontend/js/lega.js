@@ -9,6 +9,7 @@ document.getElementById('createLeagueForm').addEventListener('submit', createLea
 document.getElementById('joinLeagueForm').addEventListener('submit', joinLeague);
 document.getElementById('inviteCopy').addEventListener('click', copiaInvito);
 document.getElementById('inviteShare').addEventListener('click', condividiInvito);
+document.getElementById('newLeagueTipo').addEventListener('change', aggiornaModuloLega);
 document.getElementById('welcomeInvite').hidden = !invitoInSospeso;
 
 // --- Inviti: link con il codice della lega (?invito=123456) ---
@@ -62,10 +63,23 @@ async function condividiInvito() {
     } catch { /* condivisione annullata */ }
 }
 
-// Squadre che ci stanno in una lega con il listone di oggi. 0 = il listone non basta per una rosa intera
-// (vuoto, non ancora caricato o senza giocatori di un ruolo): in quel caso nessun limite
-function postiMassimi() {
-    return RoseCheck.maxSquadre(state.players);
+// Squadre che ci stanno in una lega con il listone di oggi. 0 = nessun limite: a quotazioni lo stesso giocatore
+// sta in più squadre, e il limite non c'è nemmeno se il listone non basta per una rosa intera
+// (vuoto, non ancora caricato o senza giocatori di un ruolo)
+function postiMassimi(lega = state.league) {
+    return legaAQuotazioni(lega) ? 0 : RoseCheck.maxSquadre(state.players);
+}
+
+// Modulo "Crea una lega": i crediti cambiano senso (e valore proposto) con il tipo di gioco
+function aggiornaModuloLega() {
+    const quotazioni = document.getElementById('newLeagueTipo').value === 'quotazioni';
+    const budget = document.getElementById('newLeagueBudget');
+    document.getElementById('newLeagueBudgetLabel').textContent = quotazioni
+        ? `Crediti per fare la squadra (consigliati ${Quotazioni.BUDGET_CONSIGLIATO})`
+        : "Crediti per l'asta (0 = senza crediti)";
+    budget.min = quotazioni ? 1 : 0;
+    if (quotazioni && budget.value === '300') budget.value = String(Quotazioni.BUDGET_CONSIGLIATO);
+    if (!quotazioni && budget.value === String(Quotazioni.BUDGET_CONSIGLIATO)) budget.value = '300';
 }
 
 // Il modulo "Unisciti" torna normale: niente più apertura forzata, codice e messaggio dell'invito
@@ -192,11 +206,13 @@ function renderLeague() {
 
     const l = state.league;
     const modalita = l.settings?.mode === 'scontri' ? 'Scontri diretti' : 'Classifica generale';
-    const crediti = l.settings?.budget ? `${l.settings.budget} crediti per l'asta` : 'Asta senza crediti';
+    const crediti = legaAQuotazioni(l) ? `Quotazioni, ${l.settings.budget} crediti a squadra`
+        : l.settings?.budget ? `${l.settings.budget} crediti per l'asta` : 'Asta senza crediti';
     document.getElementById('leagueTitle').textContent = l.name;
-    // Posti: le rose sono esclusive, quindi il listone decide quante squadre ci stanno
+    // Posti: ad asta le rose sono esclusive, quindi il listone decide quante squadre ci stanno
     const max = postiMassimi();
-    const squadre = max ? `squadre ${state.members.length}/${max}` : `${state.members.length} squadre`;
+    const n = state.members.length;
+    const squadre = max ? `squadre ${n}/${max}` : `${n} ${n === 1 ? 'squadra' : 'squadre'}`;
     document.getElementById('leagueMeta').textContent = `${modalita} · ${crediti} · dalla giornata ${l.settings?.startMatchday ?? 1} · ${squadre}`;
     document.getElementById('leagueCodeDisplay').textContent = l.code;
     disegnaInvito(l, max);
@@ -232,17 +248,19 @@ function renderLeague() {
     renderSfide();
 }
 
-// Chi è entrato quando i posti erano già finiti: conta l'ordine di iscrizione (data del server)
+// Chi è entrato quando i posti erano già finiti (conta l'ordine di iscrizione, data del server): i posti della lega,
+// altrimenti 0
 async function oltreIPosti(leagueId, uid) {
-    const max = postiMassimi();
-    if (!max) return false;
+    const lega = await db.doc(`leagues/${leagueId}`).get();
+    const max = postiMassimi(lega.data());
+    if (!max) return 0;
     const membri = (await db.collection(`leagues/${leagueId}/members`).get()).docs
         .map(d => {
             const t = d.data().joinedAt;
             return { uid: d.id, s: t?.seconds ?? Infinity, n: t?.nanoseconds ?? 0 };
         })
         .sort((a, b) => a.s - b.s || a.n - b.n || (a.uid < b.uid ? -1 : a.uid > b.uid ? 1 : 0));
-    return membri.findIndex(m => m.uid === uid) >= max;
+    return membri.findIndex(m => m.uid === uid) >= max ? max : 0;
 }
 
 // Perché le regole hanno rifiutato l'ingresso: chi era già entrato ed è stato tolto, o calendario delle sfide già fatto
@@ -266,8 +284,11 @@ async function createLeague(e) {
     const teamName = document.getElementById('newLeagueTeam').value.trim();
     const budget = parseInt(document.getElementById('newLeagueBudget').value, 10);
     const mode = document.getElementById('newLeagueMode').value;
-    if (!name || !teamName || !Number.isInteger(budget) || budget < 0) {
-        status.textContent = 'Compila nome della lega, nome della squadra e crediti.';
+    const tipo = document.getElementById('newLeagueTipo').value === 'quotazioni' ? 'quotazioni' : 'asta';
+    if (!name || !teamName || !Number.isInteger(budget) || budget < (tipo === 'quotazioni' ? 1 : 0)) {
+        status.textContent = tipo === 'quotazioni'
+            ? 'Compila nome della lega, nome della squadra e crediti (almeno 1).'
+            : 'Compila nome della lega, nome della squadra e crediti.';
         return;
     }
 
@@ -294,7 +315,7 @@ async function createLeague(e) {
             name,
             code,
             presidentUid: uid,
-            settings: { budget, mode, startMatchday: state.matchday?.number || 1 },
+            settings: { budget, mode, startMatchday: state.matchday?.number || 1, tipo },
             createdAt: now,
         });
         batch.set(db.doc(`leagueCodes/${code}`), { leagueId: leagueRef.id });
@@ -302,8 +323,11 @@ async function createLeague(e) {
         batch.set(db.doc(`users/${uid}/leagues/${leagueRef.id}`), { joinedAt: now });
         try {
             await batch.commit();
-            status.textContent = `Lega creata! Codice da condividere con gli amici: ${code}`;
+            status.textContent = tipo === 'quotazioni'
+                ? `Lega creata! Codice da condividere con gli amici: ${code}. Ognuno fa la sua squadra nella scheda Mercato.`
+                : `Lega creata! Codice da condividere con gli amici: ${code}`;
             e.target.reset();
+            aggiornaModuloLega();
             chiudiInvito();
             await loadMyLeagues(leagueRef.id);
             return;
@@ -348,7 +372,7 @@ async function joinLeague(e) {
         // Da qui si è dentro. Le regole non sanno contare i partecipanti: se la lega era già al completo si esce
         // subito. Se la verifica non riesce (per esempio senza connessione) l'ingresso resta: il limite è un aiuto
         let messaggio = 'Sei entrato nella lega!';
-        let fuori = false;
+        let fuori = 0;
         try {
             fuori = await oltreIPosti(leagueId, uid);
         } catch (err) {
@@ -361,7 +385,7 @@ async function joinLeague(e) {
                 esci.delete(db.doc(`users/${uid}/leagues/${leagueId}`));
                 await esci.commit();
                 chiudiInvito();
-                status.textContent = `La lega è al completo: con il listone di oggi ci stanno al massimo ${postiMassimi()} squadre (le rose sono esclusive). Chiedi al Presidente.`;
+                status.textContent = `La lega è al completo: con il listone di oggi ci stanno al massimo ${fuori} squadre (le rose sono esclusive). Chiedi al Presidente.`;
                 return;
             } catch (err) {
                 console.error(err);
