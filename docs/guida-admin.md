@@ -76,7 +76,7 @@ Ogni riquadro si può usare anche da solo (**Controlla proposta → Applica aggi
 Servono quando un nome del tabellino non si abbina al listone, oppure quando un numero è sbagliato e la Lega non l'ha ancora corretto.
 
 1. **Admin → Tabellini e punteggi**: scegli la giornata e premi **Controlla tabellino**.
-2. Sotto il riepilogo compare **Correzioni manuali**. Il primo menu elenca le righe del tabellino, squadra per squadra; quelle da sistemare sono segnate **NON TROVATO**.
+2. Sotto il riepilogo compare **Correzioni manuali**. Il primo menu elenca le righe del tabellino, squadra per squadra; quelle da sistemare sono segnate **NON TROVATO**. All'inizio non è scelta nessuna riga (il menu dice quante sono NON TROVATO): scegline una e compaiono il giocatore abbinato e i numeri.
 3. Nel secondo menu scegli il giocatore giusto del listone (prima quelli della squadra), oppure **Nessuno: la riga non conta**. "Abbinamento automatico" lascia fare all'app.
 4. Se serve, correggi i numeri: set, battute, ricezioni, attacchi, muri. Accanto ai numeri cambiati compare il valore originale della Lega. Punti, percentuali e totali di squadra si ricalcolano da soli.
 5. Premi **Salva correzione**: il controllo si rifà da solo e la riga risulta "corretto".

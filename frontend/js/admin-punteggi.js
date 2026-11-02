@@ -313,17 +313,28 @@ function disegnaCorrezioni() {
     }
     const { originale, righe, nonAbbinate } = calcolo;
     const tutte = righeTabellino(originale);
-    if (!tutte.some(r => r.chiave === rigaScelta)) rigaScelta = ([...nonAbbinate][0]) || tutte[0]?.chiave || null;
+    box.hidden = !tutte.length;
+    if (!tutte.length) return;
+    // Nessuna riga aperta finché l'admin non ne sceglie una: così non si corregge per sbaglio la prima della lista
+    if (!tutte.some(r => r.chiave === rigaScelta)) rigaScelta = null;
     const riga = tutte.find(r => r.chiave === rigaScelta);
-    box.hidden = !riga;
-    if (!riga) return;
-    const correzione = righe[riga.chiave] || {};
 
-    const sceltaRiga = el('select', { 'aria-label': 'Riga del tabellino', onchange: e => { rigaScelta = e.target.value; disegnaCorrezioni(); } },
+    const segnaposto = nonAbbinate.size ? `Scegli la riga da correggere (${nonAbbinate.size} NON TROVATO)…` : 'Scegli la riga da correggere…';
+    const sceltaRiga = el('select', { 'aria-label': 'Riga del tabellino', onchange: e => { rigaScelta = e.target.value || null; disegnaCorrezioni(); } },
+        el('option', { value: '', selected: !riga }, segnaposto),
         Object.entries(originale.teams).filter(([teamId]) => tutte.some(r => r.teamId === teamId)).map(([teamId, squadra]) =>
             el('optgroup', { label: squadra.team }, tutte.filter(r => r.teamId === teamId).map(r =>
                 el('option', { value: r.chiave, selected: r.chiave === rigaScelta },
                     `${r.s.name}${nonAbbinate.has(r.chiave) ? ' · NON TROVATO' : ''}${righe[r.chiave] ? ' · corretto' : ''}`)))));
+    const intestazione = [
+        el('h4', {}, 'Correzioni manuali'),
+        el('p', { class: 'admin-sub' }, "Se un nome non si abbina al listone o un numero del tabellino è sbagliato, correggilo qui. La correzione resta salvata e vale anche quando il tabellino viene riscaricato; dopo il salvataggio il controllo si rifà da solo, poi serve \"Calcola e applica\"."),
+    ];
+    if (!riga) {
+        riempi(box, intestazione, el('div', { class: 'admin-actions' }, sceltaRiga));
+        return;
+    }
+    const correzione = righe[riga.chiave] || {};
 
     // Giocatore: automatico, nessuno, oppure uno del listone (prima quelli della squadra)
     const valoreGiocatore = !('id' in correzione) ? AUTOMATICO : correzione.id === null ? NON_CONTA : correzione.id;
@@ -359,8 +370,7 @@ function disegnaCorrezioni() {
         : null;
 
     riempi(box,
-        el('h4', {}, 'Correzioni manuali'),
-        el('p', { class: 'admin-sub' }, "Se un nome non si abbina al listone o un numero del tabellino è sbagliato, correggilo qui. La correzione resta salvata e vale anche quando il tabellino viene riscaricato; dopo il salvataggio il controllo si rifà da solo, poi serve \"Calcola e applica\"."),
+        intestazione,
         el('div', { class: 'admin-actions' }, sceltaRiga, sceltaGiocatore),
         el('div', { class: 'correzione-grid' }, campi.map(c => el('label', { class: 'correzione-campo' },
             el('span', {}, c.etichetta), c.input, c.diverso ? el('small', { class: 'msg-warning' }, c.diverso) : null))),
