@@ -1,6 +1,14 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { costruisciRiepilogo, aggiornaRiepilogo, mediaPrima } = require('../../frontend/js/statistiche.js');
+const { costruisciRiepilogo, aggiornaRiepilogo, mediaPrima, daRicostruire } = require('../../frontend/js/statistiche.js');
+
+test('il riepilogo si rifà da zero se manca o se gli manca una giornata calcolata', () => {
+    assert.equal(daRicostruire(undefined, [], 1), true, 'primo calcolo della stagione');
+    assert.equal(daRicostruire([], [1], 2), true, 'riepilogo rimasto vuoto al primo calcolo');
+    assert.equal(daRicostruire([1], [1], 2), false, 'si aggiunge la giornata nuova');
+    assert.equal(daRicostruire([1, 2], [1, 2], 2), false, 'ricalcolo di una giornata');
+    assert.equal(daRicostruire([2], [2], 1), false, 'quella che si calcola si aggiunge comunque');
+});
 
 test('media, presenze e ultima giornata giocata', () => {
     const r = costruisciRiepilogo([

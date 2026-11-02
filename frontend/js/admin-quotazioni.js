@@ -3,6 +3,7 @@
 // giocatore tiene il prezzo pagato: un prezzo cambiato vale solo per chi lo prende dopo. I prezzi restano anche
 // alla stagione nuova (il passaggio non li cancella), come punto di partenza.
 const quotEdit = { prezzi: {}, q: '', role: 'ALL', soloSenza: false, dirty: false };
+const ORDINE_RUOLI = ['P', 'S', 'C', 'O', 'L'];
 
 if (auth) {
     document.getElementById('quotazioniApriBtn').addEventListener('click', apriQuotazioni);
@@ -18,13 +19,12 @@ async function mostraInfoQuotazioni() {
     const info = document.getElementById('quotazioniInfo');
     try {
         const doc = await leggiQuotazioni();
-        const prezzi = Quotazioni.prezziPerId(doc);
-        const quanti = Object.keys(prezzi).length;
+        const quanti = Object.keys(Quotazioni.prezziPerId(doc)).length;
         if (!quanti) {
             info.textContent = 'Prezzi per le leghe a quotazioni: nessuno ancora.';
             return;
         }
-        const senza = state.players.length ? Quotazioni.senzaPrezzo(state.players, prezzi).length : 0;
+        const senza = state.players.length ? Quotazioni.senzaPrezzo(state.players, Quotazioni.prezziPerId(doc, state.playersById)).length : 0;
         const quando = doc.aggiornateAt?.toDate ? ` · ultimo salvataggio ${formatDateTime(doc.aggiornateAt.toDate())}` : '';
         info.textContent = `Prezzi per le leghe a quotazioni: ${quanti} giocatori${senza ? `, ${senza} del listone ancora senza` : ''}${quando}.`;
     } catch (e) {
@@ -37,9 +37,10 @@ async function mostraInfoQuotazioni() {
 async function avvisoQuotazioni() {
     const leghe = await db.collection('leagues').where('settings.tipo', '==', 'quotazioni').limit(1).get();
     if (leghe.empty) return null;
-    const prezzi = Quotazioni.prezziPerId(await leggiQuotazioni());
-    if (!Object.keys(prezzi).length) return 'nessun prezzo per le leghe a quotazioni: senza non si fa la squadra (riquadro Quotazioni)';
-    const senza = Quotazioni.senzaPrezzo(state.players, prezzi).length;
+    const doc = await leggiQuotazioni();
+    if (!Object.keys(Quotazioni.prezziPerId(doc)).length) return 'nessun prezzo per le leghe a quotazioni: senza non si fa la squadra (riquadro Quotazioni)';
+    // Contano i prezzi nel ruolo di oggi: uno rimasto nel ruolo di prima va risalvato (lo sposta il salvataggio)
+    const senza = Quotazioni.senzaPrezzo(state.players, Quotazioni.prezziPerId(doc, state.playersById)).length;
     return senza ? `${senza} giocatori del listone senza prezzo: nelle leghe a quotazioni non si possono prendere (riquadro Quotazioni)` : null;
 }
 
@@ -51,8 +52,10 @@ async function apriQuotazioni() {
         document.getElementById('quotazioniSalvaBtn').hidden = true;
         return;
     }
+    if (!editor.hidden && !confirm('Ci sono prezzi non salvati: li butto e rileggo quelli salvati?')) return;
     status.textContent = 'Leggo i prezzi…';
     try {
+        // Tutti i prezzi, anche quelli rimasti nel ruolo di prima: il salvataggio li rimette nel ruolo di oggi
         quotEdit.prezzi = { ...Quotazioni.prezziPerId(await leggiQuotazioni()) };
         quotEdit.dirty = false;
         status.textContent = '';
@@ -103,7 +106,7 @@ function disegnaQuotazioni() {
             .filter(p => (quotEdit.role === 'ALL' || p.role === quotEdit.role)
                 && (!quotEdit.q || p.name.toLowerCase().includes(quotEdit.q) || p.team.toLowerCase().includes(quotEdit.q))
                 && (!quotEdit.soloSenza || !Number.isInteger(quotEdit.prezzi[p.id])))
-            .sort((a, b) => a.role.localeCompare(b.role) || (stat(b.id)?.media ?? -999) - (stat(a.id)?.media ?? -999));
+            .sort((a, b) => ORDINE_RUOLI.indexOf(a.role) - ORDINE_RUOLI.indexOf(b.role) || (stat(b.id)?.media ?? -999) - (stat(a.id)?.media ?? -999));
         riempi(corpo, visibili.map(p => el('tr', {},
             el('td', {}, p.name),
             el('td', {}, p.team),
@@ -113,12 +116,18 @@ function disegnaQuotazioni() {
                 type: 'number', min: 1, max: 100, step: 1, class: 'price-input', 'aria-label': `Prezzo di ${p.name}`,
                 value: Number.isInteger(quotEdit.prezzi[p.id]) ? quotEdit.prezzi[p.id] : '',
                 onchange: e => {
-                    const v = parseInt(e.target.value, 10);
-                    if (Number.isInteger(v) && v >= 1 && v <= 100) quotEdit.prezzi[p.id] = v;
+                    const testo = e.target.value.trim();
+                    const v = Number(testo);
+                    const status = document.getElementById('quotazioniStatus');
+                    if (testo === '') delete quotEdit.prezzi[p.id]; // campo svuotato apposta: niente prezzo
+                    else if (Number.isInteger(v) && v >= 1 && v <= 100) quotEdit.prezzi[p.id] = v;
                     else {
-                        delete quotEdit.prezzi[p.id];
-                        e.target.value = '';
+                        // Valore sbagliato: resta il prezzo di prima
+                        e.target.value = Number.isInteger(quotEdit.prezzi[p.id]) ? quotEdit.prezzi[p.id] : '';
+                        status.textContent = `Prezzo non valido per ${p.name}: serve un numero intero da 1 a 100.`;
+                        return;
                     }
+                    status.textContent = '';
                     quotEdit.dirty = true;
                     aggiornaRiepilogo();
                 },
@@ -141,6 +150,11 @@ function disegnaQuotazioni() {
 
 async function salvaQuotazioni() {
     const status = document.getElementById('quotazioniStatus');
+    // Senza listone tutti i prezzi finirebbero senza ruolo e il salvataggio li cancellerebbe
+    if (!state.players.length) {
+        status.textContent = 'Il listone non è caricato: ricarica la pagina prima di salvare i prezzi.';
+        return;
+    }
     const prezzi = Quotazioni.prezziPerRuolo(quotEdit.prezzi, state.playersById);
     status.textContent = 'Salvo…';
     try {
@@ -149,7 +163,8 @@ async function salvaQuotazioni() {
             aggiornateAt: firebase.firestore.FieldValue.serverTimestamp(),
             aggiornateBy: auth.currentUser.uid,
         });
-        state.quotazioni = Quotazioni.prezziPerId({ prezzi });
+        state.quotazioniDoc = { prezzi };
+        aggiornaQuotazioni();
         quotEdit.dirty = false;
         status.textContent = 'Quotazioni salvate: valgono subito per chi fa o cambia la squadra.';
         document.getElementById('quotazioniRiepilogo').textContent = riepilogoQuotazioni();

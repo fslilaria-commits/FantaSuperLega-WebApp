@@ -61,7 +61,8 @@ async function controllaRoutine() {
         applyBtn.hidden = !daFare;
         status.textContent = daFare ? 'Controlla le voci e applica.'
             : avvisiBot.length ? 'Niente da applicare, ma i dati della Lega potrebbero non essere aggiornati: vedi il bot dei dati qui sopra.'
-                : 'Tutto aggiornato: niente da fare questa settimana.';
+                : quotazioni ? 'Niente da applicare qui: resta da sistemare il riquadro Quotazioni (vedi sopra).'
+                    : 'Tutto aggiornato: niente da fare questa settimana.';
     } catch (e) {
         riempi(lista, righe, rigaRoutine('errore', e.message));
         status.textContent = '';

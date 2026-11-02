@@ -176,8 +176,9 @@ async function calcolaLega(lega, numero, punti, scadenza) {
         if (quotazioni) {
             // A quotazioni ogni cambio di squadra salva anche la formazione della giornata: conta l'ultima
             // formazione salvata fino a questa giornata, che è la squadra di quel momento (niente mercato né rose da
-            // ricostruire, e lo stesso giocatore può essere in più squadre)
-            formazione = Punteggi.formazionePiuRecente(numero, perUtente[m.id] || []);
+            // ricostruire, e lo stesso giocatore può essere in più squadre). Solo quelle salvate prima della scadenza:
+            // con una giornata anticipata, quella prima può bloccarsi dopo e non deve contare per questa
+            formazione = Punteggi.formazionePiuRecente(numero, perUtente[m.id] || [], scadenza);
         } else {
             // Chi non ha salvato la formazione per questa giornata gioca con la sua ultima formazione;
             // chi è arrivato col mercato dopo il salvataggio e prima della scadenza prende il posto di chi è partito
@@ -233,19 +234,19 @@ async function calendarioScontri(lega, iscritti, inizio) {
     return calendario;
 }
 
-// Riepilogo stagionale dei giocatori (meta/statistiche): si aggiorna con la sola giornata calcolata;
-// se non c'è ancora viene ricostruito da tutte le giornate calcolate, più questa (che è segnata come calcolata
-// solo dopo: senza, al primo calcolo della stagione il riepilogo restava vuoto)
+// Riepilogo stagionale dei giocatori (meta/statistiche): si aggiorna con la sola giornata calcolata.
+// Se non c'è ancora, o se gli manca una giornata già calcolata, viene ricostruito da tutte le giornate calcolate,
+// più questa (che è segnata come calcolata solo dopo: senza, al primo calcolo della stagione restava vuoto)
 async function aggiornaStatistiche(numero, punti) {
     const ref = db.doc('meta/statistiche');
-    const snap = await ref.get();
+    const [snap, calcolate] = await Promise.all([ref.get(), db.collection('matchdays').where('status', '==', 'scored').get()]);
+    const riepilogo = snap.exists ? snap.data() : null;
     let players;
     let giornate;
-    if (snap.exists) {
-        players = Statistiche.aggiornaRiepilogo(snap.data().players || {}, numero, punti);
-        giornate = [...new Set([...(snap.data().giornate || []), numero])];
+    if (!Statistiche.daRicostruire(riepilogo?.giornate, calcolate.docs.map(g => g.data().number), numero)) {
+        players = Statistiche.aggiornaRiepilogo(riepilogo.players || {}, numero, punti);
+        giornate = [...new Set([...(riepilogo.giornate || []), numero])];
     } else {
-        const calcolate = await db.collection('matchdays').where('status', '==', 'scored').get();
         const tutte = [];
         for (const g of calcolate.docs) {
             const stats = await g.ref.collection('stats').get();

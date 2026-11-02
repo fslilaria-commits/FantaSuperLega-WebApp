@@ -13,14 +13,15 @@ const state = {
     transfers: [],      // registro dei movimenti di mercato della lega
     matchdays: [],      // tutte le giornate del calendario
     statistiche: {},    // playerId -> { g: { giornata: fp }, media, presenze, ultima }
-    quotazioni: {},     // playerId -> prezzo, per le leghe a quotazioni (meta/quotazioni, li decide l'admin)
+    quotazioniDoc: null, // meta/quotazioni così com'è (prezzi divisi per ruolo, li decide l'admin)
+    quotazioni: {},     // playerId -> prezzo nel ruolo di oggi, per le leghe a quotazioni
     lineupSalvata: null, // la formazione della prossima giornata è salvata?
     matchday: null,     // prossima giornata da schierare: { id, number, label, lockAt: Date, provisional }
 };
 
 const STATO_VUOTO = {
     players: [], playersById: {}, leagues: [], league: null, members: [], rosters: {}, standings: {}, scores: [],
-    schedule: null, transfers: [], matchdays: [], matchday: null, statistiche: {}, quotazioni: {}, lineupSalvata: null,
+    schedule: null, transfers: [], matchdays: [], matchday: null, statistiche: {}, quotazioniDoc: null, quotazioni: {}, lineupSalvata: null,
 };
 
 const ROLE_NAMES = { P: 'Palleggiatore', S: 'Schiacciatore', C: 'Centrale', O: 'Opposto', L: 'Libero' };
@@ -57,6 +58,16 @@ async function stagioneNuovaInAttesa() {
     if (!lega) throw new Error('la stagione della Lega non è valida');
     const anno = (await db.doc('meta/stagione').get()).data()?.anno;
     return Number.isInteger(anno) && lega.anno > anno ? lega : null;
+}
+
+// Se la prossima giornata si è bloccata mentre la pagina era aperta, la rilegge (una lettura sola anche se la
+// chiedono più schede insieme): true se è cambiata
+let rileggendoGiornata = null;
+async function giornataAggiornata() {
+    if (!state.matchday || Date.now() < state.matchday.lockAt.getTime()) return false;
+    rileggendoGiornata = rileggendoGiornata || loadNextMatchday().finally(() => { rileggendoGiornata = null; });
+    await rileggendoGiornata;
+    return true;
 }
 
 // Ultima giornata del calendario nel gioco (22 con 12 squadre); null se il calendario non è ancora applicato
@@ -126,6 +137,7 @@ async function loadPlayers() {
     state.players = all
         .filter(p => p.active !== false)
         .sort((a, b) => a.name.localeCompare(b.name, 'it'));
+    aggiornaQuotazioni();
 }
 
 async function loadStatistiche() {
@@ -135,7 +147,14 @@ async function loadStatistiche() {
 
 async function loadQuotazioni() {
     const snap = await db.doc('meta/quotazioni').get();
-    state.quotazioni = Quotazioni.prezziPerId(snap.exists ? snap.data() : null);
+    state.quotazioniDoc = snap.exists ? snap.data() : null;
+    aggiornaQuotazioni();
+}
+
+// I prezzi valgono nel ruolo che il giocatore ha nel listone (come per le regole): si ricalcolano quando arrivano
+// listone o quotazioni, in qualunque ordine
+function aggiornaQuotazioni() {
+    state.quotazioni = Quotazioni.prezziPerId(state.quotazioniDoc, state.playersById);
 }
 
 // Tutte le giornate (servono anche per la finestra di mercato) e la prossima non ancora bloccata.

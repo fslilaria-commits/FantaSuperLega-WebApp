@@ -111,7 +111,7 @@ async function renderHome() {
             budget: state.league.settings.budget, playersById: state.playersById, giornata: fc.matchday,
         }) : null;
         lista.push(homeCard('fa-store', 'Squadra e cambi', [
-            el('p', {}, !fc ? 'Stagione finita' : !rosa ? 'Squadra ancora da fare' : c.liberi ? `Cambi liberi fino a ${formatDateTime(fc.chiude)}` : `Cambi: ${c.cambi} su ${Quotazioni.MAX_CAMBI} per la ${fc.label}`),
+            el('p', {}, !fc ? motivoSenzaCambi() : !rosa ? 'Squadra ancora da fare' : c.liberi ? `Cambi liberi fino a ${formatDateTime(fc.chiude)}` : `Cambi: ${c.cambi} su ${Quotazioni.MAX_CAMBI} per la ${fc.label}`),
             rosa ? el('p', { class: 'admin-sub' }, `${rosa.creditsLeft} crediti da spendere`) : null,
         ], vaiA('market', rosa ? 'Vai al mercato' : 'Fai la squadra')));
     }

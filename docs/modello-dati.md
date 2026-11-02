@@ -105,13 +105,13 @@ Il codice a 6 cifre è l'id del documento. Si legge un codice alla volta (niente
 | `code` | string | Codice invito a 6 cifre |
 | `presidentUid` | string | Chi ha creato la lega |
 | `settings.tipo` | string | `asta` o `quotazioni`; assente nelle leghe create prima (= `asta`). Non si cambia più |
-| `settings.budget` | number | Crediti per l'asta; a quotazioni i crediti di ogni squadra (intero da 1 in su, consigliati 100) |
+| `settings.budget` | number | Crediti per l'asta; a quotazioni i crediti di ogni squadra (intero da 1 in su, consigliati 100), che non cambiano più |
 | `settings.mode` | string | `classifica` o `scontri` |
 | `settings.startMatchday` | number | Prima giornata valida |
 | `settings.marketSuspended` | bool | Mercato sospeso dal Presidente (facoltativo) |
 | `createdAt` | timestamp | Data del server |
 
-Leggibile dai membri, modificabile solo dal Presidente (che non può cedere la presidenza). Giornata di inizio e tipo di competizione (e a quotazioni il budget) si cambiano solo prima della scadenza della giornata di inizio e prima che esista il calendario delle sfide.
+Leggibile dai membri, modificabile solo dal Presidente (che non può cedere la presidenza). Giornata di inizio e tipo di competizione si cambiano solo prima della scadenza della giornata di inizio e prima che esista il calendario delle sfide. A quotazioni il budget non cambia mai: il Presidente ha una squadra come gli altri, e alzarlo per farsi la sua e poi riabbassarlo gli lascerebbe una squadra fuori budget.
 
 ### `leagues/{leagueId}/members/{uid}` — partecipanti
 | Campo | Tipo | Note |
@@ -143,7 +143,7 @@ Ad asta scrive solo il Presidente. Durante l'asta la rosa si può salvare anche 
 | `dalla` | number | La prima giornata della squadra: lì i cambi sono liberi. Non cambia più |
 | `cambi` | number | Cambi fatti per `giornata` (giocatori arrivati rispetto alla squadra salvata, sommati nella stessa giornata): al massimo 5, 0 nella giornata `dalla` |
 
-Le regole rifanno tutti questi conti; il massimo per club lo controlla l'app (`frontend/js/quotazioni.js`). Insieme alla squadra, nello stesso salvataggio, va scritta la formazione di `giornata` (le regole lo pretendono): chi arriva prende il posto e la fascia di chi parte, e la prima volta titolari sono i più cari di ogni ruolo e capitano il più caro. Per i punti di una giornata conta l'ultima formazione salvata tra quelle delle giornate fino a quella (`Punteggi.formazionePiuRecente`): è la squadra di quel momento, quindi non serve il registro dei movimenti.
+Le regole rifanno tutti questi conti; il massimo per club lo controlla l'app (`frontend/js/quotazioni.js`). `giornata` non torna mai indietro: con una giornata anticipata le scadenze possono non essere in ordine, e alternare due giornate azzererebbe i cambi. A quotazioni il Presidente non cancella le squadre (rifacendo la propria azzererebbe i cambi); lo può fare solo un admin. Un prezzo vale solo nel ruolo che il giocatore ha oggi nel listone: uno rimasto nel ruolo di prima (stagione nuova, ruolo cambiato a mano) conta dopo che l'admin risalva le quotazioni. Insieme alla squadra, nello stesso salvataggio, va scritta la formazione di `giornata` (le regole lo pretendono): chi arriva prende il posto e la fascia di chi parte, e la prima volta titolari sono i più cari di ogni ruolo e capitano il più caro. Per i punti di una giornata conta l'ultima formazione salvata prima della sua scadenza tra quelle delle giornate fino a quella (`Punteggi.formazionePiuRecente`): è la squadra di quel momento, quindi non serve il registro dei movimenti.
 
 ### `leagues/{leagueId}/lineups/{matchday}_{uid}` — formazioni
 | Campo | Tipo | Note |

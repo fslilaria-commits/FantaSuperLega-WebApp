@@ -55,7 +55,15 @@
         return voti.length ? r2(voti.reduce((a, b) => a + b, 0) / voti.length) : 0;
     }
 
-    const api = { costruisciRiepilogo, aggiornaRiepilogo, mediaPrima };
+    // Il riepilogo va rifatto da zero se manca, o se non contiene una giornata già calcolata (tranne quella che si
+    // sta calcolando, che si aggiunge comunque): giornateRiepilogo = meta/statistiche.giornate
+    function daRicostruire(giornateRiepilogo, calcolate, numero) {
+        if (!Array.isArray(giornateRiepilogo)) return true;
+        const presenti = new Set(giornateRiepilogo);
+        return calcolate.some(n => n !== numero && !presenti.has(n));
+    }
+
+    const api = { costruisciRiepilogo, aggiornaRiepilogo, mediaPrima, daRicostruire };
     if (typeof module !== 'undefined' && module.exports) module.exports = api;
     else root.Statistiche = api;
 })(this);

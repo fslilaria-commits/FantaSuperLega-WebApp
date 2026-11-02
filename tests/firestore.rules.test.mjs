@@ -1,5 +1,7 @@
 // Test delle regole Firestore: si lanciano con `npm run test:rules` (avvia l'emulatore)
+import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { after, before, beforeEach, describe, test } from 'node:test';
 import {
     assertFails,
@@ -20,6 +22,11 @@ import {
     where,
     writeBatch,
 } from 'firebase/firestore';
+
+// Il codice del sito che costruisce squadre e formazioni a quotazioni: i test lo passano alle regole così com'è
+const require = createRequire(import.meta.url);
+const Quotazioni = require('../frontend/js/quotazioni.js');
+const FormazioneCheck = require('../frontend/js/formazione-check.js');
 
 const LEAGUE = 'lega1';
 const CODE = '123456';
@@ -750,6 +757,76 @@ describe('leghe a quotazioni', () => {
             { from: 'pres', to: 'anna', give: 'qs2', take: 'qs3', role: 'S', extra: 0, status: 'proposed', matchday: 6, createdAt: now, updatedAt: now }));
         await assertFails(setDoc(doc(as('pres'), `leagues/${QL}/transfers/m1`),
             { tipo: 'svincolato', uid: 'anna', playerIn: 'qs5', playerOut: 'qs1', valore: 7, extra: 0, matchday: 6, at: now }));
+    });
+
+    test('il Presidente non cancella le squadre a quotazioni (ad asta sì)', async () => {
+        await giaSalvata('pres', squadra(ruoli, { giornata: 5 }));
+        await giaSalvata('anna', squadra(ruoli, { giornata: 5 }));
+        await assertFails(deleteDoc(doc(as('pres'), `leagues/${QL}/rosters/pres`)), 'rifarla azzererebbe i cambi');
+        await assertFails(deleteDoc(doc(as('pres'), `leagues/${QL}/rosters/anna`)), 'quella di un altro');
+        await assertSucceeds(deleteDoc(doc(as('pres'), `leagues/${LEAGUE}/rosters/anna`)), 'lega ad asta');
+    });
+
+    test("a quotazioni il budget non cambia nemmeno prima dell'inizio", async () => {
+        await env.withSecurityRulesDisabled(ctx => updateDoc(doc(ctx.firestore(), `leagues/${QL}`), { 'settings.startMatchday': 6 }));
+        await assertFails(updateDoc(doc(as('pres'), `leagues/${QL}`), { 'settings.budget': 1000 }));
+        await assertSucceeds(updateDoc(doc(as('pres'), `leagues/${QL}`), { 'settings.mode': 'scontri' }), 'il resto sì, prima dell\'inizio');
+    });
+
+    test('in una giornata nuova i cambi ripartono da zero, e la giornata non torna indietro', async () => {
+        await giaSalvata('anna', squadra(ruoli, { giornata: 5, dalla: 4, cambi: 4 }));
+        const uno = cambia(ruoli, 'S', 'qs1', 'qs5');
+        await assertFails(salva('anna', squadra(uno, { dalla: 4, cambi: 5 })), 'i 4 della giornata prima non contano');
+        await assertSucceeds(salva('anna', squadra(uno, { dalla: 4, cambi: 1 })));
+        // Squadra salvata per una giornata più avanti (scadenze non in ordine): non si torna alla 6
+        await giaSalvata('marco', squadra(ruoli, { giornata: 7, dalla: 5, cambi: 0 }));
+        await assertFails(salva('marco', squadra(uno, { dalla: 5, cambi: 1 })));
+    });
+
+    test('i cambi valgono solo per la prossima giornata, non per una più avanti', async () => {
+        await env.withSecurityRulesDisabled(ctx => setDoc(doc(ctx.firestore(), 'matchdays/7'), { number: 7, lockAt: future, status: 'open' }));
+        await assertFails(salva('anna', squadra(ruoli, { giornata: 7 })), 'la 6 non si è ancora bloccata');
+    });
+
+    test('un ruolo senza prezzi blocca solo chi arriva in quel ruolo', async () => {
+        const { L, ...senzaLiberi } = quotazioni;
+        await env.withSecurityRulesDisabled(ctx => setDoc(doc(ctx.firestore(), 'meta/quotazioni'), { prezzi: senzaLiberi }));
+        await giaSalvata('anna', squadra(ruoli, { giornata: 5 }));
+        await assertSucceeds(salva('anna', squadra(cambia(ruoli, 'S', 'qs1', 'qs5'), { dalla: 5, cambi: 1 })));
+        await giaSalvata('marco', squadra(ruoli, { giornata: 5 }));
+        await assertFails(salva('marco', squadra(cambia(ruoli, 'L', 'ql1', 'ql3'), { dalla: 5, cambi: 1 })));
+    });
+
+    test('squadra e cambi costruiti dal codice del sito passano le regole', async () => {
+        const doc6 = { prezzi: quotazioni };
+        // Giocatori sparsi su 6 club, così nessuno supera i 4 per club
+        const playersById = {};
+        Object.entries(quotazioni).flatMap(([ruolo, m]) => Object.keys(m).map(id => [id, ruolo]))
+            .forEach(([id, ruolo], i) => { playersById[id] = { name: id, role: ruolo, team: `Club ${i % 6}`, active: true }; });
+        const prezzi = Quotazioni.prezziPerId(doc6, playersById);
+        const salvaDalSito = async (uid, picks, vecchia, precedente) => {
+            const controllo = Quotazioni.controllaSquadra({ picks, vecchia, quotazioni: prezzi, budget: 110, playersById, giornata: 6 });
+            assert.deepEqual(controllo.errors, []);
+            const nuova = Quotazioni.costruisciSquadra({ picks, controllo, vecchia, giornata: 6 });
+            const { starters, captain } = Quotazioni.formazioneDopoCambi({ nuova, precedente });
+            const lineup = { ...FormazioneCheck.buildLineup({ roster: nuova, starters, captain, matchday: 6, uid }), savedAt: serverTimestamp() };
+            const db = as(uid);
+            const batch = writeBatch(db);
+            batch.set(doc(db, `leagues/${QL}/rosters/${uid}`), nuova);
+            batch.set(doc(db, `leagues/${QL}/lineups/6_${uid}`), lineup);
+            await assertSucceeds(batch.commit());
+            return { nuova, lineup };
+        };
+        // Squadra nuova, con i giocatori scelti in ordine sparso
+        const picks = Object.entries(ruoli).flatMap(([role, ids]) => ids.map(id => ({ id, role }))).reverse();
+        await salvaDalSito('anna', picks, null, null);
+        // Squadra già salvata nella giornata prima: due cambi contati, con chi resta al prezzo pagato
+        const prima = Quotazioni.costruisciSquadra({ picks, controllo: Quotazioni.controllaSquadra({ picks, quotazioni: { ...prezzi, qp2: 3 }, budget: 110, playersById, giornata: 5 }), vecchia: null, giornata: 5 });
+        await giaSalvata('marco', prima);
+        const conCambi = picks.map(p => (p.id === 'qs1' ? { id: 'qs5', role: 'S' } : p.id === 'qc1' ? { id: 'qc5', role: 'C' } : p));
+        const { nuova } = await salvaDalSito('marco', conCambi, prima, formazione(prima, 'marco', 5));
+        assert.equal(nuova.cambi, 2);
+        assert.equal(nuova.prices.qp2, 3);
     });
 
     test("tipo di gioco fisso; a quotazioni il budget non cambia dopo l'inizio e va da 1 credito in su", async () => {
