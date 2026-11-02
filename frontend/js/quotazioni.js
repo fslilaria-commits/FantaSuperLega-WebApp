@@ -15,10 +15,16 @@
     const PREZZO_MAX = 15;
     const BUDGET_CONSIGLIATO = 100;
 
-    // meta/quotazioni tiene i prezzi divisi per ruolo (così le regole controllano anche il ruolo): qui { id: prezzo }
-    function prezziPerId(doc) {
+    // meta/quotazioni tiene i prezzi divisi per ruolo (così le regole controllano anche il ruolo): qui { id: prezzo }.
+    // Con playersById vale solo il prezzo nel ruolo che il giocatore ha oggi nel listone, come per le regole: un
+    // prezzo rimasto nel ruolo di prima (stagione nuova, ruolo cambiato) non conta finché l'admin non risalva
+    function prezziPerId(doc, playersById = null) {
         const prezzi = {};
-        for (const ruolo of RUOLI) Object.assign(prezzi, doc?.prezzi?.[ruolo] || {});
+        for (const ruolo of RUOLI) {
+            for (const [id, prezzo] of Object.entries(doc?.prezzi?.[ruolo] || {})) {
+                if (!playersById || playersById[id]?.role === ruolo) prezzi[id] = prezzo;
+            }
+        }
         return prezzi;
     }
 
@@ -81,6 +87,10 @@
             if (visti.has(p.id)) errors.push(`${nome(p.id)} è inserito due volte`);
             visti.add(p.id);
             if (playersById[p.id] && playersById[p.id].role !== p.role) errors.push(`${nome(p.id)} non è un ${p.role}`);
+            // Era in squadra con un altro ruolo (ruolo cambiato a mano): le regole vogliono insieme il prezzo pagato e
+            // la quotazione nel ruolo nuovo, quindi prima va tolto con un salvataggio e poi ripreso
+            const eraAltrove = !!vecchia?.prices && Object.prototype.hasOwnProperty.call(vecchia.prices, p.id) && !(vecchia[p.role] || []).includes(p.id);
+            if (eraAltrove) errors.push(`${nome(p.id)} ha cambiato ruolo: salva prima la squadra senza di lui, poi riprendilo`);
             const prezzo = prezzoPer(p.id, p.role, vecchia, quotazioni);
             if (Number.isInteger(prezzo)) prezzi[p.id] = prezzo;
             else errors.push(`${nome(p.id)} non ha ancora un prezzo: lo decide l'admin`);
@@ -156,7 +166,7 @@
 
     const api = {
         MAX_CAMBI, PREZZO_MIN, PREZZO_MAX, BUDGET_CONSIGLIATO,
-        prezziPerId, prezziPerRuolo, proponiPrezzi, senzaPrezzo, controllaSquadra, costruisciSquadra, picksDa, formazioneDopoCambi,
+        prezziPerId, prezziPerRuolo, proponiPrezzi, senzaPrezzo, prezzoPer, controllaSquadra, costruisciSquadra, picksDa, formazioneDopoCambi,
     };
     if (inNode) module.exports = api;
     else root.Quotazioni = api;

@@ -10,6 +10,7 @@ document.getElementById('joinLeagueForm').addEventListener('submit', joinLeague)
 document.getElementById('inviteCopy').addEventListener('click', copiaInvito);
 document.getElementById('inviteShare').addEventListener('click', condividiInvito);
 document.getElementById('newLeagueTipo').addEventListener('change', aggiornaModuloLega);
+aggiornaModuloLega(); // il browser può ricordare il gioco scelto prima di ricaricare la pagina
 document.getElementById('welcomeInvite').hidden = !invitoInSospeso;
 
 // --- Inviti: link con il codice della lega (?invito=123456) ---

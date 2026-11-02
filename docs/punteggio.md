@@ -64,7 +64,7 @@ Il regolamento FantaLVF usa alcuni termini che i tabellini della Lega maschile n
 
 - Titolari al 100%, capitano ×2, panchina (gli altri 7 della rosa da 14) al 50%.
 - Il totale è la somma delle righe arrotondate al centesimo.
-- Senza formazione salvata per la giornata vale l'ultima formazione precedente. Nelle leghe a quotazioni vale l'ultima formazione salvata tra quelle delle giornate fino a questa: ogni cambio di squadra la riscrive, quindi è la squadra di quel momento.
+- Senza formazione salvata per la giornata vale l'ultima formazione precedente. Nelle leghe a quotazioni vale l'ultima formazione salvata prima della scadenza tra quelle delle giornate fino a questa: ogni cambio di squadra la riscrive, quindi è la squadra di quel momento.
 - **Gare spostate** (più di 4 giorni prima o 3 dopo la data della giornata): i giocatori di quelle squadre prendono la loro **media stagionale** e, se capitani, non raddoppiano.
 
 ## Taratura da verificare

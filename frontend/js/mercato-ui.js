@@ -78,7 +78,7 @@ async function renderMercato() {
     // A quotazioni niente offerte, scambi né movimenti: ognuno cambia da sé la propria squadra (squadra-ui.js)
     if (legaAQuotazioni()) {
         const f = finestraCambi();
-        status.textContent = f ? `Squadra e cambi per la ${f.label} fino a ${formatDateTime(f.chiude)}.` : 'Stagione finita: niente più cambi.';
+        status.textContent = f ? `Squadra e cambi per la ${f.label} fino a ${formatDateTime(f.chiude)}.` : motivoSenzaCambi();
         status.classList.toggle('aperto', !!f);
         panels.hidden = true;
         document.getElementById('transfersBox').hidden = true;

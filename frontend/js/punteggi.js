@@ -218,10 +218,11 @@
 
     // Leghe a quotazioni: ogni cambio di squadra salva anche la formazione della prossima giornata, quindi vale
     // l'ultima formazione salvata (savedAt, ms) tra quelle delle giornate fino a questa: è la squadra di quel momento,
-    // anche se qualcuno avesse salvato prima una formazione per una giornata più avanti
-    function formazionePiuRecente(giornata, formazioni) {
+    // anche se qualcuno avesse salvato prima una formazione per una giornata più avanti. primaDi: la scadenza della
+    // giornata; con una giornata anticipata la precedente si blocca dopo, e quello salvato dopo non conta per questa
+    function formazionePiuRecente(giornata, formazioni, primaDi = Infinity) {
         return formazioni
-            .filter(f => f.matchday <= giornata)
+            .filter(f => f.matchday <= giornata && (f.savedAt ?? 0) < primaDi)
             .sort((a, b) => (b.savedAt ?? 0) - (a.savedAt ?? 0) || b.matchday - a.matchday)[0] || null;
     }
 

@@ -20,6 +20,25 @@ test('quotazioni: prezzi divisi per ruolo e riletti per giocatore', () => {
     assert.deepEqual(Q.prezziPerId(null), {});
 });
 
+test('quotazioni: conta solo il prezzo nel ruolo che il giocatore ha oggi, come per le regole', () => {
+    // AS1 aveva il prezzo da opposto (stagione prima o ruolo cambiato): non vale finché l'admin non risalva
+    const doc = { prezzi: { P: { AP1: 10 }, S: {}, C: {}, O: { AS1: 5 }, L: {} } };
+    assert.deepEqual(Q.prezziPerId(doc, playersById), { AP1: 10 });
+    assert.deepEqual(Q.prezziPerId(doc), { AP1: 10, AS1: 5 }, 'senza listone tutti, per il riquadro admin');
+    assert.ok(Q.senzaPrezzo([playersById.AS1].map(p => ({ ...p, id: 'AS1' })), Q.prezziPerId(doc, playersById)).length === 1);
+    // il salvataggio dell'admin lo rimette nel ruolo giusto
+    assert.deepEqual(Q.prezziPerRuolo(Q.prezziPerId(doc), playersById).S, { AS1: 5 });
+});
+
+test('quotazioni: un giocatore in squadra con un altro ruolo va prima tolto e poi ripreso', () => {
+    const vecchia = Q.costruisciSquadra({ picks: picksDa('A'), controllo: Q.controllaSquadra({ ...base, picks: picksDa('A') }), vecchia: null, giornata: 1 });
+    // AP2 risulta tra gli schiacciatori (ruolo cambiato a mano nel listone)
+    const cambiato = { ...playersById, AP2: { ...playersById.AP2, role: 'S' } };
+    const picks = picksDa('A').filter(p => p.id !== 'AP2' && p.id !== 'AS4').concat([{ id: 'BP2', role: 'P' }, { id: 'AP2', role: 'S' }]);
+    const c = Q.controllaSquadra({ ...base, playersById: cambiato, vecchia, picks });
+    assert.ok(c.errors.some(e => e.includes('AP2') && e.includes('cambiato ruolo')));
+});
+
 test('quotazioni: proposta dalle medie dentro ogni ruolo, minimo a chi non ha giocato', () => {
     const players = [
         { id: 'o1', role: 'O' }, { id: 'o2', role: 'O' }, { id: 'o3', role: 'O' }, { id: 'o4', role: 'O' },
@@ -109,6 +128,25 @@ test('quotazioni: nella formazione chi arriva prende posto e fascia di chi parte
     assert.deepEqual(checkLineup(nuova, f.starters, f.captain), []);
 });
 
+test('quotazioni: partono due titolari dello stesso ruolo e la formazione di partenza non torna con la squadra', () => {
+    const vecchia = Q.costruisciSquadra({ picks: picksDa('A'), controllo: Q.controllaSquadra({ ...base, picks: picksDa('A') }), vecchia: null, giornata: 1 });
+    const precedente = {
+        starters: { P: 'AP1', S1: 'AS1', S2: 'AS2', C1: 'AC1', C2: 'AC2', O: 'AO1', L: 'AL1' },
+        bench: ['AP2', 'AS3', 'AS4', 'AC3', 'AC4', 'AO2', 'AL2'],
+        captain: 'AS2',
+    };
+    const picks = picksDa('A').map(p => (p.id === 'AS1' ? { id: 'BS1', role: 'S' } : p.id === 'AS2' ? { id: 'BS2', role: 'S' } : p));
+    const nuova = Q.costruisciSquadra({ picks, controllo: Q.controllaSquadra({ ...base, vecchia, picks }), vecchia, giornata: 2 });
+    const f = Q.formazioneDopoCambi({ nuova, precedente });
+    assert.deepEqual([f.starters.S1, f.starters.S2].sort(), ['BS1', 'BS2'], 'entrano i nuovi, non la panchina');
+    assert.equal(f.captain, f.starters.S2, 'la fascia va a chi prende il posto del capitano');
+    assert.deepEqual(checkLineup(nuova, f.starters, f.captain), []);
+    // Formazione di partenza di un'altra squadra (squadra cancellata e rifatta): resta valida
+    const estranea = { starters: { P: 'ZP1', S1: 'ZS1', S2: 'ZS2', C1: 'ZC1', C2: 'ZC2', O: 'ZO1', L: 'ZL1' }, bench: [], captain: 'ZO1' };
+    const g = Q.formazioneDopoCambi({ nuova, precedente: estranea });
+    assert.deepEqual(checkLineup(nuova, g.starters, g.captain), []);
+});
+
 test('quotazioni: senza formazione di partenza titolari i più cari, capitano il più caro', () => {
     const picks = picksDa('A');
     const prezzi = { ...quotazioni, AP2: 12, AO2: 14 };
@@ -127,4 +165,6 @@ test('quotazioni: vale l\'ultima formazione salvata fino a quella giornata', () 
     assert.deepEqual(formazionePiuRecente(6, [f(3, 100), f(6, 200), f(4, 300)]), f(4, 300));
     assert.deepEqual(formazionePiuRecente(5, [f(3, 100), f(6, 50)]), f(3, 100));
     assert.equal(formazionePiuRecente(2, [f(3, 100)]), null);
+    // Giornata 8 anticipata (scadenza 250) prima della 7: la squadra della 7 salvata dopo non conta per la 8
+    assert.deepEqual(formazionePiuRecente(8, [f(6, 100), f(7, 300)], 250), f(6, 100));
 });
